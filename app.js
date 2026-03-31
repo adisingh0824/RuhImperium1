@@ -1,4 +1,3 @@
-import { SpeedInsights } from "@vercel/speed-insights/next"
 let cart            = [];
 let wishlist        = [];
 let currentFilter   = 'all';
