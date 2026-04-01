@@ -1,0 +1,24 @@
+{
+  "name": "ruhimperium",
+  "version": "1.0.0",
+  "description": "Ruh Imperium - Pure Indian Attars Since 1973",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adisingh0824/RuhImperium.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/adisingh0824/RuhImperium/issues"
+  },
+  "homepage": "https://github.com/adisingh0824/RuhImperium#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0"
+  }
+}
