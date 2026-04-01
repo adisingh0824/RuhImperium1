@@ -1,4 +1,4 @@
-import { SpeedInsights } from "@vercel/speed-insights/next"
+// Removed invalid module import for browser script
 let cart            = [];
 let wishlist        = [];
 let currentFilter   = 'all';
