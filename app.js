@@ -3,6 +3,13 @@ const WISHLIST_STORAGE_KEY = 'ruhImperiumWishlist';
 const USER_STORAGE_KEY = 'ruhImperiumUser';
 const SESSION_STORAGE_KEY = 'ruhImperiumSession';
 const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
+const LOCAL_USERS_STORAGE_KEY = 'ruhImperiumLocalUsers';
+const LOCAL_ORDERS_STORAGE_KEY = 'ruhImperiumLocalOrders';
+const LOCAL_COUPONS = {
+    RAMJI20: { code: 'RAMJI20', label: 'Ram Ji Signature Offer', type: 'percent', value: 20 },
+    WELCOME10: { code: 'WELCOME10', label: 'Welcome Offer', type: 'percent', value: 10 },
+    ATTAR250: { code: 'ATTAR250', label: 'Flat Rs. 250 Off', type: 'flat', value: 250, minOrder: 1500 }
+};
 
 let cart = [];
 let wishlist = [];
@@ -54,6 +61,86 @@ function clearUserState() {
     sessionToken = '';
     localStorage.removeItem(USER_STORAGE_KEY);
     localStorage.removeItem(SESSION_STORAGE_KEY);
+}
+
+function readLocalJson(key, fallback) {
+    try {
+        return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function writeLocalJson(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getLocalUsers() {
+    return readLocalJson(LOCAL_USERS_STORAGE_KEY, []);
+}
+
+function saveLocalUsers(users) {
+    writeLocalJson(LOCAL_USERS_STORAGE_KEY, users);
+}
+
+function getLocalOrders() {
+    return readLocalJson(LOCAL_ORDERS_STORAGE_KEY, []);
+}
+
+function saveLocalOrders(orders) {
+    writeLocalJson(LOCAL_ORDERS_STORAGE_KEY, orders);
+}
+
+function getLocalCoupon(code, subtotal) {
+    const coupon = LOCAL_COUPONS[String(code || '').trim().toUpperCase()];
+    if (!coupon) throw new Error('Invalid coupon code.');
+    if (coupon.minOrder && subtotal < coupon.minOrder) {
+        throw new Error(`Coupon works on orders above ₹${coupon.minOrder}.`);
+    }
+    const discountAmount = coupon.type === 'percent'
+        ? Math.round(subtotal * (coupon.value / 100))
+        : Math.min(coupon.value, subtotal);
+    return { ...coupon, discountAmount, subtotal, finalTotal: Math.max(subtotal - discountAmount, 0) };
+}
+
+function buildLocalOrder(details, paymentMethod, paymentStatus, orderStatus) {
+    const pricing = getOrderPricing();
+    return {
+        id: 'local-' + Date.now(),
+        userId: currentUser?.id || currentUser?.email || 'guest',
+        customerName: details.name,
+        customerEmail: details.email,
+        customerPhone: details.phone,
+        shippingAddress: {
+            address: details.address,
+            city: details.city,
+            state: details.state,
+            pin: details.pin
+        },
+        items: cart.map(item => ({
+            ...item,
+            unitPrice: item.price,
+            lineTotal: item.price * item.qty
+        })),
+        subtotal: pricing.subtotal,
+        discount: pricing.discount,
+        couponCode: appliedCoupon ? appliedCoupon.code : '',
+        total: pricing.total,
+        paymentMethod,
+        paymentStatus,
+        orderStatus,
+        createdAt: new Date().toISOString()
+    };
+}
+
+function buildOrderDocumentHtmlClient(order, type) {
+    const title = type === 'packing-slip' ? 'Packing Slip' : 'Invoice';
+    const address = order.shippingAddress || {};
+    const rows = (order.items || []).map(item => type === 'packing-slip'
+        ? `<tr><td>${item.name}</td><td>${item.size}</td><td>${item.qty}</td></tr>`
+        : `<tr><td>${item.name}</td><td>${item.size}</td><td>${item.qty}</td><td>₹${Number(item.unitPrice || item.price || 0).toLocaleString()}</td><td>₹${Number(item.lineTotal || item.price * item.qty || 0).toLocaleString()}</td></tr>`
+    ).join('');
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title><style>body{font-family:Arial,sans-serif;background:#f8f2e4;margin:0;color:#1f1a12}.sheet{max-width:900px;margin:24px auto;background:#fffdf8;border:1px solid #dbc890;padding:32px}.top{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px}.brand h1{margin:0;font-size:30px;color:#7b5b11}.brand p,.meta p{margin:6px 0;color:#5a4d34;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{border:1px solid #e6d9b2;background:#fffcf5;padding:16px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #eadfbf;padding:10px;text-align:left;font-size:14px}th{background:#fbf3df;color:#6f5716}.summary{margin-top:20px;margin-left:auto;max-width:320px}.summary-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee0bd}.summary-line.total{font-size:18px;font-weight:700;border-bottom:none;color:#6b5210}@media print{body{background:#fff}.sheet{margin:0;border:none}}</style></head><body><div class="sheet"><div class="top"><div class="brand"><h1>Ruh Imperium</h1><p>Pure Indian Fragrances · Since 1973</p><p>Kannauj, Uttar Pradesh</p></div><div class="meta"><p><strong>${title}</strong></p><p>Order ID: ${order.id}</p><p>Date: ${formatDate(order.createdAt)}</p><p>Payment: ${order.paymentMethod} · ${order.paymentStatus}</p></div></div><div class="grid"><div class="card"><p><strong>${order.customerName}</strong></p><p>${order.customerEmail || ''}</p><p>${order.customerPhone || ''}</p></div><div class="card"><p>${address.address || ''}</p><p>${address.city || ''}, ${address.state || ''} - ${address.pin || ''}</p><p>Order Status: ${order.orderStatus || 'pending'}</p></div></div><table><thead>${type === 'packing-slip' ? '<tr><th>Item</th><th>Size</th><th>Qty</th></tr>' : '<tr><th>Item</th><th>Size</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>'}</thead><tbody>${rows}</tbody></table><div class="summary"><div class="summary-line"><span>Subtotal</span><strong>₹${Number(order.subtotal || 0).toLocaleString()}</strong></div>${type === 'packing-slip' ? '' : `<div class="summary-line"><span>Coupon</span><strong>${order.couponCode || 'None'}</strong></div><div class="summary-line"><span>Discount</span><strong>₹${Number(order.discount || 0).toLocaleString()}</strong></div><div class="summary-line total"><span>Total</span><strong>₹${Number(order.total || 0).toLocaleString()}</strong></div>`}</div></div></body></html>`;
 }
 
 async function apiFetch(path, options = {}, needsAuth = false) {
@@ -360,7 +447,16 @@ async function applyCoupon() {
         return;
     }
     if (!apiConfig.backendReady) {
-        showToast('Start the backend to validate coupons.');
+        try {
+            appliedCoupon = getLocalCoupon(code, getCartTotal());
+            persistState();
+            updateCouponUI();
+            renderCartItems();
+            updateOrderSummary();
+            showToast(`${code} applied successfully.`);
+        } catch (error) {
+            showToast(error.message);
+        }
         return;
     }
     try {
@@ -578,6 +674,14 @@ function launchWhatsAppOrder(details, paymentLabel, paymentId = '') {
 }
 
 async function processCodOrder(details) {
+    if (!apiConfig.backendReady) {
+        const orders = getLocalOrders();
+        orders.push(buildLocalOrder(details, 'COD', 'pending', 'pending'));
+        saveLocalOrders(orders);
+        launchWhatsAppOrder(details, 'Cash on Delivery');
+        finalizeOrder('Order placed successfully with Cash on Delivery.');
+        return;
+    }
     try {
         await apiFetch('/api/orders/cod', {
             method: 'POST',
@@ -600,7 +704,7 @@ async function processRazorpayOrder(details) {
         return;
     }
     if (!apiConfig.backendReady || !apiConfig.razorpayKeyId) {
-        showToast('Backend Razorpay config is missing. Add your keys and restart the server.');
+        showToast('Online payment is unavailable on this deployment right now. Please use Cash on Delivery.');
         return;
     }
     try {
@@ -687,16 +791,30 @@ function titleCase(value) {
 }
 
 async function openOrderDocument(orderId, type) {
-    if (!sessionToken) {
-        showToast('Please sign in again to open documents.');
-        return;
-    }
     const docWindow = window.open('', '_blank');
     if (!docWindow) {
         showToast('Please allow pop-ups to open the document.');
         return;
     }
     docWindow.document.write('<p style="font-family:Arial,sans-serif;padding:24px">Loading document...</p>');
+    if (!apiConfig.backendReady) {
+        const allOrders = [...orderHistory, ...adminOrderHistory];
+        const order = allOrders.find(item => item.id === orderId);
+        if (!order) {
+            docWindow.close();
+            showToast('Order document not found.');
+            return;
+        }
+        docWindow.document.open();
+        docWindow.document.write(buildOrderDocumentHtmlClient(order, type));
+        docWindow.document.close();
+        return;
+    }
+    if (!sessionToken) {
+        docWindow.close();
+        showToast('Please sign in again to open documents.');
+        return;
+    }
     try {
         const response = await fetch(`/api/orders/${orderId}/document?type=${encodeURIComponent(type)}`, {
             headers: {
@@ -758,6 +876,14 @@ function renderOrders(list, targetId, emptyMessage) {
 }
 
 async function loadMyOrders() {
+    if (!apiConfig.backendReady) {
+        const localOrders = getLocalOrders().filter(order =>
+            currentUser && (order.userId === currentUser.id || order.customerEmail === currentUser.email)
+        ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        orderHistory = localOrders;
+        renderOrders(orderHistory, 'ordersList', 'No orders yet. Your placed orders will appear here.');
+        return;
+    }
     if (!sessionToken) return;
     try {
         const data = await apiFetch('/api/orders', {}, true);
@@ -770,6 +896,19 @@ async function loadMyOrders() {
 
 async function loadAdminOrders() {
     if (!currentUser || !currentUser.isAdmin) return;
+    if (!apiConfig.backendReady) {
+        adminOrderHistory = getLocalOrders().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        adminStats = {
+            totalOrders: adminOrderHistory.length,
+            pendingOrders: adminOrderHistory.filter(order => (order.orderStatus || 'pending') === 'pending').length,
+            shippedOrders: adminOrderHistory.filter(order => order.orderStatus === 'shipped').length,
+            deliveredOrders: adminOrderHistory.filter(order => order.orderStatus === 'delivered').length,
+            totalRevenue: adminOrderHistory.reduce((sum, order) => sum + Number(order.total || 0), 0)
+        };
+        renderAdminStats();
+        filterAdminOrders();
+        return;
+    }
     try {
         const [ordersData, statsData] = await Promise.all([
             apiFetch('/api/admin/orders', {}, true),
@@ -828,6 +967,21 @@ function filterAdminOrders() {
 
 async function updateAdminOrderStatus(orderId, orderStatus) {
     if (!currentUser || !currentUser.isAdmin) return;
+    if (!apiConfig.backendReady) {
+        const orders = getLocalOrders();
+        const order = orders.find(item => item.id === orderId);
+        if (!order) {
+            showToast('Order not found.');
+            return;
+        }
+        order.orderStatus = orderStatus;
+        order.updatedAt = new Date().toISOString();
+        saveLocalOrders(orders);
+        showToast(`Order marked as ${titleCase(orderStatus)}.`);
+        await loadAdminOrders();
+        await loadMyOrders();
+        return;
+    }
     try {
         await apiFetch(`/api/admin/orders/${orderId}/status`, {
             method: 'PATCH',
@@ -843,6 +997,38 @@ async function updateAdminOrderStatus(orderId, orderStatus) {
 
 async function exportAdminOrdersCsv() {
     if (!currentUser || !currentUser.isAdmin || !sessionToken) return;
+    if (!apiConfig.backendReady) {
+        const rows = [
+            ['Order ID', 'Created At', 'Customer Name', 'Customer Email', 'Customer Phone', 'Payment Method', 'Payment Status', 'Order Status', 'Coupon Code', 'Subtotal', 'Discount', 'Total', 'Items'],
+            ...adminOrderHistory.map(order => [
+                order.id,
+                order.createdAt,
+                order.customerName,
+                order.customerEmail,
+                order.customerPhone,
+                order.paymentMethod,
+                order.paymentStatus,
+                order.orderStatus || 'pending',
+                order.couponCode || '',
+                order.subtotal,
+                order.discount,
+                order.total,
+                (order.items || []).map(item => `${item.name} (${item.size}) x ${item.qty}`).join(' | ')
+            ])
+        ];
+        const csvText = rows.map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ruh-imperium-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast('Orders CSV exported.');
+        return;
+    }
     try {
         const response = await fetch('/api/admin/orders/export.csv', {
             headers: {
@@ -947,8 +1133,8 @@ function setAuthMode(mode) {
     document.getElementById('signupTab').classList.toggle('active', isSignup);
     document.getElementById('authTitle').textContent = isSignup ? 'Create Your Account' : 'Welcome Back';
     document.getElementById('authSubtitle').textContent = isSignup
-        ? 'Create your account on the backend so checkout and payments stay tied to a real user profile.'
-        : 'Sign in to access saved details, backend coupon validation, and Razorpay checkout.';
+        ? (apiConfig.backendReady ? 'Create your account on the backend so checkout and payments stay tied to a real user profile.' : 'Create an account saved in this browser so your details and orders still work on the live site.')
+        : (apiConfig.backendReady ? 'Sign in to access saved details, backend coupon validation, and Razorpay checkout.' : 'Sign in to your browser-saved account. Cash on Delivery and order history will still work.');
     document.getElementById('authName').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authPhone').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
@@ -1003,10 +1189,6 @@ function updateAccountUI() {
 }
 
 async function handleAuth() {
-    if (!apiConfig.backendReady) {
-        showToast('Start the backend before signing in.');
-        return;
-    }
     const name = document.getElementById('authName').value.trim();
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
     const phone = document.getElementById('authPhone').value.trim();
@@ -1017,6 +1199,45 @@ async function handleAuth() {
     }
     if (authMode === 'signup' && (!name || !phone)) {
         showToast('Please complete all signup fields.');
+        return;
+    }
+    if (!apiConfig.backendReady) {
+        const users = getLocalUsers();
+        if (authMode === 'signup') {
+            if (users.some(user => user.email === email)) {
+                showToast('An account with this email already exists.');
+                return;
+            }
+            currentUser = {
+                id: 'local-user-' + Date.now(),
+                name,
+                email,
+                phone,
+                password,
+                isAdmin: false
+            };
+            users.push(currentUser);
+            saveLocalUsers(users);
+            sessionToken = 'local-session';
+            persistUser();
+            updateAccountUI();
+            prefillCheckout();
+            closeAuthModal();
+            showToast('Account created successfully.');
+            return;
+        }
+        const savedUser = users.find(user => user.email === email && user.password === password);
+        if (!savedUser) {
+            showToast('Invalid email or password.');
+            return;
+        }
+        currentUser = savedUser;
+        sessionToken = 'local-session';
+        persistUser();
+        updateAccountUI();
+        prefillCheckout();
+        closeAuthModal();
+        showToast('Signed in successfully.');
         return;
     }
     try {
