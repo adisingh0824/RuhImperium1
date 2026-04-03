@@ -17,6 +17,8 @@ let appliedCoupon = null;
 let authMode = 'login';
 let apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false };
 let orderHistory = [];
+let adminOrderHistory = [];
+let adminStats = null;
 const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered'];
 
 function loadStoredState() {
@@ -689,6 +691,12 @@ async function openOrderDocument(orderId, type) {
         showToast('Please sign in again to open documents.');
         return;
     }
+    const docWindow = window.open('', '_blank');
+    if (!docWindow) {
+        showToast('Please allow pop-ups to open the document.');
+        return;
+    }
+    docWindow.document.write('<p style="font-family:Arial,sans-serif;padding:24px">Loading document...</p>');
     try {
         const response = await fetch(`/api/orders/${orderId}/document?type=${encodeURIComponent(type)}`, {
             headers: {
@@ -697,22 +705,18 @@ async function openOrderDocument(orderId, type) {
         });
         const html = await response.text();
         if (!response.ok) {
-            try {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
                 const data = JSON.parse(html);
                 throw new Error(data.error || 'Unable to open document.');
-            } catch (error) {
-                throw new Error('Unable to open document.');
             }
-        }
-        const docWindow = window.open('', '_blank', 'noopener,noreferrer');
-        if (!docWindow) {
-            showToast('Please allow pop-ups to open the document.');
-            return;
+            throw new Error('Unable to open document.');
         }
         docWindow.document.open();
         docWindow.document.write(html);
         docWindow.document.close();
     } catch (error) {
+        docWindow.close();
         showToast(error.message);
     }
 }
@@ -767,11 +771,59 @@ async function loadMyOrders() {
 async function loadAdminOrders() {
     if (!currentUser || !currentUser.isAdmin) return;
     try {
-        const data = await apiFetch('/api/admin/orders', {}, true);
-        renderOrders(data.orders || [], 'adminOrdersList', 'No orders have been placed yet.');
+        const [ordersData, statsData] = await Promise.all([
+            apiFetch('/api/admin/orders', {}, true),
+            apiFetch('/api/admin/stats', {}, true)
+        ]);
+        adminOrderHistory = ordersData.orders || [];
+        adminStats = statsData.stats || null;
+        renderAdminStats();
+        filterAdminOrders();
     } catch (error) {
+        adminOrderHistory = [];
+        adminStats = null;
+        renderAdminStats();
         renderOrders([], 'adminOrdersList', error.message);
     }
+}
+
+function renderAdminStats() {
+    const summary = document.getElementById('adminStats');
+    if (!summary) return;
+    if (!adminStats) {
+        summary.innerHTML = '';
+        return;
+    }
+    summary.innerHTML = `
+        <div class="stat-card"><span>Total Orders</span><strong>${adminStats.totalOrders}</strong></div>
+        <div class="stat-card"><span>Pending</span><strong>${adminStats.pendingOrders}</strong></div>
+        <div class="stat-card"><span>Shipped</span><strong>${adminStats.shippedOrders}</strong></div>
+        <div class="stat-card"><span>Revenue</span><strong>₹${Number(adminStats.totalRevenue).toLocaleString()}</strong></div>
+    `;
+}
+
+function filterAdminOrders() {
+    const searchInput = document.getElementById('adminOrderSearch');
+    const statusFilter = document.getElementById('adminOrderStatusFilter');
+    const query = (searchInput?.value || '').trim().toLowerCase();
+    const status = (statusFilter?.value || 'all').toLowerCase();
+    const filtered = adminOrderHistory.filter(order => {
+        const matchesStatus = status === 'all' || String(order.orderStatus || 'pending').toLowerCase() === status;
+        const haystack = [
+            order.id,
+            order.customerName,
+            order.customerEmail,
+            order.customerPhone,
+            order.paymentMethod,
+            order.couponCode,
+            ...(order.items || []).map(item => item.name)
+        ].join(' ').toLowerCase();
+        const matchesQuery = !query || haystack.includes(query);
+        return matchesStatus && matchesQuery;
+    });
+    renderOrders(filtered, 'adminOrdersList', 'No orders match the current filters.');
+    const count = document.getElementById('adminOrderCount');
+    if (count) count.textContent = `${filtered.length} orders shown`;
 }
 
 async function updateAdminOrderStatus(orderId, orderStatus) {
@@ -784,6 +836,34 @@ async function updateAdminOrderStatus(orderId, orderStatus) {
         showToast(`Order marked as ${titleCase(orderStatus)}.`);
         await loadAdminOrders();
         await loadMyOrders();
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
+async function exportAdminOrdersCsv() {
+    if (!currentUser || !currentUser.isAdmin || !sessionToken) return;
+    try {
+        const response = await fetch('/api/admin/orders/export.csv', {
+            headers: {
+                Authorization: `Bearer ${sessionToken}`
+            }
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Unable to export orders.');
+        }
+        const csvText = await response.text();
+        const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ruh-imperium-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast('Orders CSV exported.');
     } catch (error) {
         showToast(error.message);
     }
@@ -960,7 +1040,10 @@ async function handleAuth() {
 function logout() {
     clearUserState();
     orderHistory = [];
+    adminOrderHistory = [];
+    adminStats = null;
     updateAccountUI();
+    renderAdminStats();
     renderOrders([], 'ordersList', 'Sign in to view your orders.');
     renderOrders([], 'adminOrdersList', 'Admin orders will appear here.');
     closeAuthModal();

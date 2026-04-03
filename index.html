@@ -432,6 +432,22 @@
         .orders-box h2 { font-family:'Playfair Display',serif; color:var(--gold-light); font-size:28px; margin-bottom:18px; }
         .orders-section-title { color:var(--gold); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin:18px 0 10px; }
         .orders-list { display:flex; flex-direction:column; gap:14px; }
+        .orders-tools { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:10px 0 16px; }
+        .orders-tools input, .orders-tools select {
+            background:rgba(253,246,232,0.06); border:1px solid rgba(201,168,76,0.24); color:var(--cream);
+            padding:10px 12px; font-family:'Jost',sans-serif; font-size:13px; outline:none;
+        }
+        .orders-tools input { flex:1; min-width:220px; }
+        .orders-tools span { color:rgba(253,246,232,0.45); font-size:12px; letter-spacing:1px; }
+        .orders-tools button {
+            background:transparent; border:1px solid rgba(201,168,76,0.28); color:var(--gold-light);
+            padding:10px 14px; font-family:'Jost',sans-serif; font-size:12px; letter-spacing:1px; text-transform:uppercase; cursor:pointer;
+        }
+        .orders-tools button:hover { background:rgba(201,168,76,0.1); border-color:var(--gold); }
+        .admin-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:0 0 16px; }
+        .stat-card { border:1px solid rgba(201,168,76,0.18); background:rgba(253,246,232,0.04); padding:14px; }
+        .stat-card span { display:block; color:rgba(253,246,232,0.45); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
+        .stat-card strong { display:block; color:var(--gold-light); font-family:'Playfair Display',serif; font-size:22px; }
         .order-card { border:1px solid rgba(201,168,76,0.18); background:rgba(253,246,232,0.04); padding:16px; }
         .order-card-head { display:flex; justify-content:space-between; gap:12px; margin-bottom:10px; align-items:flex-start; }
         .order-card-head strong { display:block; color:var(--cream); font-size:16px; }
@@ -547,6 +563,9 @@
             .order-badges{justify-content:flex-start;}
             .admin-status-row{flex-direction:column; align-items:flex-start;}
             .admin-status-row select{width:100%;}
+            .orders-tools{flex-direction:column; align-items:stretch;}
+            .orders-tools input, .orders-tools select{width:100%;}
+            .admin-stats{grid-template-columns:1fr 1fr;}
         }
     </style>
 </head>
@@ -711,6 +730,19 @@
         <div class="orders-list" id="ordersList"></div>
         <div id="adminOrdersTab" style="display:none">
             <div class="orders-section-title">Admin View</div>
+            <div class="admin-stats" id="adminStats"></div>
+            <div class="orders-tools">
+                <input type="text" id="adminOrderSearch" placeholder="Search by customer, phone, order ID, or product" oninput="filterAdminOrders()">
+                <select id="adminOrderStatusFilter" onchange="filterAdminOrders()">
+                    <option value="all">All statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                </select>
+                <button type="button" onclick="exportAdminOrdersCsv()">Export CSV</button>
+                <span id="adminOrderCount">0 orders shown</span>
+            </div>
             <div class="orders-list" id="adminOrdersList"></div>
         </div>
     </div>
