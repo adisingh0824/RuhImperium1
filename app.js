@@ -170,7 +170,10 @@ async function loadApiConfig() {
 
 function showToast(msg) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
+    const normalizedMsg = String(msg || '').toLowerCase().includes('backend before signing in')
+        ? 'Sign in is available on this site. If it still fails, refresh once and try again.'
+        : msg;
+    t.textContent = normalizedMsg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
 }
@@ -193,7 +196,17 @@ function goSection(id) {
     showHome();
     setTimeout(() => {
         const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+        if (id === 'gifting') {
+            filterShop('Gifting');
+            return;
+        }
+        if (id === 'wellness') {
+            filterShop('Daily');
+        }
     }, 100);
 }
 
