@@ -670,6 +670,7 @@ function updateCheckoutOtpUI() {
     const help = document.getElementById('checkoutOtpHelp');
     const btn = document.getElementById('checkoutOtpBtn');
     const input = document.getElementById('checkoutOtp');
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
     if (!help || !btn || !input) return;
     btn.textContent = checkoutOtpRequestedFor ? 'Resend OTP' : 'Request OTP';
     if (checkoutOtpVerifiedFor) {
@@ -679,6 +680,11 @@ function updateCheckoutOtpUI() {
     } else {
         help.textContent = 'Verify your order with OTP before placing it.';
     }
+    if (placeOrderBtn) {
+        const details = getCheckoutDetails();
+        const identifier = details ? getCheckoutOtpIdentifier(details) : '';
+        placeOrderBtn.disabled = !identifier || checkoutOtpVerifiedFor !== identifier;
+    }
 }
 
 function resetCheckoutOtpState() {
@@ -687,6 +693,19 @@ function resetCheckoutOtpState() {
     clearPendingLocalCheckoutOtp();
     const otpInput = document.getElementById('checkoutOtp');
     if (otpInput) otpInput.value = '';
+    updateCheckoutOtpUI();
+}
+
+function handleCheckoutIdentityChange() {
+    const details = getCheckoutDetails();
+    const identifier = details ? getCheckoutOtpIdentifier(details) : '';
+    if (checkoutOtpVerifiedFor && checkoutOtpVerifiedFor !== identifier) {
+        checkoutOtpVerifiedFor = '';
+    }
+    if (checkoutOtpRequestedFor && checkoutOtpRequestedFor !== identifier) {
+        checkoutOtpRequestedFor = '';
+        clearPendingLocalCheckoutOtp();
+    }
     updateCheckoutOtpUI();
 }
 
@@ -784,7 +803,7 @@ async function requestCheckoutOtp() {
     }
     checkoutOtpVerifiedFor = '';
     if (!apiConfig.backendReady) {
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const code = String(Math.floor(1000 + Math.random() * 9000));
         savePendingLocalCheckoutOtp({
             identifier,
             code,
@@ -811,8 +830,8 @@ async function requestCheckoutOtp() {
 async function verifyCheckoutOtp(details) {
     const otp = document.getElementById('checkoutOtp').value.trim();
     const identifier = getCheckoutOtpIdentifier(details);
-    if (!otp || otp.length !== 6) {
-        showToast('Enter the 6-digit order OTP.');
+    if (!otp || otp.length !== 4) {
+        showToast('Enter the 4-digit order OTP.');
         return false;
     }
     if (!apiConfig.backendReady) {
@@ -1455,7 +1474,7 @@ async function requestOtp() {
             showToast('No account found for that email or phone.');
             return;
         }
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const code = String(Math.floor(1000 + Math.random() * 9000));
         savePendingLocalOtp({
             email: user.email,
             phone: user.phone,
@@ -1481,8 +1500,8 @@ async function requestOtp() {
 }
 
 async function verifyOtpLogin({ email, phone, otp }) {
-    if (!otp || otp.length !== 6) {
-        showToast('Enter the 6-digit OTP.');
+    if (!otp || otp.length !== 4) {
+        showToast('Enter the 4-digit OTP.');
         return;
     }
     if (!apiConfig.backendReady) {
@@ -1575,6 +1594,13 @@ async function initApp() {
     updateOrderSummary();
     prefillCheckout();
     renderCartItems();
+    ['cName', 'cPhone', 'cEmail', 'cAddress', 'cCity', 'cPin', 'cState', 'checkoutOtp'].forEach(id => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        element.addEventListener('input', handleCheckoutIdentityChange);
+        element.addEventListener('change', handleCheckoutIdentityChange);
+    });
+    updateCheckoutOtpUI();
     if (currentUser) loadMyOrders();
     initReveals();
 }

@@ -434,6 +434,7 @@
         .coupon-hint { font-size:12px; color:rgba(253,246,232,0.45); margin-top:8px; }
         .place-order-btn { width:100%; background:linear-gradient(135deg,var(--gold),var(--gold-light)); border:none; padding:16px; font-family:'Jost',sans-serif; font-size:13px; letter-spacing:3px; text-transform:uppercase; font-weight:600; color:var(--dark); cursor:pointer; transition:transform 0.2s; margin-top:20px; }
         .place-order-btn:hover { transform:translateY(-2px); }
+        .place-order-btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
         .auth-modal { position:fixed; inset:0; background:rgba(26,18,8,0.96); z-index:5500; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; padding:20px; }
         .auth-modal.open { opacity:1; pointer-events:all; }
         .orders-modal { position:fixed; inset:0; background:rgba(26,18,8,0.96); z-index:5600; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; padding:20px; }
@@ -694,12 +695,12 @@
         <div class="form-group">
             <label>Order OTP Verification</label>
             <div class="auth-row">
-                <input type="text" id="checkoutOtp" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric">
+                <input type="text" id="checkoutOtp" placeholder="Enter 4-digit OTP" maxlength="4" inputmode="numeric">
                 <button class="secondary-btn" type="button" id="checkoutOtpBtn" onclick="requestCheckoutOtp()">Request OTP</button>
             </div>
             <p class="auth-help" id="checkoutOtpHelp">Verify your order with OTP before placing it.</p>
         </div>
-        <button class="place-order-btn" onclick="placeOrder()">Place Order →</button>
+        <button class="place-order-btn" id="placeOrderBtn" onclick="placeOrder()" disabled>Place Order →</button>
     </div>
 </div>
 
@@ -734,7 +735,7 @@
                 <div class="form-group" id="otpGroup" style="display:none">
                     <label>One-Time Password</label>
                     <div class="auth-row">
-                        <input type="text" id="authOtp" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric">
+                        <input type="text" id="authOtp" placeholder="Enter 4-digit OTP" maxlength="4" inputmode="numeric">
                         <button class="secondary-btn" type="button" id="requestOtpBtn" onclick="requestOtp()">Request OTP</button>
                     </div>
                     <p class="auth-help" id="otpHelp">Enter your email or phone number, then request an OTP.</p>
