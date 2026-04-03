@@ -691,6 +691,14 @@
                 <button type="button" onclick="removeCoupon()">✕</button>
             </div>
         </div>
+        <div class="form-group">
+            <label>Order OTP Verification</label>
+            <div class="auth-row">
+                <input type="text" id="checkoutOtp" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric">
+                <button class="secondary-btn" type="button" id="checkoutOtpBtn" onclick="requestCheckoutOtp()">Request OTP</button>
+            </div>
+            <p class="auth-help" id="checkoutOtpHelp">Verify your order with OTP before placing it.</p>
+        </div>
         <button class="place-order-btn" onclick="placeOrder()">Place Order →</button>
     </div>
 </div>

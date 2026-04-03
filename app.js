@@ -6,6 +6,7 @@ const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
 const LOCAL_USERS_STORAGE_KEY = 'ruhImperiumLocalUsers';
 const LOCAL_ORDERS_STORAGE_KEY = 'ruhImperiumLocalOrders';
 const LOCAL_OTP_STORAGE_KEY = 'ruhImperiumPendingOtp';
+const LOCAL_CHECKOUT_OTP_STORAGE_KEY = 'ruhImperiumPendingCheckoutOtp';
 const LOCAL_COUPONS = {
     RAMJI20: { code: 'RAMJI20', label: 'Ram Ji Signature Offer', type: 'percent', value: 20 },
     WELCOME10: { code: 'WELCOME10', label: 'Welcome Offer', type: 'percent', value: 10 },
@@ -28,6 +29,8 @@ let orderHistory = [];
 let adminOrderHistory = [];
 let adminStats = null;
 let otpRequestedFor = '';
+let checkoutOtpRequestedFor = '';
+let checkoutOtpVerifiedFor = '';
 const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered'];
 
 function loadStoredState() {
@@ -103,6 +106,18 @@ function savePendingLocalOtp(otp) {
 
 function clearPendingLocalOtp() {
     localStorage.removeItem(LOCAL_OTP_STORAGE_KEY);
+}
+
+function getPendingLocalCheckoutOtp() {
+    return readLocalJson(LOCAL_CHECKOUT_OTP_STORAGE_KEY, null);
+}
+
+function savePendingLocalCheckoutOtp(otp) {
+    writeLocalJson(LOCAL_CHECKOUT_OTP_STORAGE_KEY, otp);
+}
+
+function clearPendingLocalCheckoutOtp() {
+    localStorage.removeItem(LOCAL_CHECKOUT_OTP_STORAGE_KEY);
 }
 
 function getLocalCoupon(code, subtotal) {
@@ -646,11 +661,41 @@ function selectPay(btn, type) {
     btn.classList.add('active');
 }
 
+function getCheckoutOtpIdentifier(details = getCheckoutDetails()) {
+    if (!details) return '';
+    return details.phone || details.email || '';
+}
+
+function updateCheckoutOtpUI() {
+    const help = document.getElementById('checkoutOtpHelp');
+    const btn = document.getElementById('checkoutOtpBtn');
+    const input = document.getElementById('checkoutOtp');
+    if (!help || !btn || !input) return;
+    btn.textContent = checkoutOtpRequestedFor ? 'Resend OTP' : 'Request OTP';
+    if (checkoutOtpVerifiedFor) {
+        help.textContent = `OTP verified for ${checkoutOtpVerifiedFor}. You can place the order now.`;
+    } else if (checkoutOtpRequestedFor) {
+        help.textContent = `OTP sent to ${checkoutOtpRequestedFor}. Enter it below to continue.`;
+    } else {
+        help.textContent = 'Verify your order with OTP before placing it.';
+    }
+}
+
+function resetCheckoutOtpState() {
+    checkoutOtpRequestedFor = '';
+    checkoutOtpVerifiedFor = '';
+    clearPendingLocalCheckoutOtp();
+    const otpInput = document.getElementById('checkoutOtp');
+    if (otpInput) otpInput.value = '';
+    updateCheckoutOtpUI();
+}
+
 function prefillCheckout() {
     if (!currentUser) return;
     document.getElementById('cName').value = currentUser.name || '';
     document.getElementById('cPhone').value = currentUser.phone || '';
     document.getElementById('cEmail').value = currentUser.email || '';
+    resetCheckoutOtpState();
 }
 
 function getCheckoutDetails() {
@@ -689,6 +734,7 @@ function finalizeOrder(successMessage) {
     closeCheckout();
     cart = [];
     appliedCoupon = null;
+    resetCheckoutOtpState();
     persistState();
     updateCartBadge();
     renderCartItems();
@@ -725,6 +771,83 @@ async function processCodOrder(details) {
         finalizeOrder('Order placed successfully with Cash on Delivery.');
     } catch (error) {
         showToast(error.message);
+    }
+}
+
+async function requestCheckoutOtp() {
+    const details = getCheckoutDetails();
+    if (!details) return;
+    const identifier = getCheckoutOtpIdentifier(details);
+    if (!identifier) {
+        showToast('Add your phone or email first.');
+        return;
+    }
+    checkoutOtpVerifiedFor = '';
+    if (!apiConfig.backendReady) {
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        savePendingLocalCheckoutOtp({
+            identifier,
+            code,
+            expiresAt: Date.now() + 5 * 60 * 1000
+        });
+        checkoutOtpRequestedFor = identifier;
+        updateCheckoutOtpUI();
+        showToast(`Order OTP sent. Demo OTP: ${code}`);
+        return;
+    }
+    try {
+        const data = await apiFetch('/api/orders/request-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email: details.email, phone: details.phone })
+        }, true);
+        checkoutOtpRequestedFor = data.identifier || identifier;
+        updateCheckoutOtpUI();
+        showToast(data.message || (data.previewOtp ? `Order OTP: ${data.previewOtp}` : 'Order OTP sent successfully.'));
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
+async function verifyCheckoutOtp(details) {
+    const otp = document.getElementById('checkoutOtp').value.trim();
+    const identifier = getCheckoutOtpIdentifier(details);
+    if (!otp || otp.length !== 6) {
+        showToast('Enter the 6-digit order OTP.');
+        return false;
+    }
+    if (!apiConfig.backendReady) {
+        const pending = getPendingLocalCheckoutOtp();
+        if (!pending || pending.expiresAt < Date.now()) {
+            clearPendingLocalCheckoutOtp();
+            checkoutOtpRequestedFor = '';
+            updateCheckoutOtpUI();
+            showToast('Order OTP expired. Please request a new one.');
+            return false;
+        }
+        if (pending.identifier !== identifier || pending.code !== otp) {
+            showToast('Invalid order OTP.');
+            return false;
+        }
+        checkoutOtpRequestedFor = identifier;
+        checkoutOtpVerifiedFor = identifier;
+        clearPendingLocalCheckoutOtp();
+        updateCheckoutOtpUI();
+        showToast('Order OTP verified.');
+        return true;
+    }
+    try {
+        const data = await apiFetch('/api/orders/verify-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email: details.email, phone: details.phone, otp })
+        }, true);
+        checkoutOtpRequestedFor = data.identifier || identifier;
+        checkoutOtpVerifiedFor = identifier;
+        updateCheckoutOtpUI();
+        showToast('Order OTP verified.');
+        return true;
+    } catch (error) {
+        showToast(error.message);
+        return false;
     }
 }
 
@@ -799,6 +922,15 @@ async function processRazorpayOrder(details) {
 async function placeOrder() {
     const details = getCheckoutDetails();
     if (!details) return;
+    const identifier = getCheckoutOtpIdentifier(details);
+    if (!identifier) {
+        showToast('Add your phone or email to verify the order.');
+        return;
+    }
+    if (checkoutOtpVerifiedFor !== identifier) {
+        const verified = await verifyCheckoutOtp(details);
+        if (!verified) return;
+    }
     currentUser = { ...currentUser, name: details.name, email: details.email, phone: details.phone };
     persistUser();
     updateAccountUI();
