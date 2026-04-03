@@ -1,14 +1,8 @@
 const CART_STORAGE_KEY = 'ruhImperiumCart';
 const WISHLIST_STORAGE_KEY = 'ruhImperiumWishlist';
 const USER_STORAGE_KEY = 'ruhImperiumUser';
+const SESSION_STORAGE_KEY = 'ruhImperiumSession';
 const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
-const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
-
-const coupons = {
-    RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer' },
-    WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer' },
-    ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off' }
-};
 
 let cart = [];
 let wishlist = [];
@@ -18,19 +12,25 @@ let sortMode = 'default';
 let selectedPayment = 'Razorpay';
 let currentProduct = null;
 let currentUser = null;
+let sessionToken = '';
 let appliedCoupon = null;
 let authMode = 'login';
+let apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false };
+let orderHistory = [];
+const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered'];
 
 function loadStoredState() {
     try {
         cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]');
         wishlist = JSON.parse(localStorage.getItem(WISHLIST_STORAGE_KEY) || '[]');
         currentUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+        sessionToken = localStorage.getItem(SESSION_STORAGE_KEY) || '';
         appliedCoupon = JSON.parse(localStorage.getItem(COUPON_STORAGE_KEY) || 'null');
     } catch (error) {
         cart = [];
         wishlist = [];
         currentUser = null;
+        sessionToken = '';
         appliedCoupon = null;
     }
 }
@@ -43,6 +43,40 @@ function persistState() {
 
 function persistUser() {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+    if (sessionToken) localStorage.setItem(SESSION_STORAGE_KEY, sessionToken);
+    else localStorage.removeItem(SESSION_STORAGE_KEY);
+}
+
+function clearUserState() {
+    currentUser = null;
+    sessionToken = '';
+    localStorage.removeItem(USER_STORAGE_KEY);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+}
+
+async function apiFetch(path, options = {}, needsAuth = false) {
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+    };
+    if (needsAuth && sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
+    const response = await fetch(path, { ...options, headers });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Request failed.');
+    return data;
+}
+
+async function loadApiConfig() {
+    try {
+        const data = await apiFetch('/api/config');
+        apiConfig = {
+            backendReady: true,
+            razorpayKeyId: data.razorpayKeyId || '',
+            adminEnabled: Boolean(data.adminEnabled)
+        };
+    } catch (error) {
+        apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false };
+    }
 }
 
 function showToast(msg) {
@@ -50,6 +84,13 @@ function showToast(msg) {
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function resetCouponState() {
+    appliedCoupon = null;
+    persistState();
+    updateCouponUI();
+    updateOrderSummary();
 }
 
 function showHome() {
@@ -73,67 +114,71 @@ function filterShop(cat) {
     document.getElementById('shop-page').classList.add('active');
     window.scrollTo(0, 0);
     document.getElementById('shopTitle').textContent = cat === 'all' ? 'All Products' : cat;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     renderShopGrid();
 }
 
 function shopFilter(cat, btn) {
     currentFilter = cat;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-btn').forEach(item => item.classList.remove('active'));
     if (btn) btn.classList.add('active');
     document.getElementById('shopTitle').textContent = cat === 'all' ? 'All Products' : cat;
     renderShopGrid();
 }
 
-function sortProducts(val) { sortMode = val; renderShopGrid(); }
+function sortProducts(val) {
+    sortMode = val;
+    renderShopGrid();
+}
 
 function filterByPrice(val) {
-    maxPrice = parseInt(val);
+    maxPrice = parseInt(val, 10);
     document.getElementById('priceVal').textContent = '₹' + val;
     renderShopGrid();
 }
 
 function getFilteredProducts() {
-    let filtered = products.filter(p => {
+    const filtered = products.filter(product => {
         if (currentFilter === 'all') return true;
         return (
-            p.cat.toLowerCase().includes(currentFilter.toLowerCase()) ||
-            p.notes.toLowerCase().includes(currentFilter.toLowerCase()) ||
-            p.tags.some(t => t.toLowerCase().includes(currentFilter.toLowerCase()))
+            product.cat.toLowerCase().includes(currentFilter.toLowerCase()) ||
+            product.notes.toLowerCase().includes(currentFilter.toLowerCase()) ||
+            product.tags.some(tag => tag.toLowerCase().includes(currentFilter.toLowerCase()))
         );
-    }).filter(p => p.price <= maxPrice);
+    }).filter(product => product.price <= maxPrice);
 
-    if (sortMode === 'price-asc')  filtered.sort((a, b) => a.price - b.price);
+    if (sortMode === 'price-asc') filtered.sort((a, b) => a.price - b.price);
     if (sortMode === 'price-desc') filtered.sort((a, b) => b.price - a.price);
-    if (sortMode === 'rating')     filtered.sort((a, b) => b.stars - a.stars);
-    if (sortMode === 'newest')     filtered.sort((a, b) => (b.badge === 'NEW' ? 1 : 0) - (a.badge === 'NEW' ? 1 : 0));
+    if (sortMode === 'rating') filtered.sort((a, b) => b.stars - a.stars);
+    if (sortMode === 'newest') filtered.sort((a, b) => (b.badge === 'NEW' ? 1 : 0) - (a.badge === 'NEW' ? 1 : 0));
     return filtered;
 }
 
-function starStr(s) {
-    const full = Math.floor(s), half = s % 1 >= 0.5;
+function starStr(stars) {
+    const full = Math.floor(stars);
+    const half = stars % 1 >= 0.5;
     return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0));
 }
 
-function productCardHTML(p) {
-    const inWish = wishlist.includes(p.id);
+function productCardHTML(product) {
+    const inWish = wishlist.includes(product.id);
     return `
-    <div class="product-card" onclick="openProductModal(${p.id})">
-      ${p.badge ? `<span class="product-badge ${p.badge === 'NEW' ? 'new' : ''}">${p.badge}</span>` : ''}
+    <div class="product-card" onclick="openProductModal(${product.id})">
+      ${product.badge ? `<span class="product-badge ${product.badge === 'NEW' ? 'new' : ''}">${product.badge}</span>` : ''}
       <div class="product-img-wrap">
-        <img src="${p.img}" alt="${p.name}" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">
-        <button class="wishlist-btn ${inWish ? 'active' : ''}" onclick="toggleWish(event,${p.id})">♥</button>
+        <img src="${product.img}" alt="${product.name}" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">
+        <button class="wishlist-btn ${inWish ? 'active' : ''}" onclick="toggleWish(event,${product.id})">♥</button>
       </div>
       <div class="product-info">
-        <p class="product-desc">${p.cat}</p>
-        <h3 class="product-name">${p.name}</h3>
-        <div class="product-stars">${starStr(p.stars)} <span>(${p.reviews} reviews)</span></div>
+        <p class="product-desc">${product.cat}</p>
+        <h3 class="product-name">${product.name}</h3>
+        <div class="product-stars">${starStr(product.stars)} <span>(${product.reviews} reviews)</span></div>
         <div class="product-price-row">
           <div>
-            <span class="product-price">₹${p.price.toLocaleString()}</span>
-            ${p.oldPrice ? `<span class="product-price-old">₹${p.oldPrice.toLocaleString()}</span>` : ''}
+            <span class="product-price">₹${product.price.toLocaleString()}</span>
+            ${product.oldPrice ? `<span class="product-price-old">₹${product.oldPrice.toLocaleString()}</span>` : ''}
           </div>
-          <button class="add-btn" onclick="quickAdd(event,${p.id})">Add to Cart</button>
+          <button class="add-btn" onclick="quickAdd(event,${product.id})">Add to Cart</button>
         </div>
       </div>
     </div>`;
@@ -142,23 +187,23 @@ function productCardHTML(p) {
 function renderShopGrid() {
     const filtered = getFilteredProducts();
     const grid = document.getElementById('shopGrid');
-    document.getElementById('shopCount').textContent = filtered.length + ' products found';
+    document.getElementById('shopCount').textContent = `${filtered.length} products found`;
     grid.innerHTML = filtered.length === 0
         ? `<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text-light);font-style:italic;">No products found. Try adjusting filters.</div>`
-        : filtered.map(p => productCardHTML(p)).join('');
+        : filtered.map(product => productCardHTML(product)).join('');
 }
 
 function renderHomeSections() {
-    const bestsellers = products.filter(p => p.bestseller).slice(0, 4);
-    document.getElementById('bestsellerGrid').innerHTML = bestsellers.map(p => productCardHTML(p)).join('');
-    const newArrivals = products.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4);
-    document.getElementById('newArrivalsGrid').innerHTML = newArrivals.map(p => productCardHTML(p)).join('');
+    const bestsellers = products.filter(product => product.bestseller).slice(0, 4);
+    document.getElementById('bestsellerGrid').innerHTML = bestsellers.map(product => productCardHTML(product)).join('');
+    const newArrivals = products.filter(product => product.cat === 'Next Gen Fragrances').slice(0, 4);
+    document.getElementById('newArrivalsGrid').innerHTML = newArrivals.map(product => productCardHTML(product)).join('');
 }
 
-function toggleWish(e, id) {
-    e.stopPropagation();
+function toggleWish(event, id) {
+    event.stopPropagation();
     if (wishlist.includes(id)) {
-        wishlist = wishlist.filter(x => x !== id);
+        wishlist = wishlist.filter(item => item !== id);
         showToast('Removed from wishlist');
     } else {
         wishlist.push(id);
@@ -172,39 +217,47 @@ function toggleWish(e, id) {
 
 function updateWishBadge() {
     const badge = document.getElementById('wishCount');
-    if (wishlist.length > 0) { badge.textContent = wishlist.length; badge.style.display = 'flex'; }
-    else badge.style.display = 'none';
+    if (wishlist.length > 0) {
+        badge.textContent = wishlist.length;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
 }
 
 function showWishlist() {
-    if (wishlist.length === 0) { showToast('Your wishlist is empty'); return; }
+    if (wishlist.length === 0) {
+        showToast('Your wishlist is empty');
+        return;
+    }
     document.getElementById('home-page').style.display = 'none';
     document.getElementById('shop-page').classList.add('active');
     document.getElementById('shopTitle').textContent = 'My Wishlist ❤️';
     window.scrollTo(0, 0);
-    const wishProducts = products.filter(p => wishlist.includes(p.id));
-    document.getElementById('shopCount').textContent = wishProducts.length + ' items';
-    document.getElementById('shopGrid').innerHTML = wishProducts.map(p => productCardHTML(p)).join('');
+    const wishProducts = products.filter(product => wishlist.includes(product.id));
+    document.getElementById('shopCount').textContent = `${wishProducts.length} items`;
+    document.getElementById('shopGrid').innerHTML = wishProducts.map(product => productCardHTML(product)).join('');
 }
 
-function quickAdd(e, id) {
-    e.stopPropagation();
-    const p = products.find(x => x.id === id);
-    addToCart(p, p.sizes[0]);
+function quickAdd(event, id) {
+    event.stopPropagation();
+    const product = products.find(item => item.id === id);
+    addToCart(product, product.sizes[0]);
 }
 
-function addToCart(p, size) {
-    const existing = cart.find(x => x.id === p.id && x.size === size);
+function addToCart(product, size) {
+    const existing = cart.find(item => item.id === product.id && item.size === size);
     if (existing) existing.qty++;
-    else cart.push({ id: p.id, name: p.name, img: p.img, price: p.price, size, qty: 1 });
+    else cart.push({ id: product.id, name: product.name, img: product.img, price: product.price, size, qty: 1 });
+    resetCouponState();
     persistState();
     updateCartBadge();
-    showToast('✓ ' + p.name + ' added to cart');
+    showToast(`✓ ${product.name} added to cart`);
     renderCartItems();
 }
 
 function updateCartBadge() {
-    document.getElementById('cartBadge').textContent = cart.reduce((a, x) => a + x.qty, 0);
+    document.getElementById('cartBadge').textContent = cart.reduce((sum, item) => sum + item.qty, 0);
 }
 
 function openCart() {
@@ -218,11 +271,11 @@ function closeCart() {
 }
 
 function renderCartItems() {
-    const el     = document.getElementById('cartItems');
+    const itemsEl = document.getElementById('cartItems');
     const footer = document.getElementById('cartFooter');
     const meta = document.getElementById('cartMeta');
     if (cart.length === 0) {
-        el.innerHTML = '<div class="cart-empty"><span>🧴</span><p>Your cart is beautifully empty</p></div>';
+        itemsEl.innerHTML = '<div class="cart-empty"><span>🧴</span><p>Your cart is beautifully empty</p></div>';
         footer.style.display = 'none';
         return;
     }
@@ -230,61 +283,51 @@ function renderCartItems() {
     meta.innerHTML = currentUser
         ? `Signed in as <strong>${currentUser.name}</strong>. Coupons and checkout details are ready to go.`
         : 'Sign in to save your profile and use coupons at checkout.';
-    el.innerHTML = cart.map((item, i) => `
+    itemsEl.innerHTML = cart.map((item, index) => `
     <div class="cart-item">
       <img class="cart-item-img" src="${item.img}" alt="${item.name}" onerror="this.style.display='none'">
       <div class="cart-item-info">
         <div class="cart-item-name">${item.name}</div>
         <div class="cart-item-price">₹${(item.price * item.qty).toLocaleString()} · ${item.size}</div>
         <div class="cart-qty-row">
-          <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
+          <button class="qty-btn" onclick="changeQty(${index},-1)">−</button>
           <span class="qty-num">${item.qty}</span>
-          <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+          <button class="qty-btn" onclick="changeQty(${index},1)">+</button>
         </div>
       </div>
-      <button class="cart-item-del" onclick="removeFromCart(${i})">🗑</button>
+      <button class="cart-item-del" onclick="removeFromCart(${index})">🗑</button>
     </div>`).join('');
     document.getElementById('cartTotal').textContent = '₹' + getOrderPricing().total.toLocaleString();
 }
 
-function changeQty(i, delta) {
-    cart[i].qty += delta;
-    if (cart[i].qty <= 0) cart.splice(i, 1);
-    if (appliedCoupon && !isCouponValidForCart(appliedCoupon.code, false)) {
-        appliedCoupon = null;
-    }
+function changeQty(index, delta) {
+    cart[index].qty += delta;
+    if (cart[index].qty <= 0) cart.splice(index, 1);
+    resetCouponState();
     persistState();
     updateCartBadge();
     renderCartItems();
-    updateCouponUI();
-    updateOrderSummary();
 }
 
-function removeFromCart(i) {
-    cart.splice(i, 1);
-    if (appliedCoupon && !isCouponValidForCart(appliedCoupon.code, false)) {
-        appliedCoupon = null;
-    }
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    resetCouponState();
     persistState();
     updateCartBadge();
     renderCartItems();
-    updateCouponUI();
-    updateOrderSummary();
 }
 
 function getCartTotal() {
-    return cart.reduce((a, x) => a + x.price * x.qty, 0);
+    return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
 
-function getDiscountAmount(subtotal = getCartTotal()) {
-    if (!appliedCoupon) return 0;
-    if (appliedCoupon.type === 'percent') return Math.round(subtotal * (appliedCoupon.value / 100));
-    return Math.min(appliedCoupon.value, subtotal);
+function getDiscountAmount() {
+    return appliedCoupon ? appliedCoupon.discountAmount || 0 : 0;
 }
 
 function getOrderPricing() {
     const subtotal = getCartTotal();
-    const discount = getDiscountAmount(subtotal);
+    const discount = getDiscountAmount();
     return {
         subtotal,
         discount,
@@ -293,29 +336,14 @@ function getOrderPricing() {
     };
 }
 
-function isCouponValidForCart(code, showFeedback = true) {
-    const normalizedCode = code.trim().toUpperCase();
-    const coupon = coupons[normalizedCode];
-    if (!coupon) {
-        if (showFeedback) showToast('Invalid coupon code.');
-        return false;
-    }
-    if (coupon.minOrder && getCartTotal() < coupon.minOrder) {
-        if (showFeedback) showToast(`Coupon works on orders above ₹${coupon.minOrder}.`);
-        return false;
-    }
-    return true;
-}
-
 function updateCouponUI() {
     const chip = document.getElementById('couponChip');
     const chipText = document.getElementById('couponChipText');
     const couponInput = document.getElementById('couponCode');
     if (!chip || !chipText || !couponInput) return;
     if (appliedCoupon) {
-        const discount = getDiscountAmount();
         chip.classList.add('show');
-        chipText.textContent = `${appliedCoupon.code} applied · You save ₹${discount.toLocaleString()}`;
+        chipText.textContent = `${appliedCoupon.code} applied · You save ₹${appliedCoupon.discountAmount.toLocaleString()}`;
         couponInput.value = appliedCoupon.code;
     } else {
         chip.classList.remove('show');
@@ -323,20 +351,30 @@ function updateCouponUI() {
     }
 }
 
-function applyCoupon() {
+async function applyCoupon() {
     const code = document.getElementById('couponCode').value.trim().toUpperCase();
     if (!code) {
         showToast('Enter a coupon code first.');
         return;
     }
-    if (!isCouponValidForCart(code)) return;
-    const coupon = coupons[code];
-    appliedCoupon = { code, ...coupon };
-    persistState();
-    updateCouponUI();
-    renderCartItems();
-    updateOrderSummary();
-    showToast(`${code} applied successfully.`);
+    if (!apiConfig.backendReady) {
+        showToast('Start the backend to validate coupons.');
+        return;
+    }
+    try {
+        const data = await apiFetch('/api/coupons/validate', {
+            method: 'POST',
+            body: JSON.stringify({ code, cart })
+        });
+        appliedCoupon = data.coupon;
+        persistState();
+        updateCouponUI();
+        renderCartItems();
+        updateOrderSummary();
+        showToast(`${code} applied successfully.`);
+    } catch (error) {
+        showToast(error.message);
+    }
 }
 
 function removeCoupon() {
@@ -348,54 +386,55 @@ function removeCoupon() {
     showToast('Coupon removed.');
 }
 
-//WhatsApp Order
 function whatsappOrder() {
-    if (cart.length === 0) { showToast('Cart is empty!'); return; }
+    if (cart.length === 0) {
+        showToast('Cart is empty!');
+        return;
+    }
     const pricing = getOrderPricing();
     let msg = '🌹 *Ruh Imperium Order* 🌹\n\nI would like to order:\n\n';
-    cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`; });
+    cart.forEach(item => {
+        msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`;
+    });
     if (appliedCoupon) msg += `\nCoupon: ${appliedCoupon.code} (-₹${pricing.discount.toLocaleString()})\n`;
     msg += `\n*Total: ₹${pricing.total.toLocaleString()}*\n\nPlease confirm my order. Thank you!`;
     window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
 }
 
 function openProductModal(id) {
-    const p = products.find(x => x.id === id);
-    if (!p) return;
-    currentProduct = p;
+    const product = products.find(item => item.id === id);
+    if (!product) return;
+    currentProduct = product;
 
-    document.getElementById('modalCat').textContent    = p.cat;
-    document.getElementById('modalName').textContent   = p.name;
-    document.getElementById('modalStars').innerHTML    = starStr(p.stars) + ` <span>(${p.reviews} reviews)</span>`;
-    document.getElementById('modalPrice').textContent  = '₹' + p.price.toLocaleString();
-    document.getElementById('modalOldPrice').textContent = p.oldPrice ? '₹' + p.oldPrice.toLocaleString() : '';
-    document.getElementById('modalDesc').textContent   = p.desc;
+    document.getElementById('modalCat').textContent = product.cat;
+    document.getElementById('modalName').textContent = product.name;
+    document.getElementById('modalStars').innerHTML = starStr(product.stars) + ` <span>(${product.reviews} reviews)</span>`;
+    document.getElementById('modalPrice').textContent = '₹' + product.price.toLocaleString();
+    document.getElementById('modalOldPrice').textContent = product.oldPrice ? '₹' + product.oldPrice.toLocaleString() : '';
+    document.getElementById('modalDesc').textContent = product.desc;
 
     const imgWrap = document.getElementById('modalImg');
-    imgWrap.innerHTML = `<img src="${p.img}" alt="${p.name}" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">`;
-    if (p.badge) {
-        const b = document.createElement('span');
-        b.className = 'modal-badge' + (p.badge === 'NEW' ? ' new' : '');
-        b.textContent = p.badge;
-        imgWrap.appendChild(b);
+    imgWrap.innerHTML = `<img src="${product.img}" alt="${product.name}" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">`;
+    if (product.badge) {
+        const badge = document.createElement('span');
+        badge.className = 'modal-badge' + (product.badge === 'NEW' ? ' new' : '');
+        badge.textContent = product.badge;
+        imgWrap.appendChild(badge);
     }
 
-    let selectedSize = p.sizes[0];
-    document.getElementById('sizeOpts').innerHTML = p.sizes.map((s, i) =>
-        `<button class="size-opt ${i === 0 ? 'active' : ''}" onclick="selectSize(this,'${s}')">${s}</button>`
+    const selectedSize = product.sizes[0];
+    document.getElementById('sizeOpts').innerHTML = product.sizes.map((size, index) =>
+        `<button class="size-opt ${index === 0 ? 'active' : ''}" onclick="selectSize(this,'${size}')">${size}</button>`
     ).join('');
 
-    const setAddBtn = (size) => {
-        document.getElementById('modalAddBtn').onclick = () => {
-            addToCart(p, size);
-            closeProductModal();
-            openCart();
-        };
+    document.getElementById('modalAddBtn').onclick = () => {
+        addToCart(product, selectedSize);
+        closeProductModal();
+        openCart();
     };
-    setAddBtn(selectedSize);
 
     document.getElementById('modalWaBtn').onclick = () => {
-        const msg = `Hello! I am interested in *${p.name}* (${selectedSize}) at ₹${p.price.toLocaleString()}. Please help me place an order.`;
+        const msg = `Hello! I am interested in *${product.name}* (${selectedSize}) at ₹${product.price.toLocaleString()}. Please help me place an order.`;
         window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
     };
 
@@ -404,7 +443,7 @@ function openProductModal(id) {
 }
 
 function selectSize(btn, size) {
-    document.querySelectorAll('.size-opt').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.size-opt').forEach(item => item.classList.remove('active'));
     btn.classList.add('active');
     if (currentProduct) {
         document.getElementById('modalAddBtn').onclick = () => {
@@ -424,13 +463,16 @@ function closeProductModal() {
     document.body.style.overflow = '';
 }
 
-function closeModal(e) {
-    if (e.target === document.getElementById('productModal')) closeProductModal();
+function closeModal(event) {
+    if (event.target === document.getElementById('productModal')) closeProductModal();
 }
 
 function openCheckout() {
-    if (cart.length === 0) { showToast('Cart is empty!'); return; }
-    if (!currentUser) {
+    if (cart.length === 0) {
+        showToast('Cart is empty!');
+        return;
+    }
+    if (!currentUser || !sessionToken) {
         showToast('Please sign in before checkout.');
         openAuthModal();
         return;
@@ -467,14 +509,13 @@ function updateOrderSummary() {
 
 function selectPay(btn, type) {
     selectedPayment = type;
-    document.querySelectorAll('.pay-opt').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.pay-opt').forEach(item => item.classList.remove('active'));
     btn.classList.add('active');
     const note = document.getElementById('checkoutNote');
-    if (note) {
-        note.textContent = type === 'COD'
-            ? 'Cash on Delivery orders are confirmed instantly and shared to WhatsApp for manual processing.'
-            : 'Razorpay supports UPI, cards, netbanking, and wallets. Replace the demo key in `app.js` before taking live payments.';
-    }
+    if (!note) return;
+    note.textContent = type === 'COD'
+        ? 'Cash on Delivery orders are confirmed instantly and shared to WhatsApp for manual processing.'
+        : 'Razorpay supports UPI, cards, netbanking, and wallets through the backend order API.';
 }
 
 function prefillCheckout() {
@@ -485,27 +526,32 @@ function prefillCheckout() {
 }
 
 function getCheckoutDetails() {
-    const name    = document.getElementById('cName').value.trim();
-    const phone   = document.getElementById('cPhone').value.trim();
-    const email   = document.getElementById('cEmail').value.trim();
+    const name = document.getElementById('cName').value.trim();
+    const phone = document.getElementById('cPhone').value.trim();
+    const email = document.getElementById('cEmail').value.trim();
     const address = document.getElementById('cAddress').value.trim();
-    const city    = document.getElementById('cCity').value.trim();
-    const pin     = document.getElementById('cPin').value.trim();
-    const state   = document.getElementById('cState').value;
-    if (!name || !phone || !address || !city || !pin) { showToast('Please fill all required fields!'); return null; }
+    const city = document.getElementById('cCity').value.trim();
+    const pin = document.getElementById('cPin').value.trim();
+    const state = document.getElementById('cState').value;
+    if (!name || !phone || !address || !city || !pin) {
+        showToast('Please fill all required fields!');
+        return null;
+    }
     return { name, phone, email, address, city, pin, state };
 }
 
 function buildOrderMessage(details, paymentLabel, paymentId = '') {
     const pricing = getOrderPricing();
-    let msg = `🌹 *New Order - Ruh Imperium* 🌹\n\n`;
+    let msg = '🌹 *New Order - Ruh Imperium* 🌹\n\n';
     msg += `*Customer:* ${details.name}\n*Phone:* ${details.phone}\n`;
     if (details.email) msg += `*Email:* ${details.email}\n`;
     msg += `*Address:* ${details.address}, ${details.city}, ${details.state} - ${details.pin}\n`;
     msg += `*Payment:* ${paymentLabel}\n`;
     if (paymentId) msg += `*Payment ID:* ${paymentId}\n`;
-    msg += `\n*Order Details:*\n`;
-    cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`; });
+    msg += '\n*Order Details:*\n';
+    cart.forEach(item => {
+        msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`;
+    });
     if (appliedCoupon) msg += `\n*Coupon:* ${appliedCoupon.code} (-₹${pricing.discount.toLocaleString()})\n`;
     msg += `\n*Total: ₹${pricing.total.toLocaleString()}*`;
     return msg;
@@ -521,6 +567,7 @@ function finalizeOrder(successMessage) {
     updateCouponUI();
     updateOrderSummary();
     showToast(successMessage);
+    loadMyOrders();
 }
 
 function launchWhatsAppOrder(details, paymentLabel, paymentId = '') {
@@ -528,68 +575,200 @@ function launchWhatsAppOrder(details, paymentLabel, paymentId = '') {
     window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
 }
 
-function processCodOrder(details) {
-    launchWhatsAppOrder(details, 'Cash on Delivery');
-    finalizeOrder('Order placed successfully with Cash on Delivery.');
+async function processCodOrder(details) {
+    try {
+        await apiFetch('/api/orders/cod', {
+            method: 'POST',
+            body: JSON.stringify({
+                cart,
+                couponCode: appliedCoupon ? appliedCoupon.code : '',
+                customer: details
+            })
+        }, true);
+        launchWhatsAppOrder(details, 'Cash on Delivery');
+        finalizeOrder('Order placed successfully with Cash on Delivery.');
+    } catch (error) {
+        showToast(error.message);
+    }
 }
 
-function processRazorpayOrder(details) {
+async function processRazorpayOrder(details) {
     if (typeof Razorpay === 'undefined') {
         showToast('Razorpay failed to load. Please try again.');
         return;
     }
-    if (!RAZORPAY_KEY_ID || RAZORPAY_KEY_ID.includes('replace_with_your_key')) {
-        showToast('Add your Razorpay key in app.js before using online payments.');
+    if (!apiConfig.backendReady || !apiConfig.razorpayKeyId) {
+        showToast('Backend Razorpay config is missing. Add your keys and restart the server.');
         return;
     }
-    const pricing = getOrderPricing();
-    const options = {
-        key: RAZORPAY_KEY_ID,
-        amount: pricing.total * 100,
-        currency: 'INR',
-        name: 'Ruh Imperium',
-        description: `Order for ${details.name}`,
-        image: 'gulabattar.png',
-        handler(response) {
-            launchWhatsAppOrder(details, 'Razorpay', response.razorpay_payment_id);
-            finalizeOrder('Payment received successfully via Razorpay.');
-        },
-        prefill: {
-            name: details.name,
-            email: details.email,
-            contact: details.phone
-        },
-        notes: {
-            address: `${details.address}, ${details.city}, ${details.state} - ${details.pin}`,
-            coupon: appliedCoupon ? appliedCoupon.code : 'None'
-        },
-        theme: {
-            color: '#c9a84c'
-        },
-        modal: {
-            ondismiss() {
-                showToast('Razorpay checkout was closed.');
+    try {
+        const orderData = await apiFetch('/api/payments/razorpay/order', {
+            method: 'POST',
+            body: JSON.stringify({
+                cart,
+                couponCode: appliedCoupon ? appliedCoupon.code : '',
+                customer: details
+            })
+        }, true);
+
+        const options = {
+            key: orderData.keyId,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            order_id: orderData.orderId,
+            name: 'Ruh Imperium',
+            description: `Order for ${details.name}`,
+            image: 'gulabattar.png',
+            handler: async function handler(response) {
+                try {
+                    await apiFetch('/api/payments/razorpay/verify', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            orderId: response.razorpay_order_id,
+                            paymentId: response.razorpay_payment_id,
+                            signature: response.razorpay_signature
+                        })
+                    }, true);
+                    launchWhatsAppOrder(details, 'Razorpay', response.razorpay_payment_id);
+                    finalizeOrder('Payment received successfully via Razorpay.');
+                } catch (error) {
+                    showToast(error.message);
+                }
+            },
+            prefill: {
+                name: details.name,
+                email: details.email,
+                contact: details.phone
+            },
+            notes: {
+                address: `${details.address}, ${details.city}, ${details.state} - ${details.pin}`,
+                coupon: appliedCoupon ? appliedCoupon.code : 'None'
+            },
+            theme: {
+                color: '#c9a84c'
+            },
+            modal: {
+                ondismiss() {
+                    showToast('Razorpay checkout was closed.');
+                }
             }
-        }
-    };
-    const rzp = new Razorpay(options);
-    rzp.open();
+        };
+        const razorpay = new Razorpay(options);
+        razorpay.open();
+    } catch (error) {
+        showToast(error.message);
+    }
 }
 
-function placeOrder() {
+async function placeOrder() {
     const details = getCheckoutDetails();
     if (!details) return;
     currentUser = { ...currentUser, name: details.name, email: details.email, phone: details.phone };
     persistUser();
     updateAccountUI();
     if (selectedPayment === 'COD') {
-        processCodOrder(details);
+        await processCodOrder(details);
         return;
     }
-    processRazorpayOrder(details);
+    await processRazorpayOrder(details);
 }
 
-//SEARCH BAR OPTION
+function formatDate(value) {
+    return new Date(value).toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+    });
+}
+
+function titleCase(value) {
+    return String(value || '').charAt(0).toUpperCase() + String(value || '').slice(1);
+}
+
+function renderOrders(list, targetId, emptyMessage) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    if (!list.length) {
+        target.innerHTML = `<div class="orders-empty">${emptyMessage}</div>`;
+        return;
+    }
+    target.innerHTML = list.map(order => `
+        <div class="order-card">
+            <div class="order-card-head">
+                <div>
+                    <strong>${order.id.slice(0, 8).toUpperCase()}</strong>
+                    <span>${formatDate(order.createdAt)}</span>
+                </div>
+                <div class="order-badges">
+                    <div class="order-status ${String(order.paymentStatus).toLowerCase()}">${order.paymentMethod} · ${order.paymentStatus}</div>
+                    <div class="order-status order-flow ${String(order.orderStatus || 'pending').toLowerCase()}">Order · ${titleCase(order.orderStatus || 'pending')}</div>
+                </div>
+            </div>
+            <div class="order-items">${order.items.map(item => `${item.name} (${item.size}) × ${item.qty}`).join('<br>')}</div>
+            <div class="order-meta-line">Total: ₹${Number(order.total).toLocaleString()}${order.couponCode ? ` · Coupon: ${order.couponCode}` : ''}</div>
+            ${targetId === 'adminOrdersList' ? `<div class="order-meta-line">${order.customerName} · ${order.customerPhone} · ${order.customerEmail || ''}</div>
+            <div class="admin-status-row">
+                <label for="order-status-${order.id}">Update status</label>
+                <select id="order-status-${order.id}" onchange="updateAdminOrderStatus('${order.id}', this.value)">
+                    ${ORDER_STATUSES.map(status => `<option value="${status}" ${status === (order.orderStatus || 'pending') ? 'selected' : ''}>${titleCase(status)}</option>`).join('')}
+                </select>
+            </div>` : ''}
+        </div>
+    `).join('');
+}
+
+async function loadMyOrders() {
+    if (!sessionToken) return;
+    try {
+        const data = await apiFetch('/api/orders', {}, true);
+        orderHistory = data.orders || [];
+        renderOrders(orderHistory, 'ordersList', 'No orders yet. Your placed orders will appear here.');
+    } catch (error) {
+        renderOrders([], 'ordersList', 'Unable to load orders right now.');
+    }
+}
+
+async function loadAdminOrders() {
+    if (!currentUser || !currentUser.isAdmin) return;
+    try {
+        const data = await apiFetch('/api/admin/orders', {}, true);
+        renderOrders(data.orders || [], 'adminOrdersList', 'No orders have been placed yet.');
+    } catch (error) {
+        renderOrders([], 'adminOrdersList', error.message);
+    }
+}
+
+async function updateAdminOrderStatus(orderId, orderStatus) {
+    if (!currentUser || !currentUser.isAdmin) return;
+    try {
+        await apiFetch(`/api/admin/orders/${orderId}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ orderStatus })
+        }, true);
+        showToast(`Order marked as ${titleCase(orderStatus)}.`);
+        await loadAdminOrders();
+        await loadMyOrders();
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
+function openOrdersModal() {
+    if (!currentUser) {
+        showToast('Please sign in to view orders.');
+        openAuthModal();
+        return;
+    }
+    loadMyOrders();
+    if (currentUser.isAdmin) loadAdminOrders();
+    document.getElementById('ordersModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeOrdersModal() {
+    document.getElementById('ordersModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
 function openSearch() {
     document.getElementById('searchOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -604,33 +783,42 @@ function closeSearch() {
 }
 
 function doSearch(query) {
-    const el = document.getElementById('searchResults');
-    if (!query.trim()) { el.innerHTML = ''; return; }
-    const results = products.filter(p =>
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.cat.toLowerCase().includes(query.toLowerCase()) ||
-        p.notes.toLowerCase().includes(query.toLowerCase()) ||
-        p.desc.toLowerCase().includes(query.toLowerCase())
-    );
-    if (results.length === 0) {
-        el.innerHTML = `<div style="color:rgba(253,246,232,0.4);font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;padding:20px 0;">No attars found. Try a different search.</div>`;
+    const resultsEl = document.getElementById('searchResults');
+    if (!query.trim()) {
+        resultsEl.innerHTML = '';
         return;
     }
-    el.innerHTML = results.slice(0, 6).map(p => `
-    <div class="search-result-item" onclick="searchSelect(${p.id})">
-      <img class="sri-img" src="${p.img}" alt="${p.name}" onerror="this.style.display='none'">
+    const results = products.filter(product =>
+        product.name.toLowerCase().includes(query.toLowerCase()) ||
+        product.cat.toLowerCase().includes(query.toLowerCase()) ||
+        product.notes.toLowerCase().includes(query.toLowerCase()) ||
+        product.desc.toLowerCase().includes(query.toLowerCase())
+    );
+    if (results.length === 0) {
+        resultsEl.innerHTML = `<div style="color:rgba(253,246,232,0.4);font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;padding:20px 0;">No attars found. Try a different search.</div>`;
+        return;
+    }
+    resultsEl.innerHTML = results.slice(0, 6).map(product => `
+    <div class="search-result-item" onclick="searchSelect(${product.id})">
+      <img class="sri-img" src="${product.img}" alt="${product.name}" onerror="this.style.display='none'">
       <div class="sri-info">
-        <h4>${p.name}</h4>
-        <p>${p.cat} · ₹${p.price.toLocaleString()}</p>
+        <h4>${product.name}</h4>
+        <p>${product.cat} · ₹${product.price.toLocaleString()}</p>
       </div>
     </div>`).join('');
 }
 
-function searchSelect(id) { closeSearch(); openProductModal(id); }
+function searchSelect(id) {
+    closeSearch();
+    openProductModal(id);
+}
 
 function subscribe() {
     const email = document.getElementById('nlEmail').value;
-    if (!email || !email.includes('@')) { showToast('Please enter a valid email!'); return; }
+    if (!email || !email.includes('@')) {
+        showToast('Please enter a valid email!');
+        return;
+    }
     document.getElementById('nlEmail').value = '';
     showToast('🌸 Subscribed! Welcome to the Ruh Imperium family.');
 }
@@ -642,8 +830,8 @@ function setAuthMode(mode) {
     document.getElementById('signupTab').classList.toggle('active', isSignup);
     document.getElementById('authTitle').textContent = isSignup ? 'Create Your Account' : 'Welcome Back';
     document.getElementById('authSubtitle').textContent = isSignup
-        ? 'Create a simple account on this device so checkout details and offers stay saved.'
-        : 'Sign in to save your details, apply coupons faster, and move through checkout smoothly.';
+        ? 'Create your account on the backend so checkout and payments stay tied to a real user profile.'
+        : 'Sign in to access saved details, backend coupon validation, and Razorpay checkout.';
     document.getElementById('authName').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authPhone').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
@@ -689,11 +877,19 @@ function updateAccountUI() {
         label.textContent = 'Account';
         initial.textContent = 'A';
     }
+    const ordersBtn = document.getElementById('ordersBtn');
+    const adminTab = document.getElementById('adminOrdersTab');
+    if (ordersBtn) ordersBtn.style.display = currentUser ? 'flex' : 'none';
+    if (adminTab) adminTab.style.display = currentUser && currentUser.isAdmin ? 'block' : 'none';
     renderAuthView();
     renderCartItems();
 }
 
-function handleAuth() {
+async function handleAuth() {
+    if (!apiConfig.backendReady) {
+        showToast('Start the backend before signing in.');
+        return;
+    }
     const name = document.getElementById('authName').value.trim();
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
     const phone = document.getElementById('authPhone').value.trim();
@@ -702,35 +898,34 @@ function handleAuth() {
         showToast('Email and password are required.');
         return;
     }
-    if (authMode === 'signup') {
-        if (!name || !phone) {
-            showToast('Please complete all signup fields.');
-            return;
-        }
-        currentUser = { name, email, phone, password };
+    if (authMode === 'signup' && (!name || !phone)) {
+        showToast('Please complete all signup fields.');
+        return;
+    }
+    try {
+        const path = authMode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+        const data = await apiFetch(path, {
+            method: 'POST',
+            body: JSON.stringify({ name, email, phone, password })
+        });
+        currentUser = data.user;
+        sessionToken = data.token;
         persistUser();
         updateAccountUI();
         prefillCheckout();
         closeAuthModal();
-        showToast('Account created successfully.');
-        return;
+        showToast(authMode === 'signup' ? 'Account created successfully.' : 'Signed in successfully.');
+    } catch (error) {
+        showToast(error.message);
     }
-    const savedUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
-    if (!savedUser || savedUser.email !== email || savedUser.password !== password) {
-        showToast('No matching account found on this device.');
-        return;
-    }
-    currentUser = savedUser;
-    updateAccountUI();
-    prefillCheckout();
-    closeAuthModal();
-    showToast('Signed in successfully.');
 }
 
 function logout() {
-    currentUser = null;
-    localStorage.removeItem(USER_STORAGE_KEY);
+    clearUserState();
+    orderHistory = [];
     updateAccountUI();
+    renderOrders([], 'ordersList', 'Sign in to view your orders.');
+    renderOrders([], 'adminOrdersList', 'Admin orders will appear here.');
     closeAuthModal();
     showToast('You have been logged out.');
 }
@@ -738,22 +933,36 @@ function logout() {
 function initReveals() {
     const reveals = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-    reveals.forEach(el => observer.observe(el));
+    reveals.forEach(item => observer.observe(item));
 }
 
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCheckout(); closeAuthModal(); }
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+        closeSearch();
+        closeProductModal();
+        closeCheckout();
+        closeAuthModal();
+        closeOrdersModal();
+    }
 });
 
-loadStoredState();
-renderHomeSections();
-updateWishBadge();
-updateCartBadge();
-updateAccountUI();
-updateCouponUI();
-updateOrderSummary();
-prefillCheckout();
-renderCartItems();
-initReveals();
+async function initApp() {
+    loadStoredState();
+    await loadApiConfig();
+    renderHomeSections();
+    updateWishBadge();
+    updateCartBadge();
+    updateAccountUI();
+    updateCouponUI();
+    updateOrderSummary();
+    prefillCheckout();
+    renderCartItems();
+    if (currentUser) loadMyOrders();
+    initReveals();
+}
+
+initApp();
