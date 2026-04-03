@@ -300,6 +300,14 @@ function renderHomeSections() {
     document.getElementById('bestsellerGrid').innerHTML = bestsellers.map(product => productCardHTML(product)).join('');
     const newArrivals = products.filter(product => product.cat === 'Next Gen Fragrances').slice(0, 4);
     document.getElementById('newArrivalsGrid').innerHTML = newArrivals.map(product => productCardHTML(product)).join('');
+    const wellnessPicks = products
+        .filter(product => product.tags.includes('Daily') || product.notes === 'Fresh' || product.notes === 'Woody')
+        .slice(0, 4);
+    document.getElementById('wellnessGrid').innerHTML = wellnessPicks.map(product => productCardHTML(product)).join('');
+    const giftingPicks = products
+        .filter(product => product.tags.includes('Gifting') || product.cat === 'Discovery Set')
+        .slice(0, 4);
+    document.getElementById('giftingGrid').innerHTML = giftingPicks.map(product => productCardHTML(product)).join('');
 }
 
 function toggleWish(event, id) {
