@@ -5,6 +5,7 @@ const SESSION_STORAGE_KEY = 'ruhImperiumSession';
 const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
 const LOCAL_USERS_STORAGE_KEY = 'ruhImperiumLocalUsers';
 const LOCAL_ORDERS_STORAGE_KEY = 'ruhImperiumLocalOrders';
+const LOCAL_OTP_STORAGE_KEY = 'ruhImperiumPendingOtp';
 const LOCAL_COUPONS = {
     RAMJI20: { code: 'RAMJI20', label: 'Ram Ji Signature Offer', type: 'percent', value: 20 },
     WELCOME10: { code: 'WELCOME10', label: 'Welcome Offer', type: 'percent', value: 10 },
@@ -26,6 +27,7 @@ let apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false };
 let orderHistory = [];
 let adminOrderHistory = [];
 let adminStats = null;
+let otpRequestedFor = '';
 const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered'];
 
 function loadStoredState() {
@@ -89,6 +91,18 @@ function getLocalOrders() {
 
 function saveLocalOrders(orders) {
     writeLocalJson(LOCAL_ORDERS_STORAGE_KEY, orders);
+}
+
+function getPendingLocalOtp() {
+    return readLocalJson(LOCAL_OTP_STORAGE_KEY, null);
+}
+
+function savePendingLocalOtp(otp) {
+    writeLocalJson(LOCAL_OTP_STORAGE_KEY, otp);
+}
+
+function clearPendingLocalOtp() {
+    localStorage.removeItem(LOCAL_OTP_STORAGE_KEY);
 }
 
 function getLocalCoupon(code, subtotal) {
@@ -1145,18 +1159,30 @@ function subscribe() {
 function setAuthMode(mode) {
     authMode = mode;
     const isSignup = mode === 'signup';
+    const isOtp = mode === 'otp';
     document.getElementById('loginTab').classList.toggle('active', !isSignup);
+    document.getElementById('otpTab').classList.toggle('active', isOtp);
     document.getElementById('signupTab').classList.toggle('active', isSignup);
-    document.getElementById('authTitle').textContent = isSignup ? 'Create Your Account' : 'Welcome Back';
+    document.getElementById('authTitle').textContent = isSignup ? 'Create Your Account' : isOtp ? 'Login With OTP' : 'Welcome Back';
     document.getElementById('authSubtitle').textContent = isSignup
         ? (apiConfig.backendReady ? 'Create your account on the backend so checkout and payments stay tied to a real user profile.' : 'Create an account saved in this browser so your details and orders still work on the live site.')
-        : (apiConfig.backendReady ? 'Sign in to access saved details, backend coupon validation, and Razorpay checkout.' : 'Sign in to your browser-saved account. Cash on Delivery and order history will still work.');
+        : isOtp
+            ? (apiConfig.backendReady ? 'Request a one-time password using your saved email or phone, then verify it to sign in.' : 'Request a browser OTP for your saved account, then verify it to sign in.')
+            : (apiConfig.backendReady ? 'Sign in to access saved details, backend coupon validation, and Razorpay checkout.' : 'Sign in to your browser-saved account. Cash on Delivery and order history will still work.');
     document.getElementById('authName').parentElement.style.display = isSignup ? 'block' : 'none';
-    document.getElementById('authPhone').parentElement.style.display = isSignup ? 'block' : 'none';
-    document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
+    document.getElementById('authPhone').parentElement.style.display = isSignup || isOtp ? 'block' : 'none';
+    document.getElementById('authPassword').parentElement.style.display = isOtp ? 'none' : 'block';
+    document.getElementById('otpGroup').style.display = isOtp ? 'block' : 'none';
+    document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : isOtp ? 'Verify OTP' : 'Sign In';
+    document.getElementById('requestOtpBtn').textContent = otpRequestedFor ? 'Resend OTP' : 'Request OTP';
     document.getElementById('authAltCopy').innerHTML = isSignup
         ? 'Already have an account? <a class="auth-link" onclick="setAuthMode(\'login\')">Sign in</a>'
-        : 'New here? <a class="auth-link" onclick="setAuthMode(\'signup\')">Create an account</a>';
+        : isOtp
+            ? 'Prefer password login? <a class="auth-link" onclick="setAuthMode(\'login\')">Sign in</a>'
+            : 'New here? <a class="auth-link" onclick="setAuthMode(\'signup\')">Create an account</a>';
+    document.getElementById('otpHelp').textContent = otpRequestedFor
+        ? `OTP sent to ${otpRequestedFor}. Enter it below to continue.`
+        : 'Enter your email or phone number, then request an OTP.';
 }
 
 function openAuthModal() {
@@ -1209,12 +1235,21 @@ async function handleAuth() {
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
     const phone = document.getElementById('authPhone').value.trim();
     const password = document.getElementById('authPassword').value.trim();
-    if (!email || !password) {
+    const otp = document.getElementById('authOtp').value.trim();
+    if (authMode !== 'otp' && !email) {
+        showToast('Email is required.');
+        return;
+    }
+    if (authMode === 'login' && !password) {
         showToast('Email and password are required.');
         return;
     }
     if (authMode === 'signup' && (!name || !phone)) {
         showToast('Please complete all signup fields.');
+        return;
+    }
+    if (authMode === 'otp') {
+        await verifyOtpLogin({ email, phone, otp });
         return;
     }
     if (!apiConfig.backendReady) {
@@ -1269,6 +1304,96 @@ async function handleAuth() {
         prefillCheckout();
         closeAuthModal();
         showToast(authMode === 'signup' ? 'Account created successfully.' : 'Signed in successfully.');
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
+async function requestOtp() {
+    const email = document.getElementById('authEmail').value.trim().toLowerCase();
+    const phone = document.getElementById('authPhone').value.trim();
+    if (!email && !phone) {
+        showToast('Enter your email or phone number first.');
+        return;
+    }
+    if (!apiConfig.backendReady) {
+        const users = getLocalUsers();
+        const user = users.find(item => (email && item.email === email) || (phone && item.phone === phone));
+        if (!user) {
+            showToast('No account found for that email or phone.');
+            return;
+        }
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        savePendingLocalOtp({
+            email: user.email,
+            phone: user.phone,
+            code,
+            expiresAt: Date.now() + 5 * 60 * 1000
+        });
+        otpRequestedFor = email || phone;
+        setAuthMode('otp');
+        showToast(`OTP sent. Demo OTP: ${code}`);
+        return;
+    }
+    try {
+        const data = await apiFetch('/api/auth/request-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email, phone })
+        });
+        otpRequestedFor = data.identifier || email || phone;
+        setAuthMode('otp');
+        showToast(data.message || (data.previewOtp ? `OTP sent. Demo OTP: ${data.previewOtp}` : 'OTP sent successfully.'));
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
+async function verifyOtpLogin({ email, phone, otp }) {
+    if (!otp || otp.length !== 6) {
+        showToast('Enter the 6-digit OTP.');
+        return;
+    }
+    if (!apiConfig.backendReady) {
+        const pending = getPendingLocalOtp();
+        if (!pending || pending.expiresAt < Date.now()) {
+            clearPendingLocalOtp();
+            showToast('OTP expired. Please request a new one.');
+            return;
+        }
+        if (pending.code !== otp || ((email && pending.email !== email) && (phone && pending.phone !== phone))) {
+            showToast('Invalid OTP.');
+            return;
+        }
+        const users = getLocalUsers();
+        const savedUser = users.find(user => user.email === pending.email || user.phone === pending.phone);
+        if (!savedUser) {
+            showToast('Account not found.');
+            return;
+        }
+        currentUser = savedUser;
+        sessionToken = 'local-session';
+        clearPendingLocalOtp();
+        otpRequestedFor = '';
+        persistUser();
+        updateAccountUI();
+        prefillCheckout();
+        closeAuthModal();
+        showToast('Signed in with OTP successfully.');
+        return;
+    }
+    try {
+        const data = await apiFetch('/api/auth/verify-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email, phone, otp })
+        });
+        currentUser = data.user;
+        sessionToken = data.token;
+        otpRequestedFor = '';
+        persistUser();
+        updateAccountUI();
+        prefillCheckout();
+        closeAuthModal();
+        showToast('Signed in with OTP successfully.');
     } catch (error) {
         showToast(error.message);
     }
