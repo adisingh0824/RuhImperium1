@@ -1,11 +1,49 @@
-// Removed invalid module import for browser script
-let cart            = [];
-let wishlist        = [];
-let currentFilter   = 'all';
-let maxPrice        = 5000;
-let sortMode        = 'default';
-let selectedPayment = 'UPI';
-let currentProduct  = null;
+const CART_STORAGE_KEY = 'ruhImperiumCart';
+const WISHLIST_STORAGE_KEY = 'ruhImperiumWishlist';
+const USER_STORAGE_KEY = 'ruhImperiumUser';
+const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
+const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
+
+const coupons = {
+    RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer' },
+    WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer' },
+    ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off' }
+};
+
+let cart = [];
+let wishlist = [];
+let currentFilter = 'all';
+let maxPrice = 5000;
+let sortMode = 'default';
+let selectedPayment = 'Razorpay';
+let currentProduct = null;
+let currentUser = null;
+let appliedCoupon = null;
+let authMode = 'login';
+
+function loadStoredState() {
+    try {
+        cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]');
+        wishlist = JSON.parse(localStorage.getItem(WISHLIST_STORAGE_KEY) || '[]');
+        currentUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+        appliedCoupon = JSON.parse(localStorage.getItem(COUPON_STORAGE_KEY) || 'null');
+    } catch (error) {
+        cart = [];
+        wishlist = [];
+        currentUser = null;
+        appliedCoupon = null;
+    }
+}
+
+function persistState() {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist));
+    localStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(appliedCoupon));
+}
+
+function persistUser() {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+}
 
 function showToast(msg) {
     const t = document.getElementById('toast');
@@ -126,6 +164,7 @@ function toggleWish(e, id) {
         wishlist.push(id);
         showToast('Added to wishlist ❤️');
     }
+    persistState();
     updateWishBadge();
     renderHomeSections();
     if (document.getElementById('shop-page').classList.contains('active')) renderShopGrid();
@@ -158,6 +197,7 @@ function addToCart(p, size) {
     const existing = cart.find(x => x.id === p.id && x.size === size);
     if (existing) existing.qty++;
     else cart.push({ id: p.id, name: p.name, img: p.img, price: p.price, size, qty: 1 });
+    persistState();
     updateCartBadge();
     showToast('✓ ' + p.name + ' added to cart');
     renderCartItems();
@@ -180,12 +220,16 @@ function closeCart() {
 function renderCartItems() {
     const el     = document.getElementById('cartItems');
     const footer = document.getElementById('cartFooter');
+    const meta = document.getElementById('cartMeta');
     if (cart.length === 0) {
         el.innerHTML = '<div class="cart-empty"><span>🧴</span><p>Your cart is beautifully empty</p></div>';
         footer.style.display = 'none';
         return;
     }
     footer.style.display = 'block';
+    meta.innerHTML = currentUser
+        ? `Signed in as <strong>${currentUser.name}</strong>. Coupons and checkout details are ready to go.`
+        : 'Sign in to save your profile and use coupons at checkout.';
     el.innerHTML = cart.map((item, i) => `
     <div class="cart-item">
       <img class="cart-item-img" src="${item.img}" alt="${item.name}" onerror="this.style.display='none'">
@@ -200,32 +244,118 @@ function renderCartItems() {
       </div>
       <button class="cart-item-del" onclick="removeFromCart(${i})">🗑</button>
     </div>`).join('');
-    document.getElementById('cartTotal').textContent = '₹' + getCartTotal().toLocaleString();
+    document.getElementById('cartTotal').textContent = '₹' + getOrderPricing().total.toLocaleString();
 }
 
 function changeQty(i, delta) {
     cart[i].qty += delta;
     if (cart[i].qty <= 0) cart.splice(i, 1);
+    if (appliedCoupon && !isCouponValidForCart(appliedCoupon.code, false)) {
+        appliedCoupon = null;
+    }
+    persistState();
     updateCartBadge();
     renderCartItems();
+    updateCouponUI();
+    updateOrderSummary();
 }
 
 function removeFromCart(i) {
     cart.splice(i, 1);
+    if (appliedCoupon && !isCouponValidForCart(appliedCoupon.code, false)) {
+        appliedCoupon = null;
+    }
+    persistState();
     updateCartBadge();
     renderCartItems();
+    updateCouponUI();
+    updateOrderSummary();
 }
 
 function getCartTotal() {
     return cart.reduce((a, x) => a + x.price * x.qty, 0);
 }
 
+function getDiscountAmount(subtotal = getCartTotal()) {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.type === 'percent') return Math.round(subtotal * (appliedCoupon.value / 100));
+    return Math.min(appliedCoupon.value, subtotal);
+}
+
+function getOrderPricing() {
+    const subtotal = getCartTotal();
+    const discount = getDiscountAmount(subtotal);
+    return {
+        subtotal,
+        discount,
+        delivery: 0,
+        total: Math.max(subtotal - discount, 0)
+    };
+}
+
+function isCouponValidForCart(code, showFeedback = true) {
+    const normalizedCode = code.trim().toUpperCase();
+    const coupon = coupons[normalizedCode];
+    if (!coupon) {
+        if (showFeedback) showToast('Invalid coupon code.');
+        return false;
+    }
+    if (coupon.minOrder && getCartTotal() < coupon.minOrder) {
+        if (showFeedback) showToast(`Coupon works on orders above ₹${coupon.minOrder}.`);
+        return false;
+    }
+    return true;
+}
+
+function updateCouponUI() {
+    const chip = document.getElementById('couponChip');
+    const chipText = document.getElementById('couponChipText');
+    const couponInput = document.getElementById('couponCode');
+    if (!chip || !chipText || !couponInput) return;
+    if (appliedCoupon) {
+        const discount = getDiscountAmount();
+        chip.classList.add('show');
+        chipText.textContent = `${appliedCoupon.code} applied · You save ₹${discount.toLocaleString()}`;
+        couponInput.value = appliedCoupon.code;
+    } else {
+        chip.classList.remove('show');
+        couponInput.value = '';
+    }
+}
+
+function applyCoupon() {
+    const code = document.getElementById('couponCode').value.trim().toUpperCase();
+    if (!code) {
+        showToast('Enter a coupon code first.');
+        return;
+    }
+    if (!isCouponValidForCart(code)) return;
+    const coupon = coupons[code];
+    appliedCoupon = { code, ...coupon };
+    persistState();
+    updateCouponUI();
+    renderCartItems();
+    updateOrderSummary();
+    showToast(`${code} applied successfully.`);
+}
+
+function removeCoupon() {
+    appliedCoupon = null;
+    persistState();
+    updateCouponUI();
+    renderCartItems();
+    updateOrderSummary();
+    showToast('Coupon removed.');
+}
+
 //WhatsApp Order
 function whatsappOrder() {
     if (cart.length === 0) { showToast('Cart is empty!'); return; }
+    const pricing = getOrderPricing();
     let msg = '🌹 *Ruh Imperium Order* 🌹\n\nI would like to order:\n\n';
     cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`; });
-    msg += `\n*Total: ₹${getCartTotal().toLocaleString()}*\n\nPlease confirm my order. Thank you!`;
+    if (appliedCoupon) msg += `\nCoupon: ${appliedCoupon.code} (-₹${pricing.discount.toLocaleString()})\n`;
+    msg += `\n*Total: ₹${pricing.total.toLocaleString()}*\n\nPlease confirm my order. Thank you!`;
     window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
 }
 
@@ -300,14 +430,15 @@ function closeModal(e) {
 
 function openCheckout() {
     if (cart.length === 0) { showToast('Cart is empty!'); return; }
+    if (!currentUser) {
+        showToast('Please sign in before checkout.');
+        openAuthModal();
+        return;
+    }
     closeCart();
-    const summary = document.getElementById('orderSummary');
-    summary.innerHTML = '<h3>Order Summary</h3>' +
-        cart.map(item =>
-            `<div class="order-line"><span>${item.name} (${item.size}) × ${item.qty}</span><span>₹${(item.price * item.qty).toLocaleString()}</span></div>`
-        ).join('') +
-        `<div class="order-line"><span>Delivery</span><span style="color:var(--green)">FREE</span></div>` +
-        `<div class="order-line"><span>Total</span><span>₹${getCartTotal().toLocaleString()}</span></div>`;
+    prefillCheckout();
+    updateCouponUI();
+    updateOrderSummary();
     document.getElementById('checkoutModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -317,32 +448,145 @@ function closeCheckout() {
     document.body.style.overflow = '';
 }
 
+function updateOrderSummary() {
+    const summary = document.getElementById('orderSummary');
+    if (!summary) return;
+    const pricing = getOrderPricing();
+    const couponLine = appliedCoupon
+        ? `<div class="order-line"><span>Coupon (${appliedCoupon.code})</span><span>-₹${pricing.discount.toLocaleString()}</span></div>`
+        : '';
+    summary.innerHTML = '<h3>Order Summary</h3>' +
+        cart.map(item =>
+            `<div class="order-line"><span>${item.name} (${item.size}) × ${item.qty}</span><span>₹${(item.price * item.qty).toLocaleString()}</span></div>`
+        ).join('') +
+        `<div class="order-line"><span>Subtotal</span><span>₹${pricing.subtotal.toLocaleString()}</span></div>` +
+        couponLine +
+        `<div class="order-line"><span>Delivery</span><span style="color:var(--green)">FREE</span></div>` +
+        `<div class="order-line"><span>Total</span><span>₹${pricing.total.toLocaleString()}</span></div>`;
+}
+
 function selectPay(btn, type) {
     selectedPayment = type;
     document.querySelectorAll('.pay-opt').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    const note = document.getElementById('checkoutNote');
+    if (note) {
+        note.textContent = type === 'COD'
+            ? 'Cash on Delivery orders are confirmed instantly and shared to WhatsApp for manual processing.'
+            : 'Razorpay supports UPI, cards, netbanking, and wallets. Replace the demo key in `app.js` before taking live payments.';
+    }
 }
 
-function placeOrder() {
+function prefillCheckout() {
+    if (!currentUser) return;
+    document.getElementById('cName').value = currentUser.name || '';
+    document.getElementById('cPhone').value = currentUser.phone || '';
+    document.getElementById('cEmail').value = currentUser.email || '';
+}
+
+function getCheckoutDetails() {
     const name    = document.getElementById('cName').value.trim();
     const phone   = document.getElementById('cPhone').value.trim();
+    const email   = document.getElementById('cEmail').value.trim();
     const address = document.getElementById('cAddress').value.trim();
     const city    = document.getElementById('cCity').value.trim();
     const pin     = document.getElementById('cPin').value.trim();
-    if (!name || !phone || !address || !city || !pin) { showToast('Please fill all required fields!'); return; }
+    const state   = document.getElementById('cState').value;
+    if (!name || !phone || !address || !city || !pin) { showToast('Please fill all required fields!'); return null; }
+    return { name, phone, email, address, city, pin, state };
+}
 
+function buildOrderMessage(details, paymentLabel, paymentId = '') {
+    const pricing = getOrderPricing();
     let msg = `🌹 *New Order - Ruh Imperium* 🌹\n\n`;
-    msg += `*Customer:* ${name}\n*Phone:* ${phone}\n*City:* ${city} - ${pin}\n*Payment:* ${selectedPayment}\n\n`;
-    msg += `*Order Details:*\n`;
+    msg += `*Customer:* ${details.name}\n*Phone:* ${details.phone}\n`;
+    if (details.email) msg += `*Email:* ${details.email}\n`;
+    msg += `*Address:* ${details.address}, ${details.city}, ${details.state} - ${details.pin}\n`;
+    msg += `*Payment:* ${paymentLabel}\n`;
+    if (paymentId) msg += `*Payment ID:* ${paymentId}\n`;
+    msg += `\n*Order Details:*\n`;
     cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`; });
-    msg += `\n*Total: ₹${getCartTotal().toLocaleString()}*`;
+    if (appliedCoupon) msg += `\n*Coupon:* ${appliedCoupon.code} (-₹${pricing.discount.toLocaleString()})\n`;
+    msg += `\n*Total: ₹${pricing.total.toLocaleString()}*`;
+    return msg;
+}
 
-    window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
+function finalizeOrder(successMessage) {
     closeCheckout();
     cart = [];
+    appliedCoupon = null;
+    persistState();
     updateCartBadge();
     renderCartItems();
-    showToast('🎉 Order placed! Check WhatsApp for confirmation.');
+    updateCouponUI();
+    updateOrderSummary();
+    showToast(successMessage);
+}
+
+function launchWhatsAppOrder(details, paymentLabel, paymentId = '') {
+    const msg = buildOrderMessage(details, paymentLabel, paymentId);
+    window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function processCodOrder(details) {
+    launchWhatsAppOrder(details, 'Cash on Delivery');
+    finalizeOrder('Order placed successfully with Cash on Delivery.');
+}
+
+function processRazorpayOrder(details) {
+    if (typeof Razorpay === 'undefined') {
+        showToast('Razorpay failed to load. Please try again.');
+        return;
+    }
+    if (!RAZORPAY_KEY_ID || RAZORPAY_KEY_ID.includes('replace_with_your_key')) {
+        showToast('Add your Razorpay key in app.js before using online payments.');
+        return;
+    }
+    const pricing = getOrderPricing();
+    const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: pricing.total * 100,
+        currency: 'INR',
+        name: 'Ruh Imperium',
+        description: `Order for ${details.name}`,
+        image: 'gulabattar.png',
+        handler(response) {
+            launchWhatsAppOrder(details, 'Razorpay', response.razorpay_payment_id);
+            finalizeOrder('Payment received successfully via Razorpay.');
+        },
+        prefill: {
+            name: details.name,
+            email: details.email,
+            contact: details.phone
+        },
+        notes: {
+            address: `${details.address}, ${details.city}, ${details.state} - ${details.pin}`,
+            coupon: appliedCoupon ? appliedCoupon.code : 'None'
+        },
+        theme: {
+            color: '#c9a84c'
+        },
+        modal: {
+            ondismiss() {
+                showToast('Razorpay checkout was closed.');
+            }
+        }
+    };
+    const rzp = new Razorpay(options);
+    rzp.open();
+}
+
+function placeOrder() {
+    const details = getCheckoutDetails();
+    if (!details) return;
+    currentUser = { ...currentUser, name: details.name, email: details.email, phone: details.phone };
+    persistUser();
+    updateAccountUI();
+    if (selectedPayment === 'COD') {
+        processCodOrder(details);
+        return;
+    }
+    processRazorpayOrder(details);
 }
 
 //SEARCH BAR OPTION
@@ -391,6 +635,106 @@ function subscribe() {
     showToast('🌸 Subscribed! Welcome to the Ruh Imperium family.');
 }
 
+function setAuthMode(mode) {
+    authMode = mode;
+    const isSignup = mode === 'signup';
+    document.getElementById('loginTab').classList.toggle('active', !isSignup);
+    document.getElementById('signupTab').classList.toggle('active', isSignup);
+    document.getElementById('authTitle').textContent = isSignup ? 'Create Your Account' : 'Welcome Back';
+    document.getElementById('authSubtitle').textContent = isSignup
+        ? 'Create a simple account on this device so checkout details and offers stay saved.'
+        : 'Sign in to save your details, apply coupons faster, and move through checkout smoothly.';
+    document.getElementById('authName').parentElement.style.display = isSignup ? 'block' : 'none';
+    document.getElementById('authPhone').parentElement.style.display = isSignup ? 'block' : 'none';
+    document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
+    document.getElementById('authAltCopy').innerHTML = isSignup
+        ? 'Already have an account? <a class="auth-link" onclick="setAuthMode(\'login\')">Sign in</a>'
+        : 'New here? <a class="auth-link" onclick="setAuthMode(\'signup\')">Create an account</a>';
+}
+
+function openAuthModal() {
+    renderAuthView();
+    document.getElementById('authModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAuthModal() {
+    document.getElementById('authModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function renderAuthView() {
+    const guestView = document.getElementById('authGuestView');
+    const userView = document.getElementById('authUserView');
+    if (currentUser) {
+        guestView.style.display = 'none';
+        userView.style.display = 'block';
+        document.getElementById('accountName').textContent = currentUser.name || 'Ruh Imperium Customer';
+        document.getElementById('accountEmail').textContent = currentUser.email || 'No email saved';
+        document.getElementById('accountPhone').textContent = currentUser.phone || 'No phone saved';
+    } else {
+        guestView.style.display = 'block';
+        userView.style.display = 'none';
+        setAuthMode(authMode);
+    }
+}
+
+function updateAccountUI() {
+    const label = document.getElementById('accountLabel');
+    const initial = document.getElementById('accountInitial');
+    if (currentUser) {
+        label.textContent = currentUser.name.split(' ')[0];
+        initial.textContent = currentUser.name.charAt(0).toUpperCase();
+    } else {
+        label.textContent = 'Account';
+        initial.textContent = 'A';
+    }
+    renderAuthView();
+    renderCartItems();
+}
+
+function handleAuth() {
+    const name = document.getElementById('authName').value.trim();
+    const email = document.getElementById('authEmail').value.trim().toLowerCase();
+    const phone = document.getElementById('authPhone').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+    if (!email || !password) {
+        showToast('Email and password are required.');
+        return;
+    }
+    if (authMode === 'signup') {
+        if (!name || !phone) {
+            showToast('Please complete all signup fields.');
+            return;
+        }
+        currentUser = { name, email, phone, password };
+        persistUser();
+        updateAccountUI();
+        prefillCheckout();
+        closeAuthModal();
+        showToast('Account created successfully.');
+        return;
+    }
+    const savedUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+    if (!savedUser || savedUser.email !== email || savedUser.password !== password) {
+        showToast('No matching account found on this device.');
+        return;
+    }
+    currentUser = savedUser;
+    updateAccountUI();
+    prefillCheckout();
+    closeAuthModal();
+    showToast('Signed in successfully.');
+}
+
+function logout() {
+    currentUser = null;
+    localStorage.removeItem(USER_STORAGE_KEY);
+    updateAccountUI();
+    closeAuthModal();
+    showToast('You have been logged out.');
+}
+
 function initReveals() {
     const reveals = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver(entries => {
@@ -400,8 +744,16 @@ function initReveals() {
 }
 
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCheckout(); }
+    if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCheckout(); closeAuthModal(); }
 });
 
+loadStoredState();
 renderHomeSections();
+updateWishBadge();
+updateCartBadge();
+updateAccountUI();
+updateCouponUI();
+updateOrderSummary();
+prefillCheckout();
+renderCartItems();
 initReveals();
