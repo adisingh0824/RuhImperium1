@@ -622,11 +622,6 @@ function selectPay(btn, type) {
     selectedPayment = type;
     document.querySelectorAll('.pay-opt').forEach(item => item.classList.remove('active'));
     btn.classList.add('active');
-    const note = document.getElementById('checkoutNote');
-    if (!note) return;
-    note.textContent = type === 'COD'
-        ? 'Cash on Delivery orders are confirmed instantly and shared to WhatsApp for manual processing.'
-        : 'Razorpay supports UPI, cards, netbanking, and wallets through the backend order API.';
 }
 
 function prefillCheckout() {
