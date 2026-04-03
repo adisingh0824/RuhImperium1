@@ -684,6 +684,39 @@ function titleCase(value) {
     return String(value || '').charAt(0).toUpperCase() + String(value || '').slice(1);
 }
 
+async function openOrderDocument(orderId, type) {
+    if (!sessionToken) {
+        showToast('Please sign in again to open documents.');
+        return;
+    }
+    try {
+        const response = await fetch(`/api/orders/${orderId}/document?type=${encodeURIComponent(type)}`, {
+            headers: {
+                Authorization: `Bearer ${sessionToken}`
+            }
+        });
+        const html = await response.text();
+        if (!response.ok) {
+            try {
+                const data = JSON.parse(html);
+                throw new Error(data.error || 'Unable to open document.');
+            } catch (error) {
+                throw new Error('Unable to open document.');
+            }
+        }
+        const docWindow = window.open('', '_blank', 'noopener,noreferrer');
+        if (!docWindow) {
+            showToast('Please allow pop-ups to open the document.');
+            return;
+        }
+        docWindow.document.open();
+        docWindow.document.write(html);
+        docWindow.document.close();
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
 function renderOrders(list, targetId, emptyMessage) {
     const target = document.getElementById(targetId);
     if (!target) return;
@@ -705,6 +738,10 @@ function renderOrders(list, targetId, emptyMessage) {
             </div>
             <div class="order-items">${order.items.map(item => `${item.name} (${item.size}) × ${item.qty}`).join('<br>')}</div>
             <div class="order-meta-line">Total: ₹${Number(order.total).toLocaleString()}${order.couponCode ? ` · Coupon: ${order.couponCode}` : ''}</div>
+            <div class="order-action-row">
+                <button class="order-action-btn" onclick="openOrderDocument('${order.id}','invoice')">Invoice</button>
+                <button class="order-action-btn" onclick="openOrderDocument('${order.id}','packing-slip')">Packing Slip</button>
+            </div>
             ${targetId === 'adminOrdersList' ? `<div class="order-meta-line">${order.customerName} · ${order.customerPhone} · ${order.customerEmail || ''}</div>
             <div class="admin-status-row">
                 <label for="order-status-${order.id}">Update status</label>
