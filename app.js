@@ -24,7 +24,7 @@ let currentUser = null;
 let sessionToken = '';
 let appliedCoupon = null;
 let authMode = 'login';
-let apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false };
+let apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false, otpDelivery: 'preview' };
 let orderHistory = [];
 let adminOrderHistory = [];
 let adminStats = null;
@@ -190,10 +190,11 @@ async function loadApiConfig() {
         apiConfig = {
             backendReady: true,
             razorpayKeyId: data.razorpayKeyId || '',
-            adminEnabled: Boolean(data.adminEnabled)
+            adminEnabled: Boolean(data.adminEnabled),
+            otpDelivery: data.otpDelivery || 'preview'
         };
     } catch (error) {
-        apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false };
+        apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false, otpDelivery: 'preview' };
     }
 }
 
@@ -205,6 +206,19 @@ function showToast(msg) {
     t.textContent = normalizedMsg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function buildOtpRequestToast(data, fallbackMessage, label) {
+    if (!apiConfig.backendReady) {
+        return data.previewOtp ? `${label} sent. Demo OTP: ${data.previewOtp}` : fallbackMessage;
+    }
+    if (data.delivery === 'sms') {
+        return data.message || fallbackMessage;
+    }
+    if (data.previewOtp) {
+        return `${data.message || fallbackMessage} Demo OTP: ${data.previewOtp}`;
+    }
+    return data.message || fallbackMessage;
 }
 
 function resetCouponState() {
@@ -821,7 +835,7 @@ async function requestCheckoutOtp() {
         }, true);
         checkoutOtpRequestedFor = data.identifier || identifier;
         updateCheckoutOtpUI();
-        showToast(data.message || (data.previewOtp ? `Order OTP: ${data.previewOtp}` : 'Order OTP sent successfully.'));
+        showToast(buildOtpRequestToast(data, 'Order OTP sent successfully.', 'Order OTP'));
     } catch (error) {
         showToast(error.message);
     }
@@ -1493,7 +1507,7 @@ async function requestOtp() {
         });
         otpRequestedFor = data.identifier || email || phone;
         setAuthMode('otp');
-        showToast(data.message || (data.previewOtp ? `OTP sent. Demo OTP: ${data.previewOtp}` : 'OTP sent successfully.'));
+        showToast(buildOtpRequestToast(data, 'OTP sent successfully.', 'OTP'));
     } catch (error) {
         showToast(error.message);
     }
