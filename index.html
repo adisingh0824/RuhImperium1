@@ -554,6 +554,19 @@
             text-transform:uppercase; cursor:pointer;
         }
         .order-action-btn:hover { background:rgba(201,168,76,0.1); border-color:var(--gold); }
+        .subscriber-list { display:flex; flex-direction:column; gap:12px; }
+        .subscriber-card {
+            border:1px solid rgba(118,247,255,0.1); background:rgba(255,255,255,0.04); padding:14px 16px; border-radius:18px;
+            display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+        }
+        .subscriber-card strong { display:block; color:var(--cream); font-size:15px; }
+        .subscriber-card span { color:rgba(253,246,232,0.45); font-size:12px; }
+        .subscriber-actions { display:flex; align-items:center; gap:10px; }
+        .subscriber-delete {
+            background:transparent; border:1px solid rgba(241,94,122,0.28); color:#ff9caf;
+            padding:8px 12px; border-radius:999px; cursor:pointer; font-size:11px; letter-spacing:1.2px; text-transform:uppercase;
+        }
+        .subscriber-delete:hover { background:rgba(241,94,122,0.12); border-color:rgba(241,94,122,0.55); }
         .admin-status-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; }
         .admin-status-row label { color:var(--gold); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; }
         .admin-status-row select {
@@ -839,6 +852,14 @@
                 <span id="adminOrderCount">0 orders shown</span>
             </div>
             <div class="orders-list" id="adminOrdersList"></div>
+            <div class="orders-section-title">Newsletter Subscribers</div>
+            <div class="orders-tools">
+                <input type="text" id="adminSubscriberSearch" placeholder="Search subscriber email" oninput="filterAdminSubscribers()">
+                <button type="button" onclick="copyAllSubscriberEmails()">Copy All Emails</button>
+                <button type="button" onclick="exportAdminSubscribersCsv()">Export Subscribers</button>
+                <span id="adminSubscriberCount">0 subscribers shown</span>
+            </div>
+            <div class="subscriber-list" id="adminSubscribersList"></div>
         </div>
     </div>
 </div>

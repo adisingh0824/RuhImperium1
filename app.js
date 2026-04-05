@@ -30,6 +30,7 @@ let apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false, o
 let orderHistory = [];
 let adminOrderHistory = [];
 let adminStats = null;
+let adminSubscribers = [];
 let otpRequestedFor = '';
 const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered'];
 let recentlyViewed = [];
@@ -1023,6 +1024,27 @@ function renderOrders(list, targetId, emptyMessage) {
     `).join('');
 }
 
+function renderSubscribers(list, targetId, emptyMessage) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    if (!list.length) {
+        target.innerHTML = `<div class="orders-empty">${emptyMessage}</div>`;
+        return;
+    }
+    target.innerHTML = list.map(subscriber => `
+        <div class="subscriber-card">
+            <div>
+                <strong>${subscriber.email}</strong>
+                <span>${formatDate(subscriber.createdAt)}</span>
+            </div>
+            <div class="subscriber-actions">
+                <span>${String(subscriber.id || '').slice(0, 8).toUpperCase()}</span>
+                <button class="subscriber-delete" onclick="deleteSubscriber('${subscriber.id}')">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
 async function loadMyOrders() {
     if (!apiConfig.backendReady) {
         const localOrders = getLocalOrders().filter(order =>
@@ -1046,6 +1068,13 @@ async function loadAdminOrders() {
     if (!currentUser || !currentUser.isAdmin) return;
     if (!apiConfig.backendReady) {
         adminOrderHistory = getLocalOrders().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        adminSubscribers = getLocalNewsletterSubscribers()
+            .map((email, index) => ({
+                id: `local-sub-${index + 1}`,
+                email,
+                createdAt: new Date().toISOString()
+            }))
+            .sort((a, b) => a.email.localeCompare(b.email));
         adminStats = {
             totalOrders: adminOrderHistory.length,
             pendingOrders: adminOrderHistory.filter(order => (order.orderStatus || 'pending') === 'pending').length,
@@ -1055,22 +1084,28 @@ async function loadAdminOrders() {
         };
         renderAdminStats();
         filterAdminOrders();
+        filterAdminSubscribers();
         return;
     }
     try {
-        const [ordersData, statsData] = await Promise.all([
+        const [ordersData, statsData, subscribersData] = await Promise.all([
             apiFetch('/api/admin/orders', {}, true),
-            apiFetch('/api/admin/stats', {}, true)
+            apiFetch('/api/admin/stats', {}, true),
+            apiFetch('/api/admin/subscribers', {}, true)
         ]);
         adminOrderHistory = ordersData.orders || [];
         adminStats = statsData.stats || null;
+        adminSubscribers = subscribersData.subscribers || [];
         renderAdminStats();
         filterAdminOrders();
+        filterAdminSubscribers();
     } catch (error) {
         adminOrderHistory = [];
         adminStats = null;
+        adminSubscribers = [];
         renderAdminStats();
         renderOrders([], 'adminOrdersList', error.message);
+        renderSubscribers([], 'adminSubscribersList', error.message);
     }
 }
 
@@ -1111,6 +1146,18 @@ function filterAdminOrders() {
     renderOrders(filtered, 'adminOrdersList', 'No orders match the current filters.');
     const count = document.getElementById('adminOrderCount');
     if (count) count.textContent = `${filtered.length} orders shown`;
+}
+
+function filterAdminSubscribers() {
+    const searchInput = document.getElementById('adminSubscriberSearch');
+    const query = (searchInput?.value || '').trim().toLowerCase();
+    const filtered = adminSubscribers.filter(subscriber => {
+        const haystack = [subscriber.email, subscriber.id, subscriber.createdAt].join(' ').toLowerCase();
+        return !query || haystack.includes(query);
+    });
+    renderSubscribers(filtered, 'adminSubscribersList', 'No subscribers found yet.');
+    const count = document.getElementById('adminSubscriberCount');
+    if (count) count.textContent = `${filtered.length} subscribers shown`;
 }
 
 async function updateAdminOrderStatus(orderId, orderStatus) {
@@ -1198,6 +1245,94 @@ async function exportAdminOrdersCsv() {
         link.remove();
         URL.revokeObjectURL(url);
         showToast('Orders CSV exported.');
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
+async function exportAdminSubscribersCsv() {
+    if (!currentUser || !currentUser.isAdmin || !sessionToken) return;
+    if (!apiConfig.backendReady) {
+        const rows = [
+            ['Subscriber ID', 'Email', 'Created At'],
+            ...adminSubscribers.map(subscriber => [subscriber.id, subscriber.email, subscriber.createdAt])
+        ];
+        const csvText = rows.map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ruh-imperium-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast('Subscribers CSV exported.');
+        return;
+    }
+    try {
+        const response = await fetch('/api/admin/subscribers/export.csv', {
+            headers: {
+                Authorization: `Bearer ${sessionToken}`
+            }
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Unable to export subscribers.');
+        }
+        const csvText = await response.text();
+        const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ruh-imperium-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast('Subscribers CSV exported.');
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
+async function copyAllSubscriberEmails() {
+    if (!currentUser || !currentUser.isAdmin) return;
+    if (!adminSubscribers.length) {
+        showToast('No subscribers to copy.');
+        return;
+    }
+    const emailList = adminSubscribers.map(subscriber => subscriber.email).join(', ');
+    try {
+        await navigator.clipboard.writeText(emailList);
+        showToast('All subscriber emails copied.');
+    } catch (error) {
+        showToast('Unable to copy emails right now.');
+    }
+}
+
+async function deleteSubscriber(subscriberId) {
+    if (!currentUser || !currentUser.isAdmin) return;
+    if (!subscriberId) return;
+    if (!apiConfig.backendReady) {
+        const remaining = adminSubscribers.filter(subscriber => subscriber.id !== subscriberId);
+        if (remaining.length === adminSubscribers.length) {
+            showToast('Subscriber not found.');
+            return;
+        }
+        adminSubscribers = remaining;
+        saveLocalNewsletterSubscribers(adminSubscribers.map(subscriber => subscriber.email));
+        filterAdminSubscribers();
+        showToast('Subscriber deleted.');
+        return;
+    }
+    try {
+        await apiFetch(`/api/admin/subscribers/${subscriberId}`, {
+            method: 'DELETE'
+        }, true);
+        adminSubscribers = adminSubscribers.filter(subscriber => subscriber.id !== subscriberId);
+        filterAdminSubscribers();
+        showToast('Subscriber deleted.');
     } catch (error) {
         showToast(error.message);
     }
@@ -1481,10 +1616,12 @@ function logout() {
     orderHistory = [];
     adminOrderHistory = [];
     adminStats = null;
+    adminSubscribers = [];
     updateAccountUI();
     renderAdminStats();
     renderOrders([], 'ordersList', 'Sign in to view your orders.');
     renderOrders([], 'adminOrdersList', 'Admin orders will appear here.');
+    renderSubscribers([], 'adminSubscribersList', 'Newsletter subscribers will appear here.');
     closeAuthModal();
     showToast('You have been logged out.');
 }
