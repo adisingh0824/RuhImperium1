@@ -1665,6 +1665,10 @@ function loginLocally(email, password) {
     sessionToken = 'local-session';
 }
 
+function getLocalUserByEmail(email) {
+    return getLocalUsers().find(user => user.email === email) || null;
+}
+
 async function handleAuth() {
     const name = document.getElementById('authName').value.trim();
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
@@ -1709,11 +1713,49 @@ async function handleAuth() {
         if (authMode === 'login') {
             try {
                 loginLocally(email, password);
-                completeSignedInState('Signed in successfully.');
-                return;
+                const localUser = currentUser;
+                try {
+                    const syncData = await apiFetch('/api/auth/signup', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            name: localUser.name || name || 'Ruh Imperium Customer',
+                            email: localUser.email,
+                            phone: localUser.phone || phone,
+                            password
+                        })
+                    });
+                    currentUser = syncData.user;
+                    sessionToken = syncData.token;
+                    completeSignedInState('Signed in successfully.');
+                    return;
+                } catch (syncError) {
+                    const syncMessage = String(syncError.message || '').toLowerCase();
+                    if (syncMessage.includes('already exists')) {
+                        try {
+                            const loginData = await apiFetch('/api/auth/login', {
+                                method: 'POST',
+                                body: JSON.stringify({ email, password })
+                            });
+                            currentUser = loginData.user;
+                            sessionToken = loginData.token;
+                            completeSignedInState('Signed in successfully.');
+                            return;
+                        } catch (retryError) {
+                            showToast(retryError.message);
+                            return;
+                        }
+                    }
+                    completeSignedInState('Signed in successfully.');
+                    return;
+                }
             } catch (localError) {
                 if (String(error.message || '').toLowerCase().includes('invalid email or password')) {
-                    showToast('No matching account was found. If you created the account before backend login was enabled, create it again once and then sign in.');
+                    const localUser = getLocalUserByEmail(email);
+                    if (localUser) {
+                        showToast('Your account exists locally, but the password did not match. Try the password you used when creating the account.');
+                        return;
+                    }
+                    showToast('No matching account was found. Please create the account again once and then sign in.');
                     return;
                 }
             }
