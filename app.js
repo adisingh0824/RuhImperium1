@@ -8,6 +8,7 @@ const LOCAL_ORDERS_STORAGE_KEY = 'ruhImperiumLocalOrders';
 const LOCAL_OTP_STORAGE_KEY = 'ruhImperiumPendingOtp';
 const LOCAL_CHECKOUT_OTP_STORAGE_KEY = 'ruhImperiumPendingCheckoutOtp';
 const RECENTLY_VIEWED_STORAGE_KEY = 'ruhImperiumRecentlyViewed';
+const NEWSLETTER_STORAGE_KEY = 'ruhImperiumNewsletterSubscribers';
 const LOCAL_COUPONS = {
     RAMJI20: { code: 'RAMJI20', label: 'Ram Ji Signature Offer', type: 'percent', value: 20 },
     WELCOME10: { code: 'WELCOME10', label: 'Welcome Offer', type: 'percent', value: 10 },
@@ -81,6 +82,14 @@ function readLocalJson(key, fallback) {
 
 function writeLocalJson(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getLocalNewsletterSubscribers() {
+    return readLocalJson(NEWSLETTER_STORAGE_KEY, []);
+}
+
+function saveLocalNewsletterSubscribers(subscribers) {
+    writeLocalJson(NEWSLETTER_STORAGE_KEY, subscribers);
 }
 
 function getLocalUsers() {
@@ -1255,14 +1264,71 @@ function searchSelect(id) {
     openProductModal(id);
 }
 
-function subscribe() {
-    const email = document.getElementById('nlEmail').value;
-    if (!email || !email.includes('@')) {
-        showToast('Please enter a valid email!');
+function updateNewsletterStatus(message = '', type = '') {
+    const status = document.getElementById('nlStatus');
+    if (!status) return;
+    status.textContent = message;
+    status.className = type ? `nl-status ${type}` : 'nl-status';
+}
+
+function isValidEmailAddress(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+}
+
+function handleNewsletterKeydown(event) {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    subscribe();
+}
+
+async function subscribe() {
+    const input = document.getElementById('nlEmail');
+    const button = document.getElementById('nlSubmitBtn');
+    const email = input.value.trim().toLowerCase();
+    if (!isValidEmailAddress(email)) {
+        updateNewsletterStatus('Please enter a valid email address.', 'error');
+        showToast('Please enter a valid email address.');
         return;
     }
-    document.getElementById('nlEmail').value = '';
-    showToast('🌸 Subscribed! Welcome to the Ruh Imperium family.');
+
+    button.disabled = true;
+    button.textContent = 'Saving...';
+    updateNewsletterStatus('Saving your email...', '');
+
+    if (!apiConfig.backendReady) {
+        const subscribers = getLocalNewsletterSubscribers();
+        if (!subscribers.includes(email)) {
+            subscribers.push(email);
+            saveLocalNewsletterSubscribers(subscribers);
+        }
+        input.value = '';
+        button.disabled = false;
+        button.textContent = 'Subscribe';
+        updateNewsletterStatus('You are subscribed. We will keep you posted on launches and offers.', 'success');
+        showToast('Subscribed successfully.');
+        return;
+    }
+
+    try {
+        const data = await apiFetch('/api/newsletter/subscribe', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+        input.value = '';
+        updateNewsletterStatus(
+            data.alreadySubscribed
+                ? 'This email is already subscribed.'
+                : 'You are subscribed. We will keep you posted on launches and offers.',
+            'success'
+        );
+        showToast(data.alreadySubscribed ? 'Already subscribed.' : 'Subscribed successfully.');
+    } catch (error) {
+        updateNewsletterStatus(error.message, 'error');
+        showToast(error.message);
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Subscribe';
+    }
 }
 
 function setAuthMode(mode) {

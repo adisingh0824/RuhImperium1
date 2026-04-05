@@ -468,6 +468,10 @@
         .nl-form input:focus { border-color:var(--gold); background:rgba(253,246,232,0.12); }
         .nl-form button { background:var(--gold); border:none; padding:15px 30px; font-family:'Jost',sans-serif; font-size:12px; letter-spacing:2px; text-transform:uppercase; font-weight:600; color:var(--dark); cursor:pointer; transition:background 0.3s; }
         .nl-form button:hover { background:var(--gold-light); }
+        .nl-form button:disabled { opacity:0.6; cursor:not-allowed; }
+        .nl-status { margin-top:14px; min-height:20px; font-size:13px; letter-spacing:1px; color:rgba(246,244,239,0.62); }
+        .nl-status.success { color:#b8f2c9; }
+        .nl-status.error { color:#ffd3dc; }
 
         .checkout-modal { position:fixed; inset:0; background:rgba(26,18,8,0.97); z-index:5000; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; padding:20px; }
         .checkout-modal.open { opacity:1; pointer-events:all; }
@@ -1106,9 +1110,10 @@
             <h2 class="section-title">Stay in the <em>Fragrance</em></h2>
             <p>Get exclusive offers, new launches, and the art of attar delivered to your inbox.</p>
             <div class="nl-form">
-                <input type="email" id="nlEmail" placeholder="Your email address">
-                <button type="button" onclick="subscribe()">Subscribe</button>
+                <input type="email" id="nlEmail" placeholder="Your email address" onkeydown="handleNewsletterKeydown(event)">
+                <button type="button" id="nlSubmitBtn" onclick="subscribe()">Subscribe</button>
             </div>
+            <div class="nl-status" id="nlStatus"></div>
         </div>
     </section>
 
