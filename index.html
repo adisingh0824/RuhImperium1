@@ -506,7 +506,7 @@
         .place-order-btn { width:100%; background:linear-gradient(135deg,var(--gold),var(--gold-light)); border:none; padding:16px; font-family:'Jost',sans-serif; font-size:13px; letter-spacing:3px; text-transform:uppercase; font-weight:600; color:var(--dark); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; margin-top:20px; border-radius:999px; box-shadow:0 16px 34px rgba(211,176,102,0.26); }
         .place-order-btn:hover { transform:translateY(-2px); }
         .place-order-btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
-        .auth-modal { position:fixed; inset:0; background:rgba(26,18,8,0.96); z-index:5500; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; padding:20px; }
+        .auth-modal { position:fixed; inset:0; background:rgba(245,248,252,0.88); z-index:5500; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; padding:20px; backdrop-filter:blur(8px); }
         .auth-modal.open { opacity:1; pointer-events:all; }
         .orders-modal { position:fixed; inset:0; background:rgba(245,248,252,0.88); z-index:5600; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; padding:20px; backdrop-filter:blur(8px); }
         .orders-modal.open { opacity:1; pointer-events:all; }
@@ -606,14 +606,14 @@
         }
         .admin-tracking-row button:hover { background:rgba(201,168,76,0.1); border-color:var(--gold); }
         .auth-box {
-            width:100%; max-width:520px; background:var(--dark-2); border:1px solid rgba(201,168,76,0.28);
-            padding:34px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.35); backdrop-filter:blur(18px); border-radius:28px;
+            width:100%; max-width:520px; background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(243,247,252,0.98)); border:1px solid rgba(118,247,255,0.16);
+            padding:34px; position:relative; box-shadow:0 30px 90px rgba(7,17,31,0.28); backdrop-filter:blur(18px); border-radius:28px;
         }
-        .auth-close { position:absolute; top:18px; right:18px; background:none; border:none; color:var(--cream); font-size:24px; cursor:pointer; }
+        .auth-close { position:absolute; top:18px; right:18px; background:none; border:none; color:#162742; font-size:24px; cursor:pointer; }
         .orders-box .auth-close { color:#162742; opacity:1; }
         .orders-box .auth-close:hover { color:#0b1a2e; }
-        .auth-box h2 { font-family:'Playfair Display',serif; color:var(--gold-light); font-size:28px; margin-bottom:10px; }
-        .auth-box p { color:rgba(253,246,232,0.58); font-size:14px; line-height:1.7; margin-bottom:22px; }
+        .auth-box h2 { font-family:'Playfair Display',serif; color:var(--text); font-size:28px; margin-bottom:10px; }
+        .auth-box p { color:var(--text-light); font-size:14px; line-height:1.7; margin-bottom:22px; }
         .auth-tabs { display:flex; gap:10px; margin-bottom:24px; }
         .auth-tab {
             flex:1; border:1px solid rgba(201,168,76,0.22); background:transparent; color:var(--cream);
@@ -644,10 +644,10 @@
         .admin-badge.show { display:inline-flex; align-items:center; justify-content:center; }
         .account-name-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
         .account-card {
-            padding:18px; background:rgba(253,246,232,0.04); border:1px solid rgba(201,168,76,0.16);
-            margin-bottom:20px; color:rgba(253,246,232,0.72);
+            padding:18px; background:rgba(248,251,255,0.96); border:1px solid rgba(30,45,70,0.1);
+            margin-bottom:20px; color:var(--text-light);
         }
-        .account-card strong { display:block; color:var(--gold-light); font-size:18px; margin-bottom:6px; }
+        .account-card strong { display:block; color:var(--text); font-size:18px; margin-bottom:6px; }
 
         footer { background:linear-gradient(180deg,#08111f 0%,#101e30 100%); padding:70px 40px 40px; border-top:1px solid rgba(118,247,255,0.14); }
         .footer-grid { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; gap:50px; max-width:1400px; margin:0 auto 60px; }
