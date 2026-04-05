@@ -978,9 +978,12 @@ function buildOrderTimeline(order) {
     `;
 }
 
-async function openOrderDocument(orderId, type) {
+async function openOrderDocument(orderId, type, event) {
+    const trigger = event?.currentTarget || null;
+    if (trigger) trigger.classList.add('generating');
     const docWindow = window.open('', '_blank');
     if (!docWindow) {
+        if (trigger) trigger.classList.remove('generating');
         showToast('Please allow pop-ups to open the document.');
         return;
     }
@@ -990,16 +993,19 @@ async function openOrderDocument(orderId, type) {
         const order = allOrders.find(item => item.id === orderId);
         if (!order) {
             docWindow.close();
+            if (trigger) trigger.classList.remove('generating');
             showToast('Order document not found.');
             return;
         }
         docWindow.document.open();
         docWindow.document.write(buildOrderDocumentHtmlClient(order, type));
         docWindow.document.close();
+        if (trigger) trigger.classList.remove('generating');
         return;
     }
     if (!sessionToken) {
         docWindow.close();
+        if (trigger) trigger.classList.remove('generating');
         showToast('Please sign in again to open documents.');
         return;
     }
@@ -1021,8 +1027,10 @@ async function openOrderDocument(orderId, type) {
         docWindow.document.open();
         docWindow.document.write(html);
         docWindow.document.close();
+        if (trigger) trigger.classList.remove('generating');
     } catch (error) {
         docWindow.close();
+        if (trigger) trigger.classList.remove('generating');
         showToast(error.message);
     }
 }
@@ -1052,8 +1060,8 @@ function renderOrders(list, targetId, emptyMessage) {
             ${order.courierName ? `<div class="order-meta-line">Courier: ${order.courierName}</div>` : ''}
             ${order.trackingId ? `<div class="order-meta-line">Tracking ID: ${order.trackingId}</div>` : ''}
             <div class="order-action-row">
-                <button class="order-action-btn" onclick="openOrderDocument('${order.id}','invoice')">Invoice</button>
-                <button class="order-action-btn" onclick="openOrderDocument('${order.id}','packing-slip')">Packing Slip</button>
+                <button class="order-action-btn" onclick="openOrderDocument('${order.id}','invoice', event)">Invoice</button>
+                <button class="order-action-btn" onclick="openOrderDocument('${order.id}','packing-slip', event)">Packing Slip</button>
                 ${order.trackingId ? `<button class="order-action-btn" onclick="openTrackingLink(${JSON.stringify(order.courierName || '')}, ${JSON.stringify(order.trackingId)})">Track Package</button>` : ''}
             </div>
             ${targetId === 'adminOrdersList' ? `<div class="order-meta-line">${order.customerName} · ${order.customerPhone} · ${order.customerEmail || ''}</div>
