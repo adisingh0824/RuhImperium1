@@ -223,6 +223,11 @@
         .modal-add-btn:hover { transform:translateY(-2px); }
         .modal-wa-btn { background:var(--wa-green); border:none; padding:14px 20px; cursor:pointer; color:white; font-size:20px; transition:opacity 0.2s; }
         .modal-wa-btn:hover { opacity:0.85; }
+        .modal-share-btn {
+            background:rgba(255,255,255,0.04); border:1px solid rgba(118,247,255,0.18); padding:14px 18px;
+            cursor:pointer; color:var(--cyan); font-size:16px; transition:all 0.2s; border-radius:999px;
+        }
+        .modal-share-btn:hover { background:rgba(118,247,255,0.08); border-color:var(--cyan); transform:translateY(-2px); }
         .modal-features { margin-top:24px; border-top:1px solid rgba(201,168,76,0.15); padding-top:20px; display:flex; flex-direction:column; gap:10px; }
         .modal-feature { display:flex; gap:10px; align-items:center; font-size:13px; color:rgba(253,246,232,0.5); letter-spacing:1px; }
         .modal-feature span:first-child { color:var(--gold); font-size:16px; }
@@ -356,6 +361,16 @@
             text-align: center;
         }
         .products-section .section-header { max-width:1400px; margin:0 auto 50px; }
+        .recently-viewed-section {
+            padding:80px 40px; max-width:1400px; margin:0 auto;
+        }
+        .recently-viewed-section .products-grid { max-width:none; }
+        .recently-viewed-empty {
+            text-align:center; padding:36px 24px; color:var(--text-light);
+            font-family:'Cormorant Garamond',serif; font-size:20px; font-style:italic;
+            border:1px dashed rgba(118,247,255,0.18); border-radius:24px;
+            background:rgba(255,255,255,0.28);
+        }
 
         .story-banner { display:grid; grid-template-columns:1fr 1fr; min-height:500px; }
         .story-visual { background:linear-gradient(135deg,#07111f 0%,#12233b 45%,#28344d 100%); position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }
@@ -695,6 +710,7 @@
             <div class="modal-actions">
                 <button class="modal-add-btn" id="modalAddBtn">Add to Cart</button>
                 <button class="modal-wa-btn" id="modalWaBtn" title="Enquire on WhatsApp">📱</button>
+                <button class="modal-share-btn" id="modalShareBtn" title="Share this product">↗</button>
             </div>
             <div class="modal-features">
                 <div class="modal-feature"><span>📦</span> Free shipping on prepaid orders</div>
@@ -912,6 +928,15 @@
         </div>
         <div class="products-grid" id="bestsellerGrid"></div>
         <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('all')">View All Products</button></div>
+    </section>
+
+    <section class="recently-viewed-section">
+        <div class="section-header reveal">
+            <span class="section-label">Continue Exploring</span>
+            <h2 class="section-title">Recently <em>Viewed</em></h2>
+            <div class="section-line"><span>✦</span></div>
+        </div>
+        <div class="products-grid" id="recentlyViewedGrid"></div>
     </section>
 
     <div class="story-banner" id="story">

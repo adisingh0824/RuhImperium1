@@ -7,6 +7,7 @@ const LOCAL_USERS_STORAGE_KEY = 'ruhImperiumLocalUsers';
 const LOCAL_ORDERS_STORAGE_KEY = 'ruhImperiumLocalOrders';
 const LOCAL_OTP_STORAGE_KEY = 'ruhImperiumPendingOtp';
 const LOCAL_CHECKOUT_OTP_STORAGE_KEY = 'ruhImperiumPendingCheckoutOtp';
+const RECENTLY_VIEWED_STORAGE_KEY = 'ruhImperiumRecentlyViewed';
 const LOCAL_COUPONS = {
     RAMJI20: { code: 'RAMJI20', label: 'Ram Ji Signature Offer', type: 'percent', value: 20 },
     WELCOME10: { code: 'WELCOME10', label: 'Welcome Offer', type: 'percent', value: 10 },
@@ -30,6 +31,7 @@ let adminOrderHistory = [];
 let adminStats = null;
 let otpRequestedFor = '';
 const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered'];
+let recentlyViewed = [];
 
 function loadStoredState() {
     try {
@@ -38,12 +40,14 @@ function loadStoredState() {
         currentUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
         sessionToken = localStorage.getItem(SESSION_STORAGE_KEY) || '';
         appliedCoupon = JSON.parse(localStorage.getItem(COUPON_STORAGE_KEY) || 'null');
+        recentlyViewed = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_STORAGE_KEY) || '[]');
     } catch (error) {
         cart = [];
         wishlist = [];
         currentUser = null;
         sessionToken = '';
         appliedCoupon = null;
+        recentlyViewed = [];
     }
 }
 
@@ -51,6 +55,7 @@ function persistState() {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
     localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist));
     localStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(appliedCoupon));
+    localStorage.setItem(RECENTLY_VIEWED_STORAGE_KEY, JSON.stringify(recentlyViewed));
 }
 
 function persistUser() {
@@ -349,6 +354,49 @@ function renderHomeSections() {
         .filter(product => product.tags.includes('Gifting') || product.cat === 'Discovery Set')
         .slice(0, 4);
     document.getElementById('giftingGrid').innerHTML = giftingPicks.map(product => productCardHTML(product)).join('');
+    renderRecentlyViewed();
+}
+
+function renderRecentlyViewed() {
+    const grid = document.getElementById('recentlyViewedGrid');
+    if (!grid) return;
+    const viewedProducts = recentlyViewed
+        .map(id => products.find(product => product.id === id))
+        .filter(Boolean)
+        .slice(0, 4);
+    grid.innerHTML = viewedProducts.length
+        ? viewedProducts.map(product => productCardHTML(product)).join('')
+        : '<div class="recently-viewed-empty" style="grid-column:1/-1;">Your recently opened fragrances will appear here.</div>';
+}
+
+function rememberRecentlyViewed(productId) {
+    recentlyViewed = [productId, ...recentlyViewed.filter(id => id !== productId)].slice(0, 8);
+    persistState();
+    renderRecentlyViewed();
+}
+
+async function shareCurrentProduct(product, size) {
+    if (!product) return;
+    const shareUrl = `${window.location.origin}${window.location.pathname}#product-${product.id}`;
+    const shareText = `${product.name}${size ? ` (${size})` : ''} · ₹${product.price.toLocaleString()} · Ruh Imperium`;
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: product.name,
+                text: shareText,
+                url: shareUrl
+            });
+            return;
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+        }
+    }
+    try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        showToast('Product link copied.');
+    } catch (error) {
+        showToast('Unable to share right now.');
+    }
 }
 
 function toggleWish(event, id) {
@@ -565,6 +613,7 @@ function openProductModal(id) {
     const product = products.find(item => item.id === id);
     if (!product) return;
     currentProduct = product;
+    rememberRecentlyViewed(product.id);
 
     document.getElementById('modalCat').textContent = product.cat;
     document.getElementById('modalName').textContent = product.name;
@@ -597,6 +646,7 @@ function openProductModal(id) {
         const msg = `Hello! I am interested in *${product.name}* (${selectedSize}) at ₹${product.price.toLocaleString()}. Please help me place an order.`;
         window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
     };
+    document.getElementById('modalShareBtn').onclick = () => shareCurrentProduct(product, selectedSize);
 
     document.getElementById('productModal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -615,6 +665,7 @@ function selectSize(btn, size) {
             const msg = `Hello! I am interested in *${currentProduct.name}* (${size}) at ₹${currentProduct.price.toLocaleString()}. Please help me place an order.`;
             window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
         };
+        document.getElementById('modalShareBtn').onclick = () => shareCurrentProduct(currentProduct, size);
     }
 }
 
