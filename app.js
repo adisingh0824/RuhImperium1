@@ -999,7 +999,7 @@ function renderOrders(list, targetId, emptyMessage) {
         <div class="order-card">
             <div class="order-card-head">
                 <div>
-                    <strong>${order.id.slice(0, 8).toUpperCase()}</strong>
+                    <strong>Bill No. ${String(order.id || '').slice(0, 8).toUpperCase()}</strong>
                     <span>${formatDate(order.createdAt)}</span>
                 </div>
                 <div class="order-badges">
