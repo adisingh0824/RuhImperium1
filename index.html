@@ -632,10 +632,16 @@
             background:rgba(253,246,232,0.04); color:var(--gold-light); font-size:12px; letter-spacing:1.5px;
             text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:8px;
         }
+        .account-pill-text { display:flex; align-items:center; gap:8px; }
         .account-pill strong {
             width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--dark);
             display:inline-flex; align-items:center; justify-content:center; font-size:12px;
         }
+        .admin-badge {
+            display:none; padding:4px 8px; border-radius:999px; background:rgba(118,247,255,0.14);
+            border:1px solid rgba(118,247,255,0.26); color:var(--cyan); font-size:10px; letter-spacing:1.4px;
+        }
+        .admin-badge.show { display:inline-flex; align-items:center; justify-content:center; }
         .account-card {
             padding:18px; background:rgba(253,246,232,0.04); border:1px solid rgba(201,168,76,0.16);
             margin-bottom:20px; color:rgba(253,246,232,0.72);
@@ -858,6 +864,7 @@
             <p>Your profile is saved on this device and will be used to prefill checkout details.</p>
             <div class="account-card">
                 <strong id="accountName"></strong>
+                <span id="accountAdminBadgeCard" class="admin-badge">Admin</span><br>
                 <span id="accountEmail"></span><br>
                 <span id="accountPhone"></span>
             </div>
@@ -934,7 +941,7 @@
                 <a onclick="goSection('contact')">Contact</a>
             </nav>
             <button class="icon-btn" id="ordersBtn" title="Orders" onclick="openOrdersModal()" style="display:none">📦</button>
-            <button class="icon-btn account-pill" title="Account" onclick="openAuthModal()"><strong id="accountInitial">A</strong><span id="accountLabel">Account</span></button>
+            <button class="icon-btn account-pill" title="Account" onclick="openAuthModal()"><strong id="accountInitial">A</strong><span class="account-pill-text"><span id="accountLabel">Account</span><span id="accountAdminBadge" class="admin-badge">Admin</span></span></button>
             <button class="icon-btn" title="Search" onclick="openSearch()">🔍</button>
             <button class="icon-btn" title="Wishlist" onclick="showWishlist()">❤️<span class="cart-count" id="wishCount" style="background:var(--dark-3);display:none">0</span></button>
             <button class="icon-btn" title="Cart" onclick="openCart()" style="position:relative">🛒<span class="cart-count" id="cartBadge">0</span></button>

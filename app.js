@@ -1592,15 +1592,18 @@ function closeAuthModal() {
 function renderAuthView() {
     const guestView = document.getElementById('authGuestView');
     const userView = document.getElementById('authUserView');
+    const cardBadge = document.getElementById('accountAdminBadgeCard');
     if (currentUser) {
         guestView.style.display = 'none';
         userView.style.display = 'block';
         document.getElementById('accountName').textContent = currentUser.name || 'Ruh Imperium Customer';
         document.getElementById('accountEmail').textContent = currentUser.email || 'No email saved';
         document.getElementById('accountPhone').textContent = currentUser.phone || 'No phone saved';
+        if (cardBadge) cardBadge.classList.toggle('show', Boolean(currentUser.isAdmin));
     } else {
         guestView.style.display = 'block';
         userView.style.display = 'none';
+        if (cardBadge) cardBadge.classList.remove('show');
         setAuthMode(authMode);
     }
 }
@@ -1608,12 +1611,15 @@ function renderAuthView() {
 function updateAccountUI() {
     const label = document.getElementById('accountLabel');
     const initial = document.getElementById('accountInitial');
+    const badge = document.getElementById('accountAdminBadge');
     if (currentUser) {
         label.textContent = currentUser.name.split(' ')[0];
         initial.textContent = currentUser.name.charAt(0).toUpperCase();
+        if (badge) badge.classList.toggle('show', Boolean(currentUser.isAdmin));
     } else {
         label.textContent = 'Account';
         initial.textContent = 'A';
+        if (badge) badge.classList.remove('show');
     }
     const ordersBtn = document.getElementById('ordersBtn');
     const adminTab = document.getElementById('adminOrdersTab');
