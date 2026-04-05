@@ -573,6 +573,16 @@
             min-width:180px; background:rgba(253,246,232,0.06); border:1px solid rgba(201,168,76,0.24);
             color:var(--cream); padding:10px 12px; font-family:'Jost',sans-serif; font-size:13px; outline:none;
         }
+        .admin-tracking-row { display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
+        .admin-tracking-row input {
+            flex:1; min-width:220px; background:rgba(253,246,232,0.06); border:1px solid rgba(201,168,76,0.24);
+            color:var(--cream); padding:10px 12px; font-family:'Jost',sans-serif; font-size:13px; outline:none;
+        }
+        .admin-tracking-row button {
+            background:transparent; border:1px solid rgba(201,168,76,0.28); color:var(--gold-light);
+            padding:10px 14px; font-family:'Jost',sans-serif; font-size:12px; letter-spacing:1px; text-transform:uppercase; cursor:pointer;
+        }
+        .admin-tracking-row button:hover { background:rgba(201,168,76,0.1); border-color:var(--gold); }
         .auth-box {
             width:100%; max-width:520px; background:var(--dark-2); border:1px solid rgba(201,168,76,0.28);
             padding:34px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.35); backdrop-filter:blur(18px); border-radius:28px;
@@ -671,6 +681,8 @@
             .order-badges{justify-content:flex-start;}
             .admin-status-row{flex-direction:column; align-items:flex-start;}
             .admin-status-row select{width:100%;}
+            .admin-tracking-row{flex-direction:column; align-items:stretch;}
+            .admin-tracking-row input,.admin-tracking-row button{width:100%;}
             .orders-tools{flex-direction:column; align-items:stretch;}
             .orders-tools input, .orders-tools select{width:100%;}
             .admin-stats{grid-template-columns:1fr 1fr;}
