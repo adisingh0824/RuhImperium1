@@ -1629,6 +1629,42 @@ function updateAccountUI() {
     renderCartItems();
 }
 
+function completeSignedInState(successMessage) {
+    persistUser();
+    updateAccountUI();
+    prefillCheckout();
+    closeAuthModal();
+    showToast(successMessage);
+}
+
+function signUpLocally(name, email, phone, password) {
+    const users = getLocalUsers();
+    if (users.some(user => user.email === email)) {
+        throw new Error('An account with this email already exists.');
+    }
+    currentUser = {
+        id: 'local-user-' + Date.now(),
+        name,
+        email,
+        phone,
+        password,
+        isAdmin: false
+    };
+    users.push(currentUser);
+    saveLocalUsers(users);
+    sessionToken = 'local-session';
+}
+
+function loginLocally(email, password) {
+    const users = getLocalUsers();
+    const savedUser = users.find(user => user.email === email && user.password === password);
+    if (!savedUser) {
+        throw new Error('Invalid email or password.');
+    }
+    currentUser = savedUser;
+    sessionToken = 'local-session';
+}
+
 async function handleAuth() {
     const name = document.getElementById('authName').value.trim();
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
@@ -1647,42 +1683,17 @@ async function handleAuth() {
         return;
     }
     if (!apiConfig.backendReady) {
-        const users = getLocalUsers();
-        if (authMode === 'signup') {
-            if (users.some(user => user.email === email)) {
-                showToast('An account with this email already exists.');
+        try {
+            if (authMode === 'signup') {
+                signUpLocally(name, email, phone, password);
+                completeSignedInState('Account created successfully.');
                 return;
             }
-            currentUser = {
-                id: 'local-user-' + Date.now(),
-                name,
-                email,
-                phone,
-                password,
-                isAdmin: false
-            };
-            users.push(currentUser);
-            saveLocalUsers(users);
-            sessionToken = 'local-session';
-            persistUser();
-            updateAccountUI();
-            prefillCheckout();
-            closeAuthModal();
-            showToast('Account created successfully.');
-            return;
+            loginLocally(email, password);
+            completeSignedInState('Signed in successfully.');
+        } catch (error) {
+            showToast(error.message);
         }
-        const savedUser = users.find(user => user.email === email && user.password === password);
-        if (!savedUser) {
-            showToast('Invalid email or password.');
-            return;
-        }
-        currentUser = savedUser;
-        sessionToken = 'local-session';
-        persistUser();
-        updateAccountUI();
-        prefillCheckout();
-        closeAuthModal();
-        showToast('Signed in successfully.');
         return;
     }
     try {
@@ -1693,12 +1704,30 @@ async function handleAuth() {
         });
         currentUser = data.user;
         sessionToken = data.token;
-        persistUser();
-        updateAccountUI();
-        prefillCheckout();
-        closeAuthModal();
-        showToast(authMode === 'signup' ? 'Account created successfully.' : 'Signed in successfully.');
+        completeSignedInState(authMode === 'signup' ? 'Account created successfully.' : 'Signed in successfully.');
     } catch (error) {
+        if (authMode === 'login') {
+            try {
+                loginLocally(email, password);
+                completeSignedInState('Signed in successfully.');
+                return;
+            } catch (localError) {
+                if (String(error.message || '').toLowerCase().includes('invalid email or password')) {
+                    showToast('No matching account was found. If you created the account before backend login was enabled, create it again once and then sign in.');
+                    return;
+                }
+            }
+        }
+        if (authMode === 'signup' && String(error.message || '').toLowerCase().includes('request failed')) {
+            try {
+                signUpLocally(name, email, phone, password);
+                completeSignedInState('Account created successfully.');
+                return;
+            } catch (localError) {
+                showToast(localError.message);
+                return;
+            }
+        }
         showToast(error.message);
     }
 }
