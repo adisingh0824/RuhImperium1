@@ -172,6 +172,7 @@ function buildLocalOrder(details, paymentMethod, paymentStatus, orderStatus) {
         paymentStatus,
         orderStatus,
         trackingId: '',
+        courierName: '',
         createdAt: new Date().toISOString()
     };
 }
@@ -183,7 +184,7 @@ function buildOrderDocumentHtmlClient(order, type) {
         ? `<tr><td>${item.name}</td><td>${item.size}</td><td>${item.qty}</td></tr>`
         : `<tr><td>${item.name}</td><td>${item.size}</td><td>${item.qty}</td><td>₹${Number(item.unitPrice || item.price || 0).toLocaleString()}</td><td>₹${Number(item.lineTotal || item.price * item.qty || 0).toLocaleString()}</td></tr>`
     ).join('');
-    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title><style>body{font-family:Arial,sans-serif;background:#f8f2e4;margin:0;color:#1f1a12}.sheet{max-width:900px;margin:24px auto;background:#fffdf8;border:1px solid #dbc890;padding:32px}.top{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px}.brand h1{margin:0;font-size:30px;color:#7b5b11}.brand p,.meta p{margin:6px 0;color:#5a4d34;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{border:1px solid #e6d9b2;background:#fffcf5;padding:16px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #eadfbf;padding:10px;text-align:left;font-size:14px}th{background:#fbf3df;color:#6f5716}.summary{margin-top:20px;margin-left:auto;max-width:320px}.summary-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee0bd}.summary-line.total{font-size:18px;font-weight:700;border-bottom:none;color:#6b5210}@media print{body{background:#fff}.sheet{margin:0;border:none}}</style></head><body><div class="sheet"><div class="top"><div class="brand"><h1>Ruh Imperium</h1><p>Pure Indian Fragrances · Since 1973</p><p>Kannauj, Uttar Pradesh</p></div><div class="meta"><p><strong>${title}</strong></p><p>Order ID: ${order.id}</p><p>Date: ${formatDate(order.createdAt)}</p><p>Payment: ${order.paymentMethod} · ${order.paymentStatus}</p></div></div><div class="grid"><div class="card"><p><strong>${order.customerName}</strong></p><p>${order.customerEmail || ''}</p><p>${order.customerPhone || ''}</p></div><div class="card"><p>${address.address || ''}</p><p>${address.city || ''}, ${address.state || ''} - ${address.pin || ''}</p><p>Order Status: ${order.orderStatus || 'pending'}</p>${order.trackingId ? `<p>Tracking ID: ${order.trackingId}</p>` : ''}</div></div><table><thead>${type === 'packing-slip' ? '<tr><th>Item</th><th>Size</th><th>Qty</th></tr>' : '<tr><th>Item</th><th>Size</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>'}</thead><tbody>${rows}</tbody></table><div class="summary"><div class="summary-line"><span>Subtotal</span><strong>₹${Number(order.subtotal || 0).toLocaleString()}</strong></div>${type === 'packing-slip' ? (order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : '') : `<div class="summary-line"><span>Coupon</span><strong>${order.couponCode || 'None'}</strong></div><div class="summary-line"><span>Discount</span><strong>₹${Number(order.discount || 0).toLocaleString()}</strong></div>${order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : ''}<div class="summary-line total"><span>Total</span><strong>₹${Number(order.total || 0).toLocaleString()}</strong></div>`}</div></div></body></html>`;
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title><style>body{font-family:Arial,sans-serif;background:#f8f2e4;margin:0;color:#1f1a12}.sheet{max-width:900px;margin:24px auto;background:#fffdf8;border:1px solid #dbc890;padding:32px}.top{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px}.brand h1{margin:0;font-size:30px;color:#7b5b11}.brand p,.meta p{margin:6px 0;color:#5a4d34;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{border:1px solid #e6d9b2;background:#fffcf5;padding:16px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #eadfbf;padding:10px;text-align:left;font-size:14px}th{background:#fbf3df;color:#6f5716}.summary{margin-top:20px;margin-left:auto;max-width:320px}.summary-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee0bd}.summary-line.total{font-size:18px;font-weight:700;border-bottom:none;color:#6b5210}@media print{body{background:#fff}.sheet{margin:0;border:none}}</style></head><body><div class="sheet"><div class="top"><div class="brand"><h1>Ruh Imperium</h1><p>Pure Indian Fragrances · Since 1973</p><p>Kannauj, Uttar Pradesh</p></div><div class="meta"><p><strong>${title}</strong></p><p>Order ID: ${order.id}</p><p>Date: ${formatDate(order.createdAt)}</p><p>Payment: ${order.paymentMethod} · ${order.paymentStatus}</p></div></div><div class="grid"><div class="card"><p><strong>${order.customerName}</strong></p><p>${order.customerEmail || ''}</p><p>${order.customerPhone || ''}</p></div><div class="card"><p>${address.address || ''}</p><p>${address.city || ''}, ${address.state || ''} - ${address.pin || ''}</p><p>Order Status: ${order.orderStatus || 'pending'}</p>${order.courierName ? `<p>Courier: ${order.courierName}</p>` : ''}${order.trackingId ? `<p>Tracking ID: ${order.trackingId}</p>` : ''}</div></div><table><thead>${type === 'packing-slip' ? '<tr><th>Item</th><th>Size</th><th>Qty</th></tr>' : '<tr><th>Item</th><th>Size</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>'}</thead><tbody>${rows}</tbody></table><div class="summary"><div class="summary-line"><span>Subtotal</span><strong>₹${Number(order.subtotal || 0).toLocaleString()}</strong></div>${type === 'packing-slip' ? `${order.courierName ? `<div class="summary-line"><span>Courier</span><strong>${order.courierName}</strong></div>` : ''}${order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : ''}` : `<div class="summary-line"><span>Coupon</span><strong>${order.couponCode || 'None'}</strong></div><div class="summary-line"><span>Discount</span><strong>₹${Number(order.discount || 0).toLocaleString()}</strong></div>${order.courierName ? `<div class="summary-line"><span>Courier</span><strong>${order.courierName}</strong></div>` : ''}${order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : ''}<div class="summary-line total"><span>Total</span><strong>₹${Number(order.total || 0).toLocaleString()}</strong></div>`}</div></div></body></html>`;
 }
 
 async function apiFetch(path, options = {}, needsAuth = false) {
@@ -940,6 +941,29 @@ function titleCase(value) {
     return String(value || '').charAt(0).toUpperCase() + String(value || '').slice(1);
 }
 
+function buildTrackingUrl(courierName, trackingId) {
+    const courier = String(courierName || '').trim().toLowerCase();
+    const tracking = encodeURIComponent(String(trackingId || '').trim());
+    if (!tracking) return '';
+    if (courier.includes('delhivery')) return `https://www.delhivery.com/track/package/${tracking}`;
+    if (courier.includes('blue dart') || courier.includes('bluedart')) return `https://www.bluedart.com/tracking?tracking=${tracking}`;
+    if (courier.includes('india post') || courier.includes('speed post')) return `https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx?consignment=${tracking}`;
+    if (courier.includes('dtdc')) return `https://www.dtdc.in/tracking/tracking_results.asp?strCnno=${tracking}`;
+    if (courier.includes('xpressbees')) return `https://www.xpressbees.com/shipment/tracking?trackingNumber=${tracking}`;
+    if (courier.includes('ekart')) return `https://ekartlogistics.com/shipmenttrack/${tracking}`;
+    if (courier.includes('ecom') || courier.includes('ecom express')) return `https://ecomexpress.in/tracking/?awb_field=${tracking}`;
+    return `https://www.google.com/search?q=${encodeURIComponent(`${courierName || 'courier'} tracking ${trackingId}`)}`;
+}
+
+function openTrackingLink(courierName, trackingId) {
+    const url = buildTrackingUrl(courierName, trackingId);
+    if (!url) {
+        showToast('Tracking link is not available yet.');
+        return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 async function openOrderDocument(orderId, type) {
     const docWindow = window.open('', '_blank');
     if (!docWindow) {
@@ -1010,10 +1034,12 @@ function renderOrders(list, targetId, emptyMessage) {
             </div>
             <div class="order-items">${order.items.map(item => `${item.name} (${item.size}) × ${item.qty}`).join('<br>')}</div>
             <div class="order-meta-line">Total: ₹${Number(order.total).toLocaleString()}${order.couponCode ? ` · Coupon: ${order.couponCode}` : ''}</div>
+            ${order.courierName ? `<div class="order-meta-line">Courier: ${order.courierName}</div>` : ''}
             ${order.trackingId ? `<div class="order-meta-line">Tracking ID: ${order.trackingId}</div>` : ''}
             <div class="order-action-row">
                 <button class="order-action-btn" onclick="openOrderDocument('${order.id}','invoice')">Invoice</button>
                 <button class="order-action-btn" onclick="openOrderDocument('${order.id}','packing-slip')">Packing Slip</button>
+                ${order.trackingId ? `<button class="order-action-btn" onclick="openTrackingLink(${JSON.stringify(order.courierName || '')}, ${JSON.stringify(order.trackingId)})">Track Package</button>` : ''}
             </div>
             ${targetId === 'adminOrdersList' ? `<div class="order-meta-line">${order.customerName} · ${order.customerPhone} · ${order.customerEmail || ''}</div>
             <div class="admin-status-row">
@@ -1023,8 +1049,9 @@ function renderOrders(list, targetId, emptyMessage) {
                 </select>
             </div>
             <div class="admin-tracking-row">
+                <input type="text" id="courier-name-${order.id}" value="${order.courierName || ''}" placeholder="Courier name">
                 <input type="text" id="tracking-id-${order.id}" value="${order.trackingId || ''}" placeholder="Add tracking ID">
-                <button type="button" onclick="saveOrderTrackingId('${order.id}')">Save Tracking</button>
+                <button type="button" onclick="saveOrderTrackingId('${order.id}')">Save Shipping</button>
             </div>` : ''}
         </div>
     `).join('');
@@ -1198,8 +1225,10 @@ async function updateAdminOrderStatus(orderId, orderStatus) {
 
 async function saveOrderTrackingId(orderId) {
     if (!currentUser || !currentUser.isAdmin) return;
+    const courierInput = document.getElementById(`courier-name-${orderId}`);
     const input = document.getElementById(`tracking-id-${orderId}`);
-    if (!input) return;
+    if (!input || !courierInput) return;
+    const courierName = courierInput.value.trim();
     const trackingId = input.value.trim();
     if (!apiConfig.backendReady) {
         const orders = getLocalOrders();
@@ -1208,24 +1237,25 @@ async function saveOrderTrackingId(orderId) {
             showToast('Order not found.');
             return;
         }
+        order.courierName = courierName;
         order.trackingId = trackingId;
         order.updatedAt = new Date().toISOString();
         saveLocalOrders(orders);
         adminOrderHistory = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         filterAdminOrders();
         await loadMyOrders();
-        showToast(trackingId ? 'Tracking ID saved.' : 'Tracking ID cleared.');
+        showToast(courierName || trackingId ? 'Shipping details saved.' : 'Shipping details cleared.');
         return;
     }
     try {
         const data = await apiFetch(`/api/admin/orders/${orderId}/status`, {
             method: 'PATCH',
-            body: JSON.stringify({ trackingId })
+            body: JSON.stringify({ courierName, trackingId })
         }, true);
         adminOrderHistory = adminOrderHistory.map(order => order.id === orderId ? { ...order, ...data.order } : order);
         filterAdminOrders();
         await loadMyOrders();
-        showToast(trackingId ? 'Tracking ID saved.' : 'Tracking ID cleared.');
+        showToast(courierName || trackingId ? 'Shipping details saved.' : 'Shipping details cleared.');
     } catch (error) {
         showToast(error.message);
     }
