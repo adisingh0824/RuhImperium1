@@ -1608,7 +1608,9 @@ function renderAuthView() {
     if (currentUser) {
         guestView.style.display = 'none';
         userView.style.display = 'block';
-        document.getElementById('accountName').textContent = currentUser.name || 'Ruh Imperium Customer';
+        document.getElementById('accountName').textContent = currentUser.isAdmin
+            ? `${currentUser.name || 'Ruh Imperium Customer'} (Admin)`
+            : (currentUser.name || 'Ruh Imperium Customer');
         document.getElementById('accountEmail').textContent = currentUser.email || 'No email saved';
         document.getElementById('accountPhone').textContent = currentUser.phone || 'No phone saved';
         if (cardBadge) cardBadge.classList.toggle('show', Boolean(currentUser.isAdmin));

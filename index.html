@@ -642,6 +642,7 @@
             border:1px solid rgba(118,247,255,0.26); color:var(--cyan); font-size:10px; letter-spacing:1.4px;
         }
         .admin-badge.show { display:inline-flex; align-items:center; justify-content:center; }
+        .account-name-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
         .account-card {
             padding:18px; background:rgba(253,246,232,0.04); border:1px solid rgba(201,168,76,0.16);
             margin-bottom:20px; color:rgba(253,246,232,0.72);
@@ -863,8 +864,10 @@
             <h2>Your Account</h2>
             <p>Your profile is saved on this device and will be used to prefill checkout details.</p>
             <div class="account-card">
-                <strong id="accountName"></strong>
-                <span id="accountAdminBadgeCard" class="admin-badge">Admin</span><br>
+                <div class="account-name-row">
+                    <strong id="accountName"></strong>
+                    <span id="accountAdminBadgeCard" class="admin-badge">Admin</span>
+                </div>
                 <span id="accountEmail"></span><br>
                 <span id="accountPhone"></span>
             </div>
