@@ -964,6 +964,20 @@ function openTrackingLink(courierName, trackingId) {
     window.open(url, '_blank', 'noopener,noreferrer');
 }
 
+function buildOrderTimeline(order) {
+    const steps = ['pending', 'confirmed', 'shipped', 'delivered'];
+    const activeStatus = String(order.orderStatus || 'pending').toLowerCase();
+    const activeIndex = Math.max(steps.indexOf(activeStatus), 0);
+    return `
+        <div class="order-timeline">
+            ${steps.map((step, index) => {
+                const stateClass = index < activeIndex ? 'done' : index === activeIndex ? 'active' : '';
+                return `<div class="timeline-step ${stateClass}"><strong>${titleCase(step)}</strong></div>`;
+            }).join('')}
+        </div>
+    `;
+}
+
 async function openOrderDocument(orderId, type) {
     const docWindow = window.open('', '_blank');
     if (!docWindow) {
@@ -1033,6 +1047,7 @@ function renderOrders(list, targetId, emptyMessage) {
                 </div>
             </div>
             <div class="order-items">${order.items.map(item => `${item.name} (${item.size}) × ${item.qty}`).join('<br>')}</div>
+            ${buildOrderTimeline(order)}
             <div class="order-meta-line">Total: ₹${Number(order.total).toLocaleString()}${order.couponCode ? ` · Coupon: ${order.couponCode}` : ''}</div>
             ${order.courierName ? `<div class="order-meta-line">Courier: ${order.courierName}</div>` : ''}
             ${order.trackingId ? `<div class="order-meta-line">Tracking ID: ${order.trackingId}</div>` : ''}

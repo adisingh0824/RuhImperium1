@@ -546,6 +546,25 @@
         .order-status.delivered { color:#b8f2c9; border-color:rgba(45,106,79,0.5); }
         .order-items { color:rgba(253,246,232,0.7); line-height:1.7; margin-bottom:10px; font-size:14px; }
         .order-meta-line { color:rgba(253,246,232,0.48); font-size:13px; line-height:1.6; }
+        .order-timeline {
+            display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0 10px;
+        }
+        .timeline-step {
+            position:relative; padding:12px 10px 10px; border-radius:16px;
+            border:1px solid rgba(118,247,255,0.08); background:rgba(255,255,255,0.03);
+            text-align:center;
+        }
+        .timeline-step::before {
+            content:''; width:10px; height:10px; border-radius:50%; display:block; margin:0 auto 8px;
+            background:rgba(253,246,232,0.18); box-shadow:0 0 0 4px rgba(255,255,255,0.02);
+        }
+        .timeline-step strong { display:block; color:rgba(253,246,232,0.5); font-size:10px; letter-spacing:1.4px; text-transform:uppercase; }
+        .timeline-step.active { border-color:rgba(118,247,255,0.26); background:rgba(118,247,255,0.08); }
+        .timeline-step.active::before { background:var(--cyan); box-shadow:0 0 0 4px rgba(118,247,255,0.12); }
+        .timeline-step.active strong { color:var(--cream); }
+        .timeline-step.done { border-color:rgba(211,176,102,0.24); background:rgba(211,176,102,0.08); }
+        .timeline-step.done::before { background:var(--gold); box-shadow:0 0 0 4px rgba(211,176,102,0.12); }
+        .timeline-step.done strong { color:var(--gold-light); }
         .orders-empty { color:rgba(253,246,232,0.45); font-style:italic; padding:18px 0; }
         .order-action-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
         .order-action-btn {
@@ -679,6 +698,7 @@
             .orders-box{padding:26px 18px;}
             .order-card-head{flex-direction:column;}
             .order-badges{justify-content:flex-start;}
+            .order-timeline{grid-template-columns:1fr 1fr;}
             .admin-status-row{flex-direction:column; align-items:flex-start;}
             .admin-status-row select{width:100%;}
             .admin-tracking-row{flex-direction:column; align-items:stretch;}
