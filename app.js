@@ -26,7 +26,7 @@ let currentUser = null;
 let sessionToken = '';
 let appliedCoupon = null;
 let authMode = 'login';
-let apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false, otpDelivery: 'preview' };
+let apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false, adminEmail: '', otpDelivery: 'preview' };
 let orderHistory = [];
 let adminOrderHistory = [];
 let adminStats = null;
@@ -51,6 +51,15 @@ function loadStoredState() {
         appliedCoupon = null;
         recentlyViewed = [];
     }
+}
+
+function applyAdminAccess(user) {
+    if (!user) return user;
+    const adminEmail = String(apiConfig.adminEmail || '').trim().toLowerCase();
+    return {
+        ...user,
+        isAdmin: Boolean(adminEmail) && String(user.email || '').trim().toLowerCase() === adminEmail
+    };
 }
 
 function persistState() {
@@ -206,10 +215,13 @@ async function loadApiConfig() {
             backendReady: true,
             razorpayKeyId: data.razorpayKeyId || '',
             adminEnabled: Boolean(data.adminEnabled),
+            adminEmail: String(data.adminEmail || '').trim().toLowerCase(),
             otpDelivery: data.otpDelivery || 'preview'
         };
+        currentUser = applyAdminAccess(currentUser);
+        persistUser();
     } catch (error) {
-        apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false, otpDelivery: 'preview' };
+        apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false, adminEmail: '', otpDelivery: 'preview' };
     }
 }
 
@@ -1650,6 +1662,7 @@ function signUpLocally(name, email, phone, password) {
         password,
         isAdmin: false
     };
+    currentUser = applyAdminAccess(currentUser);
     users.push(currentUser);
     saveLocalUsers(users);
     sessionToken = 'local-session';
@@ -1661,7 +1674,7 @@ function loginLocally(email, password) {
     if (!savedUser) {
         throw new Error('Invalid email or password.');
     }
-    currentUser = savedUser;
+    currentUser = applyAdminAccess(savedUser);
     sessionToken = 'local-session';
 }
 
@@ -1706,7 +1719,7 @@ async function handleAuth() {
             method: 'POST',
             body: JSON.stringify({ name, email, phone, password })
         });
-        currentUser = data.user;
+        currentUser = applyAdminAccess(data.user);
         sessionToken = data.token;
         completeSignedInState(authMode === 'signup' ? 'Account created successfully.' : 'Signed in successfully.');
     } catch (error) {
@@ -1724,7 +1737,7 @@ async function handleAuth() {
                             password
                         })
                     });
-                    currentUser = syncData.user;
+                    currentUser = applyAdminAccess(syncData.user);
                     sessionToken = syncData.token;
                     completeSignedInState('Signed in successfully.');
                     return;
@@ -1736,7 +1749,7 @@ async function handleAuth() {
                                 method: 'POST',
                                 body: JSON.stringify({ email, password })
                             });
-                            currentUser = loginData.user;
+                            currentUser = applyAdminAccess(loginData.user);
                             sessionToken = loginData.token;
                             completeSignedInState('Signed in successfully.');
                             return;
