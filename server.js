@@ -1086,6 +1086,7 @@ const server = http.createServer(async (req, res) => {
 
 module.exports = {
     server,
+    handleApi,
     buildPricedCart,
     calculateSubtotal,
     validateCoupon,
@@ -1098,7 +1099,7 @@ module.exports = {
     verifyToken
 };
 
-if (process.env.SKIP_LISTEN !== '1') {
+if (require.main === module && process.env.SKIP_LISTEN !== '1') {
     server.listen(PORT, () => {
         console.log(`Ruh Imperium server running on http://localhost:${PORT}`);
     });
