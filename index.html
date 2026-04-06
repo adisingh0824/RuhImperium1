@@ -622,10 +622,22 @@
         .auth-tab.active { background:var(--gold); color:var(--dark); border-color:var(--gold); }
         .auth-form { display:flex; flex-direction:column; gap:16px; }
         .auth-form .form-group { margin-bottom:0; }
+        .auth-form .form-group input,
+        .auth-form .form-group select,
+        .auth-form .form-group textarea {
+            background:#fff; border:1px solid rgba(30,45,70,0.12); color:var(--text);
+        }
+        .auth-form .form-group input::placeholder,
+        .auth-form .form-group textarea::placeholder { color:rgba(83,101,126,0.7); }
+        .auth-form .form-group input:focus,
+        .auth-form .form-group select:focus,
+        .auth-form .form-group textarea:focus {
+            border-color:rgba(35,65,95,0.35); background:#f9fbfe;
+        }
         .auth-row { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:end; }
         .auth-row .secondary-btn { margin:0; white-space:nowrap; }
-        .auth-help { font-size:12px; color:rgba(253,246,232,0.45); margin-top:-4px; }
-        .auth-alt { margin-top:16px; text-align:center; font-size:13px; color:rgba(253,246,232,0.5); }
+        .auth-help { font-size:12px; color:var(--text-light); margin-top:-4px; }
+        .auth-alt { margin-top:16px; text-align:center; font-size:13px; color:var(--text-light); }
         .auth-link { color:var(--gold-light); cursor:pointer; text-decoration:none; }
         .account-pill {
             min-width:112px; padding:10px 14px; border:1px solid rgba(201,168,76,0.28);
