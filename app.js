@@ -15,6 +15,7 @@ const LOCAL_COUPONS = {
     WELCOME10: { code: 'WELCOME10', label: 'Welcome Offer', type: 'percent', value: 10 },
     ATTAR250: { code: 'ATTAR250', label: 'Flat Rs. 250 Off', type: 'flat', value: 250, minOrder: 1500 }
 };
+const FALLBACK_ADMIN_EMAIL = 'sadityasingh7990@gmail.com';
 
 let cart = [];
 let wishlist = [];
@@ -56,7 +57,7 @@ function loadStoredState() {
 
 function applyAdminAccess(user) {
     if (!user) return user;
-    const adminEmail = String(apiConfig.adminEmail || '').trim().toLowerCase();
+    const adminEmail = String(apiConfig.adminEmail || FALLBACK_ADMIN_EMAIL).trim().toLowerCase();
     return {
         ...user,
         isAdmin: Boolean(adminEmail) && String(user.email || '').trim().toLowerCase() === adminEmail
