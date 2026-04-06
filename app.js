@@ -8,6 +8,7 @@ const LOCAL_ORDERS_STORAGE_KEY = 'ruhImperiumLocalOrders';
 const LOCAL_OTP_STORAGE_KEY = 'ruhImperiumPendingOtp';
 const LOCAL_CHECKOUT_OTP_STORAGE_KEY = 'ruhImperiumPendingCheckoutOtp';
 const RECENTLY_VIEWED_STORAGE_KEY = 'ruhImperiumRecentlyViewed';
+
 const NEWSLETTER_STORAGE_KEY = 'ruhImperiumNewsletterSubscribers';
 const LOCAL_COUPONS = {
     RAMJI20: { code: 'RAMJI20', label: 'Ram Ji Signature Offer', type: 'percent', value: 20 },
