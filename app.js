@@ -856,7 +856,22 @@ async function processCodOrder(details) {
         finalizeOrder('Order placed successfully with Cash on Delivery.');
     } catch (error) {
         const message = String(error.message || '');
-        if (!sessionToken || /request failed/i.test(message) || /failed to fetch/i.test(message)) {
+        const shouldFallback = (
+            !sessionToken ||
+            /request failed/i.test(message) ||
+            /failed to fetch/i.test(message) ||
+            /internal server error/i.test(message) ||
+            /api route not found/i.test(message) ||
+            /unexpected token/i.test(message) ||
+            /network/i.test(message)
+        );
+        const shouldBlock = (
+            /please sign in again/i.test(message) ||
+            /invalid coupon/i.test(message) ||
+            /coupon works on orders above/i.test(message) ||
+            /one or more cart items are invalid/i.test(message)
+        );
+        if (shouldFallback && !shouldBlock) {
             saveLocalCodOrder(details);
             showToast('Order saved in fallback mode because the live checkout API is unavailable right now.');
             return;
