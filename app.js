@@ -188,6 +188,14 @@ function buildLocalOrder(details, paymentMethod, paymentStatus, orderStatus) {
     };
 }
 
+function saveLocalCodOrder(details) {
+    const orders = getLocalOrders();
+    orders.push(buildLocalOrder(details, 'COD', 'pending', 'pending'));
+    saveLocalOrders(orders);
+    launchWhatsAppOrder(details, 'Cash on Delivery');
+    finalizeOrder('Order placed successfully with Cash on Delivery.');
+}
+
 function buildOrderDocumentHtmlClient(order, type) {
     const title = type === 'packing-slip' ? 'Packing Slip' : 'Invoice';
     const address = order.shippingAddress || {};
@@ -832,11 +840,7 @@ function launchWhatsAppOrder(details, paymentLabel, paymentId = '') {
 
 async function processCodOrder(details) {
     if (!apiConfig.backendReady) {
-        const orders = getLocalOrders();
-        orders.push(buildLocalOrder(details, 'COD', 'pending', 'pending'));
-        saveLocalOrders(orders);
-        launchWhatsAppOrder(details, 'Cash on Delivery');
-        finalizeOrder('Order placed successfully with Cash on Delivery.');
+        saveLocalCodOrder(details);
         return;
     }
     try {
@@ -851,6 +855,12 @@ async function processCodOrder(details) {
         launchWhatsAppOrder(details, 'Cash on Delivery');
         finalizeOrder('Order placed successfully with Cash on Delivery.');
     } catch (error) {
+        const message = String(error.message || '');
+        if (!sessionToken || /request failed/i.test(message) || /failed to fetch/i.test(message)) {
+            saveLocalCodOrder(details);
+            showToast('Order saved in fallback mode because the live checkout API is unavailable right now.');
+            return;
+        }
         showToast(error.message);
     }
 }
