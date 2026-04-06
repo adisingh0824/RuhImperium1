@@ -28,7 +28,16 @@ let currentUser = null;
 let sessionToken = '';
 let appliedCoupon = null;
 let authMode = 'login';
-let apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false, adminEmail: '', otpDelivery: 'preview' };
+let apiConfig = {
+    backendReady: false,
+    razorpayKeyId: '',
+    adminEnabled: false,
+    adminEmail: '',
+    otpDelivery: 'preview',
+    paymentEnabled: false,
+    paymentReason: '',
+    health: null
+};
 let orderHistory = [];
 let adminOrderHistory = [];
 let adminStats = null;
@@ -285,13 +294,100 @@ async function loadApiConfig() {
             razorpayKeyId: data.razorpayKeyId || '',
             adminEnabled: Boolean(data.adminEnabled),
             adminEmail: String(data.adminEmail || '').trim().toLowerCase(),
-            otpDelivery: data.otpDelivery || 'preview'
+            otpDelivery: data.otpDelivery || 'preview',
+            paymentEnabled: Boolean(data.paymentEnabled),
+            paymentReason: String(data.paymentReason || ''),
+            health: data.health || null
         };
         currentUser = applyAdminAccess(currentUser);
         persistUser();
     } catch (error) {
-        apiConfig = { backendReady: false, razorpayKeyId: '', adminEnabled: false, adminEmail: '', otpDelivery: 'preview' };
+        apiConfig = {
+            backendReady: false,
+            razorpayKeyId: '',
+            adminEnabled: false,
+            adminEmail: '',
+            otpDelivery: 'preview',
+            paymentEnabled: false,
+            paymentReason: '',
+            health: null
+        };
     }
+}
+
+function renderBackendStatus() {
+    const target = document.getElementById('backendStatus');
+    if (!target) return;
+    if (!apiConfig.backendReady) {
+        target.innerHTML = '<strong>Local Mode Active</strong><span>Live backend is unavailable, so the site is using browser fallback for account, orders, and admin tools.</span>';
+        target.className = 'backend-status warning';
+        return;
+    }
+    const health = apiConfig.health || {};
+    const issues = [];
+    if (!health.authConfigured) issues.push('Auth secret missing');
+    if (!health.adminConfigured) issues.push('Admin email missing');
+    if (!health.razorpayConfigured) issues.push('Razorpay not configured');
+    if (issues.length) {
+        target.innerHTML = `<strong>Backend Limited</strong><span>${issues.join(' • ')}</span>`;
+        target.className = 'backend-status warning';
+        return;
+    }
+    target.innerHTML = `<strong>Backend Live</strong><span>Auth, admin, storage, and payment APIs are available.</span>`;
+    target.className = 'backend-status healthy';
+}
+
+function getPaymentReadiness() {
+    if (!currentUser || !sessionToken) {
+        return { ready: false, message: 'Please sign in before online payment.' };
+    }
+    if (typeof Razorpay === 'undefined') {
+        return { ready: false, message: 'Razorpay checkout script did not load. Refresh once and try again.' };
+    }
+    if (!apiConfig.backendReady) {
+        return { ready: false, message: 'Online payment is unavailable because the live backend is not connected on this deployment.' };
+    }
+    if (!apiConfig.paymentEnabled) {
+        return { ready: false, message: apiConfig.paymentReason || 'Online payment is not configured on the server yet.' };
+    }
+    if (!apiConfig.razorpayKeyId) {
+        return { ready: false, message: 'Razorpay key ID is missing on the server.' };
+    }
+    return { ready: true, message: 'Online payment is ready.' };
+}
+
+function updatePaymentOptionsUI() {
+    const razorpayBtn = document.getElementById('payRazorpayBtn');
+    const codBtn = document.getElementById('payCodBtn');
+    const note = document.getElementById('paymentStatusNote');
+    if (!razorpayBtn || !codBtn) return;
+
+    const readiness = getPaymentReadiness();
+    const razorpayAvailable = readiness.ready;
+
+    razorpayBtn.disabled = !razorpayAvailable;
+    razorpayBtn.classList.toggle('disabled', !razorpayAvailable);
+    razorpayBtn.setAttribute('aria-disabled', String(!razorpayAvailable));
+
+    if (!razorpayAvailable && selectedPayment === 'Razorpay') {
+        selectedPayment = 'COD';
+    }
+
+    razorpayBtn.classList.toggle('active', selectedPayment === 'Razorpay' && razorpayAvailable);
+    codBtn.classList.toggle('active', selectedPayment === 'COD' || !razorpayAvailable);
+
+    if (note) {
+        note.textContent = razorpayAvailable
+            ? 'Online payment is live. Razorpay will open after your order is created.'
+            : readiness.message;
+        note.className = `payment-status-note ${razorpayAvailable ? 'success' : 'warning'}`;
+    }
+}
+
+async function refreshPaymentReadiness() {
+    await loadApiConfig();
+    updateAccountUI();
+    updatePaymentOptionsUI();
 }
 
 function showToast(msg) {
@@ -828,9 +924,17 @@ function updateOrderSummary() {
 }
 
 function selectPay(btn, type) {
+    if (type === 'Razorpay') {
+        const readiness = getPaymentReadiness();
+        if (!readiness.ready) {
+            selectedPayment = 'COD';
+            updatePaymentOptionsUI();
+            showToast(readiness.message);
+            return;
+        }
+    }
     selectedPayment = type;
-    document.querySelectorAll('.pay-opt').forEach(item => item.classList.remove('active'));
-    btn.classList.add('active');
+    updatePaymentOptionsUI();
 }
 
 function getCheckoutOtpIdentifier(details = getCheckoutDetails()) {
@@ -860,6 +964,7 @@ function prefillCheckout() {
     document.getElementById('cPhone').value = currentUser.phone || '';
     document.getElementById('cEmail').value = currentUser.email || '';
     resetCheckoutOtpState();
+    updatePaymentOptionsUI();
 }
 
 function getCheckoutDetails() {
@@ -964,12 +1069,11 @@ async function verifyCheckoutOtp(details) {
 }
 
 async function processRazorpayOrder(details) {
-    if (typeof Razorpay === 'undefined') {
-        showToast('Razorpay failed to load. Please try again.');
-        return;
-    }
-    if (!apiConfig.backendReady || !apiConfig.razorpayKeyId) {
-        showToast('Online payment is unavailable on this deployment right now. Please use Cash on Delivery.');
+    await refreshPaymentReadiness();
+    const readiness = getPaymentReadiness();
+    if (!readiness.ready) {
+        updatePaymentOptionsUI();
+        showToast(readiness.message);
         return;
     }
     try {
@@ -1027,24 +1131,23 @@ async function processRazorpayOrder(details) {
         const razorpay = new Razorpay(options);
         razorpay.open();
     } catch (error) {
-        if (isRecoverableApiError(error.message)) {
-            const orders = getLocalOrders();
-            const order = orders.find(item => item.id === orderId);
-            if (!order) {
-                showToast('Order not found.');
-                return;
-            }
-            order.courierName = courierName;
-            order.trackingId = trackingId;
-            order.updatedAt = new Date().toISOString();
-            saveLocalOrders(orders);
-            buildLocalAdminSnapshot();
-            filterAdminOrders();
-            await loadMyOrders();
-            showToast(courierName || trackingId ? 'Shipping details saved.' : 'Shipping details cleared.');
+        const message = String(error.message || '');
+        await refreshPaymentReadiness();
+        if (/please sign in again/i.test(message)) {
+            showToast('Your session expired. Please sign in again before online payment.');
             return;
         }
-        showToast(error.message);
+        if (/razorpay keys are missing/i.test(message) || /auth secret is missing/i.test(message)) {
+            updatePaymentOptionsUI();
+            showToast(message);
+            return;
+        }
+        if (isRecoverableApiError(message)) {
+            updatePaymentOptionsUI();
+            showToast('Online payment is unavailable right now on this deployment. Please use Cash on Delivery.');
+            return;
+        }
+        showToast(message);
     }
 }
 
@@ -1107,6 +1210,53 @@ function buildOrderTimeline(order) {
             }).join('')}
         </div>
     `;
+}
+
+function openAdminWhatsApp(orderId) {
+    const order = adminOrderHistory.find(item => item.id === orderId) || orderHistory.find(item => item.id === orderId);
+    if (!order || !order.customerPhone) {
+        showToast('Customer phone number is not available.');
+        return;
+    }
+    const items = (order.items || []).map(item => `${item.name} (${item.size}) x ${item.qty}`).join(', ');
+    const message = `Hello ${order.customerName || 'Customer'}, regarding your Ruh Imperium order ${order.id}. Items: ${items}.`;
+    const phone = String(order.customerPhone).replace(/[^\d]/g, '');
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+function openAdminEmail(orderId) {
+    const order = adminOrderHistory.find(item => item.id === orderId) || orderHistory.find(item => item.id === orderId);
+    if (!order || !order.customerEmail) {
+        showToast('Customer email is not available.');
+        return;
+    }
+    const subject = `Ruh Imperium Order ${order.id}`;
+    const body = `Hello ${order.customerName || 'Customer'},%0D%0A%0D%0AThis is regarding your order ${order.id}.%0D%0AOrder status: ${titleCase(order.orderStatus || 'pending')}.`;
+    window.location.href = `mailto:${encodeURIComponent(order.customerEmail)}?subject=${encodeURIComponent(subject)}&body=${body}`;
+}
+
+async function copyAdminOrderSummary(orderId) {
+    const order = adminOrderHistory.find(item => item.id === orderId) || orderHistory.find(item => item.id === orderId);
+    if (!order) {
+        showToast('Order not found.');
+        return;
+    }
+    const summary = [
+        `Order: ${order.id}`,
+        `Customer: ${order.customerName || ''}`,
+        `Phone: ${order.customerPhone || ''}`,
+        `Email: ${order.customerEmail || ''}`,
+        `Payment: ${order.paymentMethod} · ${order.paymentStatus}`,
+        `Order Status: ${order.orderStatus || 'pending'}`,
+        `Total: ₹${Number(order.total || 0).toLocaleString()}`,
+        `Items: ${(order.items || []).map(item => `${item.name} (${item.size}) x ${item.qty}`).join(', ')}`
+    ].join('\n');
+    try {
+        await navigator.clipboard.writeText(summary);
+        showToast('Order summary copied.');
+    } catch (error) {
+        showToast('Unable to copy order summary right now.');
+    }
 }
 
 async function openOrderDocument(orderId, type, event) {
@@ -1196,6 +1346,11 @@ function renderOrders(list, targetId, emptyMessage) {
                 ${order.trackingId ? `<button class="order-action-btn" onclick="openTrackingLink(${JSON.stringify(order.courierName || '')}, ${JSON.stringify(order.trackingId)})">Track Package</button>` : ''}
             </div>
             ${targetId === 'adminOrdersList' ? `<div class="order-meta-line">${order.customerName} · ${order.customerPhone} · ${order.customerEmail || ''}</div>
+            <div class="admin-quick-actions">
+                <button class="admin-quick-btn" type="button" onclick="openAdminWhatsApp('${order.id}')">WhatsApp</button>
+                <button class="admin-quick-btn" type="button" onclick="openAdminEmail('${order.id}')">Email</button>
+                <button class="admin-quick-btn" type="button" onclick="copyAdminOrderSummary('${order.id}')">Copy Summary</button>
+            </div>
             <div class="admin-status-row">
                 <label for="order-status-${order.id}">Update status</label>
                 <select id="order-status-${order.id}" onchange="updateAdminOrderStatus('${order.id}', this.value)">
@@ -1796,6 +1951,7 @@ function updateAccountUI() {
     if (ordersBtn) ordersBtn.style.display = currentUser ? 'flex' : 'none';
     if (adminTab) adminTab.style.display = currentUser && currentUser.isAdmin ? 'block' : 'none';
     renderAuthView();
+    renderBackendStatus();
     renderCartItems();
 }
 
@@ -1995,9 +2151,11 @@ async function initApp() {
     updateWishBadge();
     updateCartBadge();
     updateAccountUI();
+    renderBackendStatus();
     updateCouponUI();
     updateOrderSummary();
     prefillCheckout();
+    updatePaymentOptionsUI();
     renderCartItems();
     ['cName', 'cPhone', 'cEmail', 'cAddress', 'cCity', 'cPin', 'cState'].forEach(id => {
         const element = document.getElementById(id);

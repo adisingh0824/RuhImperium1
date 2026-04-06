@@ -607,12 +607,31 @@ async function createRazorpayOrder(amount, receipt, notes) {
 
 async function handleApi(req, res, pathname, url) {
     if (req.method === 'GET' && pathname === '/api/config') {
+        const razorpayConfigured = Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET);
+        const authConfigured = Boolean(TOKEN_SECRET && TOKEN_SECRET !== 'change-this-auth-secret');
+        const adminConfigured = Boolean(ADMIN_EMAIL);
+        const paymentEnabled = razorpayConfigured && authConfigured;
+        const paymentReason = !razorpayConfigured
+            ? 'Razorpay keys are missing on the server.'
+            : !authConfigured
+                ? 'Auth secret is missing on the server.'
+                : '';
         sendJson(res, 200, {
             backendReady: true,
             razorpayKeyId: RAZORPAY_KEY_ID,
             adminEnabled: Boolean(ADMIN_EMAIL),
             adminEmail: ADMIN_EMAIL,
-            otpDelivery: getOtpDeliveryMode()
+            otpDelivery: getOtpDeliveryMode(),
+            paymentEnabled,
+            paymentReason,
+            health: {
+                storage: 'sqlite',
+                razorpayConfigured,
+                authConfigured,
+                adminConfigured,
+                paymentEnabled,
+                paymentReason
+            }
         });
         return;
     }

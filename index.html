@@ -523,6 +523,13 @@
         .payment-opts { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
         .pay-opt { padding:10px 16px; border:1px solid rgba(118,247,255,0.16); background:rgba(255,255,255,0.02); color:var(--cream); font-family:'Jost',sans-serif; font-size:12px; cursor:pointer; transition:all 0.2s; border-radius:999px; }
         .pay-opt.active { background:linear-gradient(135deg,var(--gold),var(--gold-light)); color:var(--dark); border-color:var(--gold); }
+        .pay-opt.disabled { opacity:0.45; cursor:not-allowed; filter:saturate(0.7); }
+        .payment-status-note {
+            margin-top:12px; padding:12px 14px; border-radius:16px; font-size:12px; line-height:1.6;
+            border:1px solid rgba(118,247,255,0.16); background:rgba(255,255,255,0.03); color:rgba(253,246,232,0.68);
+        }
+        .payment-status-note.success { border-color:rgba(45,106,79,0.35); background:rgba(45,106,79,0.12); color:#b8f2c9; }
+        .payment-status-note.warning { border-color:rgba(201,168,76,0.26); background:rgba(201,168,76,0.08); color:var(--gold-light); }
         .coupon-row { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end; }
         .coupon-btn, .secondary-btn {
             background:transparent; border:1px solid rgba(201,168,76,0.35); color:var(--gold-light);
@@ -552,6 +559,16 @@
         }
         .orders-box h2 { font-family:'Playfair Display',serif; color:var(--text); font-size:28px; margin-bottom:18px; }
         .orders-section-title { color:var(--gold); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin:18px 0 10px; }
+        .backend-status {
+            display:flex; flex-direction:column; gap:6px; margin:0 0 18px; padding:14px 16px; border-radius:18px;
+            border:1px solid rgba(118,247,255,0.12); background:linear-gradient(135deg, rgba(16,34,58,0.96), rgba(10,20,38,0.96));
+            box-shadow:0 16px 38px rgba(7,17,31,0.16);
+        }
+        .backend-status strong { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--cyan); }
+        .backend-status span { font-size:13px; line-height:1.6; color:rgba(246,244,239,0.76); }
+        .backend-status.warning { background:linear-gradient(135deg, rgba(50,35,8,0.94), rgba(28,20,8,0.96)); border-color:rgba(211,176,102,0.2); }
+        .backend-status.warning strong { color:var(--gold-light); }
+        .backend-status.healthy { background:linear-gradient(135deg, rgba(8,40,48,0.94), rgba(8,22,30,0.96)); }
         .orders-list { display:flex; flex-direction:column; gap:14px; }
         .orders-tools { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:10px 0 16px; }
         .orders-tools input, .orders-tools select {
@@ -626,6 +643,18 @@
         }
         .order-action-btn:hover { background:rgba(201,168,76,0.1); border-color:var(--gold); }
         .order-action-btn.generating { background:#162742; border-color:#162742; color:#f7fbff; }
+        .admin-quick-actions {
+            display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;
+        }
+        .admin-quick-btn {
+            border:1px solid rgba(118,247,255,0.18); background:rgba(16,34,58,0.96); color:var(--cream);
+            padding:9px 12px; border-radius:999px; font-size:11px; letter-spacing:1.4px; text-transform:uppercase; cursor:pointer;
+            transition:all 0.25s ease;
+        }
+        .admin-quick-btn:hover {
+            background:rgba(118,247,255,0.12); border-color:rgba(118,247,255,0.34); color:var(--cyan);
+            box-shadow:0 0 24px rgba(118,247,255,0.12);
+        }
         .subscriber-list { display:flex; flex-direction:column; gap:12px; }
         .subscriber-card {
             border:1px solid rgba(118,247,255,0.1); background:rgba(255,255,255,0.88); padding:14px 16px; border-radius:18px;
@@ -899,9 +928,10 @@
         <div class="form-group">
             <label>Payment Method</label>
             <div class="payment-opts">
-                <button class="pay-opt active" onclick="selectPay(this,'Razorpay')">⚡ Razorpay</button>
-                <button class="pay-opt" onclick="selectPay(this,'COD')">💵 Cash on Delivery</button>
+                <button class="pay-opt active" id="payRazorpayBtn" type="button" onclick="selectPay(this,'Razorpay')">⚡ Razorpay</button>
+                <button class="pay-opt" id="payCodBtn" type="button" onclick="selectPay(this,'COD')">💵 Cash on Delivery</button>
             </div>
+            <div class="payment-status-note" id="paymentStatusNote">Checking payment availability...</div>
         </div>
         <div class="form-group">
             <label>Coupon Code</label>
@@ -971,6 +1001,7 @@
     <div class="orders-box">
         <button class="auth-close" type="button" onclick="closeOrdersModal()">✕</button>
         <h2>Your Orders</h2>
+        <div id="backendStatus" class="backend-status warning"></div>
         <div class="orders-section-title">My Orders</div>
         <div class="orders-list" id="ordersList"></div>
         <div id="adminOrdersTab" style="display:none">
