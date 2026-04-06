@@ -699,6 +699,12 @@
             border:1px solid rgba(118,247,255,0.26); color:var(--cyan); font-size:10px; letter-spacing:1.4px;
         }
         .admin-badge.show { display:inline-flex; align-items:center; justify-content:center; }
+        .top-admin-badge {
+            display:none; align-items:center; justify-content:center; padding:8px 12px; border-radius:999px;
+            background:rgba(118,247,255,0.14); border:1px solid rgba(118,247,255,0.26); color:var(--cyan);
+            font-size:10px; letter-spacing:1.8px; text-transform:uppercase;
+        }
+        .top-admin-badge.show { display:inline-flex; }
         .account-name-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
         .account-card {
             padding:18px; background:rgba(248,251,255,0.96); border:1px solid rgba(30,45,70,0.1);
@@ -1012,6 +1018,7 @@
                 <a onclick="goSection('contact')">Contact</a>
             </nav>
             <button class="icon-btn" id="ordersBtn" title="Orders" onclick="openOrdersModal()" style="display:none">📦</button>
+            <span id="topAdminBadge" class="top-admin-badge">Admin</span>
             <button class="icon-btn account-pill" title="Account" onclick="openAuthModal()"><strong id="accountInitial">A</strong><span class="account-pill-text"><span id="accountLabel">Account</span><span id="accountAdminBadge" class="admin-badge">Admin</span></span></button>
             <button class="icon-btn" title="Search" onclick="openSearch()">🔍</button>
             <button class="icon-btn" title="Wishlist" onclick="showWishlist()">❤️<span class="cart-count" id="wishCount" style="background:var(--dark-3);display:none">0</span></button>

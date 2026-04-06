@@ -1628,14 +1628,17 @@ function updateAccountUI() {
     const label = document.getElementById('accountLabel');
     const initial = document.getElementById('accountInitial');
     const badge = document.getElementById('accountAdminBadge');
+    const topBadge = document.getElementById('topAdminBadge');
     if (currentUser) {
         label.textContent = currentUser.name.split(' ')[0];
         initial.textContent = currentUser.name.charAt(0).toUpperCase();
         if (badge) badge.classList.toggle('show', Boolean(currentUser.isAdmin));
+        if (topBadge) topBadge.classList.toggle('show', Boolean(currentUser.isAdmin));
     } else {
         label.textContent = 'Account';
         initial.textContent = 'A';
         if (badge) badge.classList.remove('show');
+        if (topBadge) topBadge.classList.remove('show');
     }
     const ordersBtn = document.getElementById('ordersBtn');
     const adminTab = document.getElementById('adminOrdersTab');
