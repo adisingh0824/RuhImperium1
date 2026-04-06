@@ -33,6 +33,7 @@ let orderHistory = [];
 let adminOrderHistory = [];
 let adminStats = null;
 let adminSubscribers = [];
+let adminFilterPreset = 'all';
 let otpRequestedFor = '';
 const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered'];
 let recentlyViewed = [];
@@ -194,6 +195,24 @@ function saveLocalCodOrder(details) {
     saveLocalOrders(orders);
     launchWhatsAppOrder(details, 'Cash on Delivery');
     finalizeOrder('Order placed successfully with Cash on Delivery.');
+}
+
+function buildLocalAdminSnapshot() {
+    adminOrderHistory = getLocalOrders().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    adminSubscribers = getLocalNewsletterSubscribers()
+        .map((email, index) => ({
+            id: `local-sub-${index + 1}`,
+            email,
+            createdAt: new Date().toISOString()
+        }))
+        .sort((a, b) => a.email.localeCompare(b.email));
+    adminStats = {
+        totalOrders: adminOrderHistory.length,
+        pendingOrders: adminOrderHistory.filter(order => (order.orderStatus || 'pending') === 'pending').length,
+        shippedOrders: adminOrderHistory.filter(order => order.orderStatus === 'shipped').length,
+        deliveredOrders: adminOrderHistory.filter(order => order.orderStatus === 'delivered').length,
+        totalRevenue: adminOrderHistory.reduce((sum, order) => sum + Number(order.total || 0), 0)
+    };
 }
 
 function buildOrderDocumentHtmlClient(order, type) {
@@ -1162,21 +1181,7 @@ async function loadMyOrders() {
 async function loadAdminOrders() {
     if (!currentUser || !currentUser.isAdmin) return;
     if (!apiConfig.backendReady) {
-        adminOrderHistory = getLocalOrders().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        adminSubscribers = getLocalNewsletterSubscribers()
-            .map((email, index) => ({
-                id: `local-sub-${index + 1}`,
-                email,
-                createdAt: new Date().toISOString()
-            }))
-            .sort((a, b) => a.email.localeCompare(b.email));
-        adminStats = {
-            totalOrders: adminOrderHistory.length,
-            pendingOrders: adminOrderHistory.filter(order => (order.orderStatus || 'pending') === 'pending').length,
-            shippedOrders: adminOrderHistory.filter(order => order.orderStatus === 'shipped').length,
-            deliveredOrders: adminOrderHistory.filter(order => order.orderStatus === 'delivered').length,
-            totalRevenue: adminOrderHistory.reduce((sum, order) => sum + Number(order.total || 0), 0)
-        };
+        buildLocalAdminSnapshot();
         renderAdminStats();
         filterAdminOrders();
         filterAdminSubscribers();
@@ -1195,12 +1200,11 @@ async function loadAdminOrders() {
         filterAdminOrders();
         filterAdminSubscribers();
     } catch (error) {
-        adminOrderHistory = [];
-        adminStats = null;
-        adminSubscribers = [];
+        buildLocalAdminSnapshot();
         renderAdminStats();
-        renderOrders([], 'adminOrdersList', error.message);
-        renderSubscribers([], 'adminSubscribersList', error.message);
+        filterAdminOrders();
+        filterAdminSubscribers();
+        showToast('Admin dashboard loaded in fallback mode.');
     }
 }
 
@@ -1226,6 +1230,13 @@ function filterAdminOrders() {
     const status = (statusFilter?.value || 'all').toLowerCase();
     const filtered = adminOrderHistory.filter(order => {
         const matchesStatus = status === 'all' || String(order.orderStatus || 'pending').toLowerCase() === status;
+        const matchesPreset = (
+            adminFilterPreset === 'all' ||
+            (adminFilterPreset === 'needs-tracking' && (order.orderStatus === 'shipped' || order.orderStatus === 'confirmed') && !String(order.trackingId || '').trim()) ||
+            (adminFilterPreset === 'paid' && String(order.paymentStatus || '').toLowerCase() === 'paid') ||
+            (adminFilterPreset === 'cod' && String(order.paymentMethod || '').toLowerCase() === 'cod') ||
+            (adminFilterPreset === 'today' && new Date(order.createdAt).toDateString() === new Date().toDateString())
+        );
         const haystack = [
             order.id,
             order.customerName,
@@ -1236,11 +1247,18 @@ function filterAdminOrders() {
             ...(order.items || []).map(item => item.name)
         ].join(' ').toLowerCase();
         const matchesQuery = !query || haystack.includes(query);
-        return matchesStatus && matchesQuery;
+        return matchesStatus && matchesQuery && matchesPreset;
     });
     renderOrders(filtered, 'adminOrdersList', 'No orders match the current filters.');
     const count = document.getElementById('adminOrderCount');
     if (count) count.textContent = `${filtered.length} orders shown`;
+}
+
+function setAdminFilterPreset(preset) {
+    adminFilterPreset = preset || 'all';
+    const buttons = document.querySelectorAll('[data-admin-preset]');
+    buttons.forEach(button => button.classList.toggle('active', button.dataset.adminPreset === adminFilterPreset));
+    filterAdminOrders();
 }
 
 function filterAdminSubscribers() {
@@ -1479,6 +1497,7 @@ function openOrdersModal() {
     }
     loadMyOrders();
     if (currentUser.isAdmin) loadAdminOrders();
+    setAdminFilterPreset(adminFilterPreset || 'all');
     document.getElementById('ordersModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 }

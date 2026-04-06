@@ -3,11 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const vm = require('vm');
+const { DatabaseSync } = require('node:sqlite');
 
 const ROOT = __dirname;
 loadEnvFile(path.join(ROOT, '.env'));
 const DEFAULT_DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'ruh-imperium-data') : path.join(ROOT, 'data');
 const DATA_DIR = path.resolve(process.env.DATA_DIR || DEFAULT_DATA_DIR);
+const DB_FILE = path.join(DATA_DIR, 'ruh-imperium.sqlite');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 const OTPS_FILE = path.join(DATA_DIR, 'otps.json');
@@ -42,6 +44,7 @@ const mimeTypes = {
 };
 
 ensureDataStore();
+const db = openDatabase();
 const productCatalog = loadProducts();
 
 function loadEnvFile(filePath) {
@@ -64,10 +67,52 @@ function loadEnvFile(filePath) {
 
 function ensureDataStore() {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-    if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]\n', 'utf8');
-    if (!fs.existsSync(ORDERS_FILE)) fs.writeFileSync(ORDERS_FILE, '[]\n', 'utf8');
-    if (!fs.existsSync(OTPS_FILE)) fs.writeFileSync(OTPS_FILE, '[]\n', 'utf8');
-    if (!fs.existsSync(SUBSCRIBERS_FILE)) fs.writeFileSync(SUBSCRIBERS_FILE, '[]\n', 'utf8');
+}
+
+function openDatabase() {
+    const database = new DatabaseSync(DB_FILE);
+    database.exec(`
+        CREATE TABLE IF NOT EXISTS app_store (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
+    `);
+    seedCollection(database, 'users', USERS_FILE);
+    seedCollection(database, 'orders', ORDERS_FILE);
+    seedCollection(database, 'otps', OTPS_FILE);
+    seedCollection(database, 'subscribers', SUBSCRIBERS_FILE);
+    return database;
+}
+
+function seedCollection(database, key, legacyFile) {
+    const existing = database.prepare('SELECT key FROM app_store WHERE key = ?').get(key);
+    if (existing) return;
+    let value = [];
+    if (fs.existsSync(legacyFile)) {
+        try {
+            value = JSON.parse(fs.readFileSync(legacyFile, 'utf8'));
+        } catch (error) {
+            value = [];
+        }
+    }
+    database.prepare('INSERT INTO app_store (key, value) VALUES (?, ?)').run(key, JSON.stringify(value));
+}
+
+function readCollection(key) {
+    const row = db.prepare('SELECT value FROM app_store WHERE key = ?').get(key);
+    if (!row) return [];
+    try {
+        return JSON.parse(row.value);
+    } catch (error) {
+        return [];
+    }
+}
+
+function writeCollection(key, value) {
+    db.prepare(`
+        INSERT INTO app_store (key, value) VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+    `).run(key, JSON.stringify(value));
 }
 
 function loadProducts() {
@@ -79,35 +124,35 @@ function loadProducts() {
 }
 
 function readUsers() {
-    return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    return readCollection('users');
 }
 
 function writeUsers(users) {
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2) + '\n', 'utf8');
+    writeCollection('users', users);
 }
 
 function readOrders() {
-    return JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf8'));
+    return readCollection('orders');
 }
 
 function writeOrders(orders) {
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2) + '\n', 'utf8');
+    writeCollection('orders', orders);
 }
 
 function readOtps() {
-    return JSON.parse(fs.readFileSync(OTPS_FILE, 'utf8'));
+    return readCollection('otps');
 }
 
 function writeOtps(otps) {
-    fs.writeFileSync(OTPS_FILE, JSON.stringify(otps, null, 2) + '\n', 'utf8');
+    writeCollection('otps', otps);
 }
 
 function readSubscribers() {
-    return JSON.parse(fs.readFileSync(SUBSCRIBERS_FILE, 'utf8'));
+    return readCollection('subscribers');
 }
 
 function writeSubscribers(subscribers) {
-    fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify(subscribers, null, 2) + '\n', 'utf8');
+    writeCollection('subscribers', subscribers);
 }
 
 function escapeHtml(value) {
