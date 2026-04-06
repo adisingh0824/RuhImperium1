@@ -625,10 +625,21 @@
         .auth-form .form-group input,
         .auth-form .form-group select,
         .auth-form .form-group textarea {
-            background:#fff; border:1px solid rgba(30,45,70,0.12); color:var(--text);
+            background:#fff !important; border:1px solid rgba(30,45,70,0.12); color:#132033 !important; caret-color:#132033;
         }
         .auth-form .form-group input::placeholder,
         .auth-form .form-group textarea::placeholder { color:rgba(83,101,126,0.7); }
+        .auth-form .form-group input::-webkit-input-placeholder,
+        .auth-form .form-group textarea::-webkit-input-placeholder { color:rgba(83,101,126,0.7); }
+        .auth-form .form-group input:-webkit-autofill,
+        .auth-form .form-group input:-webkit-autofill:hover,
+        .auth-form .form-group input:-webkit-autofill:focus,
+        .auth-form .form-group textarea:-webkit-autofill,
+        .auth-form .form-group select:-webkit-autofill {
+            -webkit-text-fill-color:#132033 !important;
+            box-shadow:0 0 0px 1000px #fff inset;
+            transition:background-color 9999s ease-in-out 0s;
+        }
         .auth-form .form-group input:focus,
         .auth-form .form-group select:focus,
         .auth-form .form-group textarea:focus {
