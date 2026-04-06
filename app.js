@@ -215,6 +215,19 @@ function buildLocalAdminSnapshot() {
     };
 }
 
+function isRecoverableApiError(message) {
+    const text = String(message || '').toLowerCase();
+    return (
+        !text ||
+        /request failed/.test(text) ||
+        /failed to fetch/.test(text) ||
+        /internal server error/.test(text) ||
+        /api route not found/.test(text) ||
+        /network/.test(text) ||
+        /unexpected token/.test(text)
+    );
+}
+
 function buildOrderDocumentHtmlClient(order, type) {
     const title = type === 'packing-slip' ? 'Packing Slip' : 'Invoice';
     const address = order.shippingAddress || {};
@@ -231,9 +244,36 @@ async function apiFetch(path, options = {}, needsAuth = false) {
         ...(options.headers || {})
     };
     if (needsAuth && sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
-    const response = await fetch(path, { ...options, headers });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Request failed.');
+    let response;
+    try {
+        response = await fetch(path, { ...options, headers });
+    } catch (error) {
+        if (String(path || '').startsWith('/api/')) {
+            apiConfig = { ...apiConfig, backendReady: false };
+        }
+        throw new Error('Request failed.');
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    let data = {};
+    let text = '';
+    if (contentType.includes('application/json')) {
+        data = await response.json().catch(() => ({}));
+    } else {
+        text = await response.text().catch(() => '');
+    }
+
+    if (!response.ok) {
+        const message = data.error || text || 'Request failed.';
+        if (String(path || '').startsWith('/api/') && isRecoverableApiError(message) && response.status >= 500) {
+            apiConfig = { ...apiConfig, backendReady: false };
+        }
+        throw new Error(message);
+    }
+
+    if (!contentType.includes('application/json')) {
+        return text;
+    }
     return data;
 }
 
@@ -634,6 +674,22 @@ async function applyCoupon() {
         updateOrderSummary();
         showToast(`${code} applied successfully.`);
     } catch (error) {
+        if (isRecoverableApiError(error.message)) {
+            const orders = getLocalOrders();
+            const order = orders.find(item => item.id === orderId);
+            if (!order) {
+                showToast('Order not found.');
+                return;
+            }
+            order.orderStatus = orderStatus;
+            order.updatedAt = new Date().toISOString();
+            saveLocalOrders(orders);
+            buildLocalAdminSnapshot();
+            filterAdminOrders();
+            await loadMyOrders();
+            showToast(`Order marked as ${titleCase(orderStatus)}.`);
+            return;
+        }
         showToast(error.message);
     }
 }
@@ -971,6 +1027,23 @@ async function processRazorpayOrder(details) {
         const razorpay = new Razorpay(options);
         razorpay.open();
     } catch (error) {
+        if (isRecoverableApiError(error.message)) {
+            const orders = getLocalOrders();
+            const order = orders.find(item => item.id === orderId);
+            if (!order) {
+                showToast('Order not found.');
+                return;
+            }
+            order.courierName = courierName;
+            order.trackingId = trackingId;
+            order.updatedAt = new Date().toISOString();
+            saveLocalOrders(orders);
+            buildLocalAdminSnapshot();
+            filterAdminOrders();
+            await loadMyOrders();
+            showToast(courierName || trackingId ? 'Shipping details saved.' : 'Shipping details cleared.');
+            return;
+        }
         showToast(error.message);
     }
 }
@@ -1174,7 +1247,11 @@ async function loadMyOrders() {
         orderHistory = data.orders || [];
         renderOrders(orderHistory, 'ordersList', 'No orders yet. Your placed orders will appear here.');
     } catch (error) {
-        renderOrders([], 'ordersList', 'Unable to load orders right now.');
+        const localOrders = getLocalOrders().filter(order =>
+            currentUser && (order.userId === currentUser.id || order.customerEmail === currentUser.email)
+        ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        orderHistory = localOrders;
+        renderOrders(orderHistory, 'ordersList', 'No orders yet. Your placed orders will appear here.');
     }
 }
 
@@ -1299,6 +1376,18 @@ async function updateAdminOrderStatus(orderId, orderStatus) {
         await loadAdminOrders();
         await loadMyOrders();
     } catch (error) {
+        if (isRecoverableApiError(error.message)) {
+            const remaining = adminSubscribers.filter(subscriber => subscriber.id !== subscriberId);
+            if (remaining.length === adminSubscribers.length) {
+                showToast('Subscriber not found.');
+                return;
+            }
+            adminSubscribers = remaining;
+            saveLocalNewsletterSubscribers(adminSubscribers.map(subscriber => subscriber.email));
+            filterAdminSubscribers();
+            showToast('Subscriber deleted.');
+            return;
+        }
         showToast(error.message);
     }
 }
@@ -1344,35 +1433,7 @@ async function saveOrderTrackingId(orderId) {
 async function exportAdminOrdersCsv() {
     if (!currentUser || !currentUser.isAdmin || !sessionToken) return;
     if (!apiConfig.backendReady) {
-        const rows = [
-            ['Order ID', 'Created At', 'Customer Name', 'Customer Email', 'Customer Phone', 'Payment Method', 'Payment Status', 'Order Status', 'Coupon Code', 'Subtotal', 'Discount', 'Total', 'Items'],
-            ...adminOrderHistory.map(order => [
-                order.id,
-                order.createdAt,
-                order.customerName,
-                order.customerEmail,
-                order.customerPhone,
-                order.paymentMethod,
-                order.paymentStatus,
-                order.orderStatus || 'pending',
-                order.couponCode || '',
-                order.subtotal,
-                order.discount,
-                order.total,
-                (order.items || []).map(item => `${item.name} (${item.size}) x ${item.qty}`).join(' | ')
-            ])
-        ];
-        const csvText = rows.map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-        const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `ruh-imperium-orders-${new Date().toISOString().slice(0, 10)}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        showToast('Orders CSV exported.');
+        exportAdminOrdersCsvLocal();
         return;
     }
     try {
@@ -1397,28 +1458,51 @@ async function exportAdminOrdersCsv() {
         URL.revokeObjectURL(url);
         showToast('Orders CSV exported.');
     } catch (error) {
+        if (isRecoverableApiError(error.message)) {
+            buildLocalAdminSnapshot();
+            exportAdminOrdersCsvLocal();
+            return;
+        }
         showToast(error.message);
     }
+}
+
+function exportAdminOrdersCsvLocal() {
+    const rows = [
+        ['Order ID', 'Created At', 'Customer Name', 'Customer Email', 'Customer Phone', 'Payment Method', 'Payment Status', 'Order Status', 'Coupon Code', 'Subtotal', 'Discount', 'Total', 'Items'],
+        ...adminOrderHistory.map(order => [
+            order.id,
+            order.createdAt,
+            order.customerName,
+            order.customerEmail,
+            order.customerPhone,
+            order.paymentMethod,
+            order.paymentStatus,
+            order.orderStatus || 'pending',
+            order.couponCode || '',
+            order.subtotal,
+            order.discount,
+            order.total,
+            (order.items || []).map(item => `${item.name} (${item.size}) x ${item.qty}`).join(' | ')
+        ])
+    ];
+    const csvText = rows.map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ruh-imperium-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast('Orders CSV exported.');
 }
 
 async function exportAdminSubscribersCsv() {
     if (!currentUser || !currentUser.isAdmin || !sessionToken) return;
     if (!apiConfig.backendReady) {
-        const rows = [
-            ['Subscriber ID', 'Email', 'Created At'],
-            ...adminSubscribers.map(subscriber => [subscriber.id, subscriber.email, subscriber.createdAt])
-        ];
-        const csvText = rows.map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-        const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `ruh-imperium-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        showToast('Subscribers CSV exported.');
+        exportAdminSubscribersCsvLocal();
         return;
     }
     try {
@@ -1443,8 +1527,31 @@ async function exportAdminSubscribersCsv() {
         URL.revokeObjectURL(url);
         showToast('Subscribers CSV exported.');
     } catch (error) {
+        if (isRecoverableApiError(error.message)) {
+            buildLocalAdminSnapshot();
+            exportAdminSubscribersCsvLocal();
+            return;
+        }
         showToast(error.message);
     }
+}
+
+function exportAdminSubscribersCsvLocal() {
+    const rows = [
+        ['Subscriber ID', 'Email', 'Created At'],
+        ...adminSubscribers.map(subscriber => [subscriber.id, subscriber.email, subscriber.createdAt])
+    ];
+    const csvText = rows.map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ruh-imperium-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast('Subscribers CSV exported.');
 }
 
 async function copyAllSubscriberEmails() {
