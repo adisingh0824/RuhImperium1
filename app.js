@@ -771,20 +771,18 @@ async function applyCoupon() {
         showToast(`${code} applied successfully.`);
     } catch (error) {
         if (isRecoverableApiError(error.message)) {
-            const orders = getLocalOrders();
-            const order = orders.find(item => item.id === orderId);
-            if (!order) {
-                showToast('Order not found.');
+            try {
+                appliedCoupon = getLocalCoupon(code, getCartTotal());
+                persistState();
+                updateCouponUI();
+                renderCartItems();
+                updateOrderSummary();
+                showToast(`${code} applied successfully in fallback mode.`);
+                return;
+            } catch (localError) {
+                showToast(localError.message);
                 return;
             }
-            order.orderStatus = orderStatus;
-            order.updatedAt = new Date().toISOString();
-            saveLocalOrders(orders);
-            buildLocalAdminSnapshot();
-            filterAdminOrders();
-            await loadMyOrders();
-            showToast(`Order marked as ${titleCase(orderStatus)}.`);
-            return;
         }
         showToast(error.message);
     }

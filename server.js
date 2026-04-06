@@ -24,6 +24,9 @@ const MSG91_AUTH_KEY = String(process.env.MSG91_AUTH_KEY || '').trim();
 const MSG91_TEMPLATE_ID = String(process.env.MSG91_TEMPLATE_ID || '').trim();
 const MSG91_SENDER_ID = String(process.env.MSG91_SENDER_ID || '').trim();
 const MSG91_ROUTE = String(process.env.MSG91_ROUTE || '4').trim();
+const SUPABASE_URL = String(process.env.SUPABASE_URL || '').trim().replace(/\/$/, '');
+const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+const REMOTE_DB_ENABLED = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 
 const coupons = {
     RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer' },
@@ -43,8 +46,8 @@ const mimeTypes = {
     '.ico': 'image/x-icon'
 };
 
-ensureDataStore();
-const db = openDatabase();
+if (!REMOTE_DB_ENABLED) ensureDataStore();
+const db = REMOTE_DB_ENABLED ? null : openDatabase();
 const productCatalog = loadProducts();
 
 function loadEnvFile(filePath) {
@@ -98,7 +101,7 @@ function seedCollection(database, key, legacyFile) {
     database.prepare('INSERT INTO app_store (key, value) VALUES (?, ?)').run(key, JSON.stringify(value));
 }
 
-function readCollection(key) {
+function readCollectionLocal(key) {
     const row = db.prepare('SELECT value FROM app_store WHERE key = ?').get(key);
     if (!row) return [];
     try {
@@ -108,11 +111,65 @@ function readCollection(key) {
     }
 }
 
-function writeCollection(key, value) {
+function writeCollectionLocal(key, value) {
     db.prepare(`
         INSERT INTO app_store (key, value) VALUES (?, ?)
         ON CONFLICT(key) DO UPDATE SET value = excluded.value
     `).run(key, JSON.stringify(value));
+}
+
+async function requestRemoteCollection(resourcePath, init = {}) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/${resourcePath}`, {
+        ...init,
+        headers: {
+            apikey: SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=representation,resolution=merge-duplicates',
+            ...(init.headers || {})
+        }
+    });
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(errorText || 'Hosted database request failed.');
+    }
+    if (response.status === 204) return null;
+    return response.json().catch(() => null);
+}
+
+async function readCollection(key) {
+    if (!REMOTE_DB_ENABLED) return readCollectionLocal(key);
+    const rows = await requestRemoteCollection(`app_store?key=eq.${encodeURIComponent(key)}&select=value&limit=1`, {
+        method: 'GET',
+        headers: {
+            Prefer: 'return=representation'
+        }
+    });
+    const value = Array.isArray(rows) && rows[0] ? rows[0].value : [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+        try {
+            return JSON.parse(value);
+        } catch (error) {
+            return [];
+        }
+    }
+    return value && typeof value === 'object' ? value : [];
+}
+
+async function writeCollection(key, value) {
+    if (!REMOTE_DB_ENABLED) {
+        writeCollectionLocal(key, value);
+        return;
+    }
+    await requestRemoteCollection('app_store?on_conflict=key', {
+        method: 'POST',
+        body: JSON.stringify([{
+            key,
+            value,
+            updated_at: new Date().toISOString()
+        }])
+    });
 }
 
 function loadProducts() {
@@ -123,36 +180,36 @@ function loadProducts() {
     return context.globalThis.__products || [];
 }
 
-function readUsers() {
+async function readUsers() {
     return readCollection('users');
 }
 
-function writeUsers(users) {
-    writeCollection('users', users);
+async function writeUsers(users) {
+    await writeCollection('users', users);
 }
 
-function readOrders() {
+async function readOrders() {
     return readCollection('orders');
 }
 
-function writeOrders(orders) {
-    writeCollection('orders', orders);
+async function writeOrders(orders) {
+    await writeCollection('orders', orders);
 }
 
-function readOtps() {
+async function readOtps() {
     return readCollection('otps');
 }
 
-function writeOtps(otps) {
-    writeCollection('otps', otps);
+async function writeOtps(otps) {
+    await writeCollection('otps', otps);
 }
 
-function readSubscribers() {
+async function readSubscribers() {
     return readCollection('subscribers');
 }
 
-function writeSubscribers(subscribers) {
-    writeCollection('subscribers', subscribers);
+async function writeSubscribers(subscribers) {
+    await writeCollection('subscribers', subscribers);
 }
 
 function escapeHtml(value) {
@@ -257,12 +314,12 @@ function verifyToken(token) {
     return payload;
 }
 
-function getAuthUser(req) {
+async function getAuthUser(req) {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
     const payload = verifyToken(token);
     if (!payload) return null;
-    const users = readUsers();
+    const users = await readUsers();
     return users.find(user => user.id === payload.sub) || null;
 }
 
@@ -305,14 +362,15 @@ function buildOrderRecord({ user, customer, pricedCart, subtotal, coupon, total,
     };
 }
 
-function getAdminUser(req) {
-    const authUser = getAuthUser(req);
+async function getAdminUser(req) {
+    const authUser = await getAuthUser(req);
     if (!authUser) return null;
     return Boolean(ADMIN_EMAIL) && authUser.email === ADMIN_EMAIL ? authUser : null;
 }
 
-function getOrderById(orderId) {
-    return readOrders().find(order => order.id === orderId) || null;
+async function getOrderById(orderId) {
+    const orders = await readOrders();
+    return orders.find(order => order.id === orderId) || null;
 }
 
 function canAccessOrder(user, order) {
@@ -625,7 +683,8 @@ async function handleApi(req, res, pathname, url) {
             paymentEnabled,
             paymentReason,
             health: {
-                storage: 'sqlite',
+                storage: REMOTE_DB_ENABLED ? 'supabase' : 'sqlite',
+                hostedDatabaseConfigured: REMOTE_DB_ENABLED,
                 razorpayConfigured,
                 authConfigured,
                 adminConfigured,
@@ -646,7 +705,7 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Name, email, phone, and a 6+ character password are required.' });
             return;
         }
-        const users = readUsers();
+        const users = await readUsers();
         if (users.some(user => user.email === email)) {
             sendJson(res, 409, { error: 'An account with this email already exists.' });
             return;
@@ -662,7 +721,7 @@ async function handleApi(req, res, pathname, url) {
             createdAt: new Date().toISOString()
         };
         users.push(user);
-        writeUsers(users);
+        await writeUsers(users);
         sendJson(res, 201, {
             user: sanitizeUser(user),
             token: createToken(user)
@@ -678,7 +737,7 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Email and password are required.' });
             return;
         }
-        const users = readUsers();
+        const users = await readUsers();
         const user = users.find(entry => entry.email === email);
         if (!user || !verifyPassword(password, user)) {
             sendJson(res, 401, { error: 'Invalid email or password.' });
@@ -699,14 +758,14 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Email or phone is required.' });
             return;
         }
-        const users = readUsers();
+        const users = await readUsers();
         const user = users.find(entry => (email && entry.email === email) || (phone && entry.phone === phone));
         if (!user) {
             sendJson(res, 404, { error: 'No account found for that email or phone.' });
             return;
         }
         const code = String(Math.floor(1000 + Math.random() * 9000));
-        const otps = readOtps().filter(entry => entry.userId !== user.id && entry.expiresAt > Date.now());
+        const otps = (await readOtps()).filter(entry => entry.userId !== user.id && entry.expiresAt > Date.now());
         otps.push({
             userId: user.id,
             purpose: 'login',
@@ -715,7 +774,7 @@ async function handleApi(req, res, pathname, url) {
             codeHash: crypto.createHash('sha256').update(code).digest('hex'),
             expiresAt: Date.now() + 5 * 60 * 1000
         });
-        writeOtps(otps);
+        await writeOtps(otps);
         const delivery = await sendOtpMessage({ phone: user.phone || phone, otp: code });
         sendJson(res, 200, {
             message: delivery.mode === 'sms'
@@ -737,13 +796,13 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Email or phone and OTP are required.' });
             return;
         }
-        const users = readUsers();
+        const users = await readUsers();
         const user = users.find(entry => (email && entry.email === email) || (phone && entry.phone === phone));
         if (!user) {
             sendJson(res, 404, { error: 'Account not found.' });
             return;
         }
-        const otps = readOtps();
+        const otps = await readOtps();
         const matchingOtp = otps.find(entry => entry.userId === user.id && entry.purpose === 'login' && entry.expiresAt > Date.now());
         if (!matchingOtp) {
             sendJson(res, 400, { error: 'OTP expired. Please request a new one.' });
@@ -754,7 +813,7 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Invalid OTP.' });
             return;
         }
-        writeOtps(otps.filter(entry => entry.userId !== user.id));
+        await writeOtps(otps.filter(entry => entry.userId !== user.id));
         sendJson(res, 200, {
             user: sanitizeUser(user),
             token: createToken(user)
@@ -763,7 +822,7 @@ async function handleApi(req, res, pathname, url) {
     }
 
     if (req.method === 'POST' && pathname === '/api/orders/request-otp') {
-        const authUser = getAuthUser(req);
+        const authUser = await getAuthUser(req);
         if (!authUser) {
             sendJson(res, 401, { error: 'Please sign in again before requesting order OTP.' });
             return;
@@ -776,7 +835,7 @@ async function handleApi(req, res, pathname, url) {
             return;
         }
         const code = String(Math.floor(1000 + Math.random() * 9000));
-        const otps = readOtps().filter(entry => !(entry.userId === authUser.id && entry.purpose === 'order') && entry.expiresAt > Date.now());
+        const otps = (await readOtps()).filter(entry => !(entry.userId === authUser.id && entry.purpose === 'order') && entry.expiresAt > Date.now());
         otps.push({
             userId: authUser.id,
             purpose: 'order',
@@ -785,7 +844,7 @@ async function handleApi(req, res, pathname, url) {
             codeHash: crypto.createHash('sha256').update(code).digest('hex'),
             expiresAt: Date.now() + 5 * 60 * 1000
         });
-        writeOtps(otps);
+        await writeOtps(otps);
         const delivery = await sendOtpMessage({ phone, otp: code });
         sendJson(res, 200, {
             message: delivery.mode === 'sms'
@@ -799,7 +858,7 @@ async function handleApi(req, res, pathname, url) {
     }
 
     if (req.method === 'POST' && pathname === '/api/orders/verify-otp') {
-        const authUser = getAuthUser(req);
+        const authUser = await getAuthUser(req);
         if (!authUser) {
             sendJson(res, 401, { error: 'Please sign in again before verifying order OTP.' });
             return;
@@ -812,7 +871,7 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Email or phone and OTP are required.' });
             return;
         }
-        const otps = readOtps();
+        const otps = await readOtps();
         const matchingOtp = otps.find(entry =>
             entry.userId === authUser.id &&
             entry.purpose === 'order' &&
@@ -828,7 +887,7 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Invalid order OTP.' });
             return;
         }
-        writeOtps(otps.filter(entry => !(entry.userId === authUser.id && entry.purpose === 'order')));
+        await writeOtps(otps.filter(entry => !(entry.userId === authUser.id && entry.purpose === 'order')));
         sendJson(res, 200, {
             verified: true,
             identifier: phone || email
@@ -858,7 +917,7 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Please enter a valid email address.' });
             return;
         }
-        const subscribers = readSubscribers();
+        const subscribers = await readSubscribers();
         const existing = subscribers.find(entry => entry.email === email);
         if (existing) {
             sendJson(res, 200, { subscribed: true, alreadySubscribed: true, email });
@@ -869,13 +928,13 @@ async function handleApi(req, res, pathname, url) {
             email,
             createdAt: new Date().toISOString()
         });
-        writeSubscribers(subscribers);
+        await writeSubscribers(subscribers);
         sendJson(res, 201, { subscribed: true, email });
         return;
     }
 
     if (req.method === 'POST' && pathname === '/api/payments/razorpay/order') {
-        const authUser = getAuthUser(req);
+        const authUser = await getAuthUser(req);
         if (!authUser) {
             sendJson(res, 401, { error: 'Please sign in again before payment.' });
             return;
@@ -895,7 +954,7 @@ async function handleApi(req, res, pathname, url) {
             customerPhone: authUser.phone,
             coupon: coupon ? coupon.code : 'None'
         });
-        const orders = readOrders();
+        const orders = await readOrders();
         orders.push(buildOrderRecord({
             user: authUser,
             customer: body.customer || {},
@@ -908,7 +967,7 @@ async function handleApi(req, res, pathname, url) {
             orderStatus: 'pending',
             razorpayOrderId: order.id
         }));
-        writeOrders(orders);
+        await writeOrders(orders);
         sendJson(res, 200, {
             keyId: RAZORPAY_KEY_ID,
             orderId: order.id,
@@ -919,7 +978,7 @@ async function handleApi(req, res, pathname, url) {
     }
 
     if (req.method === 'POST' && pathname === '/api/payments/razorpay/verify') {
-        const authUser = getAuthUser(req);
+        const authUser = await getAuthUser(req);
         if (!authUser) {
             sendJson(res, 401, { error: 'Please sign in again before payment verification.' });
             return;
@@ -937,20 +996,20 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Payment signature verification failed.' });
             return;
         }
-        const orders = readOrders();
+        const orders = await readOrders();
         const order = orders.find(entry => entry.razorpayOrderId === body.orderId && entry.userId === authUser.id);
         if (order) {
             order.paymentStatus = 'paid';
             order.razorpayPaymentId = body.paymentId;
             order.paidAt = new Date().toISOString();
-            writeOrders(orders);
+            await writeOrders(orders);
         }
         sendJson(res, 200, { verified: true });
         return;
     }
 
     if (req.method === 'POST' && pathname === '/api/orders/cod') {
-        const authUser = getAuthUser(req);
+        const authUser = await getAuthUser(req);
         if (!authUser) {
             sendJson(res, 401, { error: 'Please sign in again before placing the order.' });
             return;
@@ -960,7 +1019,7 @@ async function handleApi(req, res, pathname, url) {
         const subtotal = calculateSubtotal(pricedCart);
         const coupon = body.couponCode ? validateCoupon(body.couponCode, subtotal) : null;
         const total = Math.max(subtotal - (coupon ? coupon.discountAmount : 0), 0);
-        const orders = readOrders();
+        const orders = await readOrders();
         const order = buildOrderRecord({
             user: authUser,
             customer: body.customer || {},
@@ -973,18 +1032,18 @@ async function handleApi(req, res, pathname, url) {
             orderStatus: 'pending'
         });
         orders.push(order);
-        writeOrders(orders);
+        await writeOrders(orders);
         sendJson(res, 201, { orderId: order.id });
         return;
     }
 
     if (req.method === 'GET' && pathname === '/api/orders') {
-        const authUser = getAuthUser(req);
+        const authUser = await getAuthUser(req);
         if (!authUser) {
             sendJson(res, 401, { error: 'Please sign in again to view your orders.' });
             return;
         }
-        const orders = readOrders()
+        const orders = (await readOrders())
             .filter(order => order.userId === authUser.id)
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         sendJson(res, 200, { orders });
@@ -992,14 +1051,14 @@ async function handleApi(req, res, pathname, url) {
     }
 
     if (req.method === 'GET' && pathname.startsWith('/api/orders/') && pathname.endsWith('/document')) {
-        const authUser = getAuthUser(req);
+        const authUser = await getAuthUser(req);
         if (!authUser) {
             sendJson(res, 401, { error: 'Please sign in again to view this document.' });
             return;
         }
         const parts = pathname.split('/');
         const orderId = parts[3];
-        const order = getOrderById(orderId);
+        const order = await getOrderById(orderId);
         if (!canAccessOrder(authUser, order)) {
             sendJson(res, 403, { error: 'You do not have access to this order document.' });
             return;
@@ -1010,81 +1069,81 @@ async function handleApi(req, res, pathname, url) {
     }
 
     if (req.method === 'GET' && pathname === '/api/admin/orders') {
-        const adminUser = getAdminUser(req);
+        const adminUser = await getAdminUser(req);
         if (!adminUser) {
             sendJson(res, 403, { error: 'Admin access required.' });
             return;
         }
-        const orders = readOrders().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const orders = (await readOrders()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         sendJson(res, 200, { orders });
         return;
     }
 
     if (req.method === 'GET' && pathname === '/api/admin/stats') {
-        const adminUser = getAdminUser(req);
+        const adminUser = await getAdminUser(req);
         if (!adminUser) {
             sendJson(res, 403, { error: 'Admin access required.' });
             return;
         }
-        const orders = readOrders();
+        const orders = await readOrders();
         sendJson(res, 200, { stats: buildAdminStats(orders) });
         return;
     }
 
     if (req.method === 'GET' && pathname === '/api/admin/orders/export.csv') {
-        const adminUser = getAdminUser(req);
+        const adminUser = await getAdminUser(req);
         if (!adminUser) {
             sendJson(res, 403, { error: 'Admin access required.' });
             return;
         }
-        const orders = readOrders().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const orders = (await readOrders()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         sendText(res, 200, buildOrdersCsv(orders), 'text/csv; charset=utf-8');
         return;
     }
 
     if (req.method === 'GET' && pathname === '/api/admin/subscribers') {
-        const adminUser = getAdminUser(req);
+        const adminUser = await getAdminUser(req);
         if (!adminUser) {
             sendJson(res, 403, { error: 'Admin access required.' });
             return;
         }
-        const subscribers = readSubscribers().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const subscribers = (await readSubscribers()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         sendJson(res, 200, { subscribers });
         return;
     }
 
     if (req.method === 'GET' && pathname === '/api/admin/subscribers/export.csv') {
-        const adminUser = getAdminUser(req);
+        const adminUser = await getAdminUser(req);
         if (!adminUser) {
             sendJson(res, 403, { error: 'Admin access required.' });
             return;
         }
-        const subscribers = readSubscribers().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const subscribers = (await readSubscribers()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         sendText(res, 200, buildSubscribersCsv(subscribers), 'text/csv; charset=utf-8');
         return;
     }
 
     if (req.method === 'DELETE' && pathname.startsWith('/api/admin/subscribers/')) {
-        const adminUser = getAdminUser(req);
+        const adminUser = await getAdminUser(req);
         if (!adminUser) {
             sendJson(res, 403, { error: 'Admin access required.' });
             return;
         }
         const parts = pathname.split('/');
         const subscriberId = parts[4];
-        const subscribers = readSubscribers();
+        const subscribers = await readSubscribers();
         const nextSubscribers = subscribers.filter(subscriber => subscriber.id !== subscriberId);
         if (nextSubscribers.length === subscribers.length) {
             sendJson(res, 404, { error: 'Subscriber not found.' });
             return;
         }
-        writeSubscribers(nextSubscribers);
+        await writeSubscribers(nextSubscribers);
         sendJson(res, 200, { removed: true, subscriberId });
         return;
     }
 
     if (req.method === 'PATCH' && pathname.startsWith('/api/admin/orders/') && pathname.endsWith('/status')) {
-        const adminUser = getAdminUser(req);
+        const adminUser = await getAdminUser(req);
         if (!adminUser) {
             sendJson(res, 403, { error: 'Admin access required.' });
             return;
@@ -1104,7 +1163,7 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Invalid order status.' });
             return;
         }
-        const orders = readOrders();
+        const orders = await readOrders();
         const order = orders.find(entry => entry.id === orderId);
         if (!order) {
             sendJson(res, 404, { error: 'Order not found.' });
@@ -1114,7 +1173,7 @@ async function handleApi(req, res, pathname, url) {
         order.trackingId = nextTrackingId;
         order.courierName = nextCourierName;
         order.updatedAt = new Date().toISOString();
-        writeOrders(orders);
+        await writeOrders(orders);
         sendJson(res, 200, { order });
         return;
     }
