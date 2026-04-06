@@ -6,7 +6,8 @@ const vm = require('vm');
 
 const ROOT = __dirname;
 loadEnvFile(path.join(ROOT, '.env'));
-const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(ROOT, 'data'));
+const DEFAULT_DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'ruh-imperium-data') : path.join(ROOT, 'data');
+const DATA_DIR = path.resolve(process.env.DATA_DIR || DEFAULT_DATA_DIR);
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 const OTPS_FILE = path.join(DATA_DIR, 'otps.json');
