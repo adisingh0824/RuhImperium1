@@ -2932,6 +2932,9 @@ function completeSignedInState(successMessage) {
 }
 
 function signUpLocally(name, email, phone, password) {
+    if (!password || password.length < 6) {
+        throw new Error('Use a password with at least 6 characters.');
+    }
     const users = getLocalUsers();
     if (users.some(user => user.email === email)) {
         throw new Error('An account with this email already exists.');
@@ -2980,6 +2983,10 @@ async function handleAuth() {
     }
     if (authMode === 'signup' && (!name || !phone)) {
         showToast('Please complete all signup fields.');
+        return;
+    }
+    if (authMode === 'signup' && password.length < 6) {
+        showToast('Use a password with at least 6 characters.');
         return;
     }
     if (!apiConfig.backendReady) {
@@ -3056,14 +3063,45 @@ async function handleAuth() {
                 }
             }
         }
-        if (authMode === 'signup' && String(error.message || '').toLowerCase().includes('request failed')) {
+        if (authMode === 'signup' && isRecoverableApiError(error.message)) {
             try {
                 signUpLocally(name, email, phone, password);
                 completeSignedInState('Account created successfully.');
                 return;
             } catch (localError) {
-                showToast(localError.message);
+                const localUser = getLocalUserByEmail(email);
+                if (localUser) {
+                    if (localUser.password === password) {
+                        loginLocally(email, password);
+                        completeSignedInState('This account already existed locally, so you were signed in directly.');
+                        return;
+                    }
+                    showToast('This email already exists on this device. Try signing in with the same password.');
+                    return;
+                }
+                showToast(localError.message || 'Account could not be created right now.');
                 return;
+            }
+        }
+        if (authMode === 'signup' && String(error.message || '').toLowerCase().includes('already exists')) {
+            try {
+                loginLocally(email, password);
+                completeSignedInState('This account already existed, so you were signed in directly.');
+                return;
+            } catch (localError) {
+                try {
+                    const loginData = await apiFetch('/api/auth/login', {
+                        method: 'POST',
+                        body: JSON.stringify({ email, password })
+                    });
+                    currentUser = applyAdminAccess(loginData.user);
+                    sessionToken = loginData.token;
+                    completeSignedInState('This account already existed, so you were signed in directly.');
+                    return;
+                } catch (retryError) {
+                    showToast('This email is already registered. Try signing in with the same password.');
+                    return;
+                }
             }
         }
         showToast(error.message);
