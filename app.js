@@ -38,6 +38,7 @@ const CATEGORY_GST_RATES = {
     'Eau De Parfum': 18
 };
 const REMOTE_STATES = new Set(['West Bengal', 'Tamil Nadu', 'Karnataka', 'Maharashtra', 'Other']);
+const SHIPPING_PROVIDERS = ['Delhivery', 'Ecom Express', 'Ekart', 'Xpressbees', 'DTDC', 'Blue Dart', 'India Post / Speed Post'];
 
 let cart = [];
 let wishlist = [];
@@ -555,6 +556,12 @@ function renderBackendStatus() {
     }
     target.innerHTML = `<strong>Backend Live</strong><span>Auth, admin, storage, and payment APIs are available.</span>`;
     target.className = 'backend-status healthy';
+}
+
+function populateShippingProviders() {
+    const list = document.getElementById('shippingProvidersList');
+    if (!list) return;
+    list.innerHTML = SHIPPING_PROVIDERS.map(provider => `<option value="${provider}"></option>`).join('');
 }
 
 function downloadJsonFile(filename, payload) {
@@ -2164,7 +2171,7 @@ function renderOrders(list, targetId, emptyMessage) {
                 </select>
             </div>
             <div class="admin-tracking-row">
-                <input type="text" id="courier-name-${order.id}" value="${order.courierName || ''}" placeholder="Courier name">
+                <input type="text" id="courier-name-${order.id}" list="shippingProvidersList" value="${order.courierName || ''}" placeholder="Courier name">
                 <input type="text" id="tracking-id-${order.id}" value="${order.trackingId || ''}" placeholder="Add tracking ID">
                 <button type="button" onclick="saveOrderTrackingId('${order.id}')">Save Shipping</button>
             </div>` : ''}
@@ -3162,6 +3169,7 @@ async function initApp() {
     populateReviewProductOptions();
     renderHomeSections();
     renderCustomerReviews();
+    populateShippingProviders();
     updateWishBadge();
     updateCartBadge();
     updateAccountUI();

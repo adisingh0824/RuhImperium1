@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const vm = require('vm');
 const { DatabaseSync } = require('node:sqlite');
 const { MongoClient } = require('mongodb');
+const nodemailer = require('nodemailer');
 
 const ROOT = __dirname;
 loadEnvFile(path.join(ROOT, '.env'));
@@ -29,6 +30,8 @@ const SMTP_HOST = String(process.env.SMTP_HOST || '').trim();
 const SMTP_PORT = String(process.env.SMTP_PORT || '').trim();
 const SMTP_USER = String(process.env.SMTP_USER || '').trim();
 const SMTP_PASS = String(process.env.SMTP_PASS || '').trim();
+const SMTP_FROM = String(process.env.SMTP_FROM || SMTP_USER || '').trim();
+const APP_BASE_URL = String(process.env.APP_BASE_URL || '').trim().replace(/\/$/, '');
 const ADMIN_EMAIL = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
 const OTP_PROVIDER = String(process.env.OTP_PROVIDER || '').trim().toLowerCase();
 const MSG91_AUTH_KEY = String(process.env.MSG91_AUTH_KEY || '').trim();
@@ -61,6 +64,15 @@ const coupons = {
 };
 
 const PARTIAL_COD_DEPOSIT_PERCENT = 20;
+const SHIPPING_PROVIDERS = [
+    { id: 'delhivery', label: 'Delhivery' },
+    { id: 'ecom-express', label: 'Ecom Express' },
+    { id: 'ekart', label: 'Ekart' },
+    { id: 'xpressbees', label: 'Xpressbees' },
+    { id: 'dtdc', label: 'DTDC' },
+    { id: 'blue-dart', label: 'Blue Dart' },
+    { id: 'india-post', label: 'India Post / Speed Post' }
+];
 
 const mimeTypes = {
     '.html': 'text/html; charset=utf-8',
@@ -77,6 +89,7 @@ const mimeTypes = {
 if (!REMOTE_DB_ENABLED) ensureDataStore();
 const db = REMOTE_DB_ENABLED ? null : openDatabase();
 let mongoClientPromise = null;
+let transporterPromise = null;
 const productCatalog = loadProducts();
 
 function loadEnvFile(filePath) {
@@ -344,6 +357,113 @@ function normalizePhone(phone) {
     if (digits.length === 10) return `91${digits}`;
     if (digits.length === 12 && digits.startsWith('91')) return digits;
     return digits;
+}
+
+// EMAIL NOTIFICATION SETUP
+function getBaseUrl(req) {
+    if (APP_BASE_URL) return APP_BASE_URL;
+    const proto = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+    return `${proto}://${host}`;
+}
+
+function getTransporter() {
+    if (!(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS)) return null;
+    if (!transporterPromise) {
+        transporterPromise = Promise.resolve(nodemailer.createTransport({
+            host: SMTP_HOST,
+            port: Number(SMTP_PORT),
+            secure: Number(SMTP_PORT) === 465,
+            auth: {
+                user: SMTP_USER,
+                pass: SMTP_PASS
+            }
+        }));
+    }
+    return transporterPromise;
+}
+
+function buildOrderTrackingUrl(order) {
+    const courier = String(order.courierName || '').trim().toLowerCase();
+    const tracking = encodeURIComponent(String(order.trackingId || '').trim());
+    if (!tracking) return '';
+    if (courier.includes('delhivery')) return `https://www.delhivery.com/track/package/${tracking}`;
+    if (courier.includes('blue dart') || courier.includes('bluedart')) return `https://www.bluedart.com/tracking?tracking=${tracking}`;
+    if (courier.includes('india post') || courier.includes('speed post')) return `https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx?consignment=${tracking}`;
+    if (courier.includes('dtdc')) return `https://www.dtdc.in/tracking/tracking_results.asp?strCnno=${tracking}`;
+    if (courier.includes('xpressbees')) return `https://www.xpressbees.com/shipment/tracking?trackingNumber=${tracking}`;
+    if (courier.includes('ekart')) return `https://ekartlogistics.com/shipmenttrack/${tracking}`;
+    if (courier.includes('ecom')) return `https://ecomexpress.in/tracking/?awb_field=${tracking}`;
+    return '';
+}
+
+function buildNotificationEmail(order, eventType, req) {
+    const invoiceUrl = `${getBaseUrl(req)}/api/orders/${order.id}/document?type=invoice`;
+    const packingSlipUrl = `${getBaseUrl(req)}/api/orders/${order.id}/document?type=packing-slip`;
+    const trackingUrl = buildOrderTrackingUrl(order);
+    const statusLabel = String(order.orderStatus || 'pending').toUpperCase();
+    const paymentLabel = `${order.paymentMethod} · ${order.paymentStatus}`;
+    const itemsHtml = (order.items || []).map(item =>
+        `<li>${escapeHtml(item.name)} (${escapeHtml(item.size)}) × ${escapeHtml(item.qty)}</li>`
+    ).join('');
+    const titleMap = {
+        placed: 'Your Ruh Imperium order is confirmed',
+        paid: 'Payment received for your Ruh Imperium order',
+        shipped: 'Your Ruh Imperium order has been shipped',
+        delivered: 'Your Ruh Imperium order has been delivered',
+        updated: 'Your Ruh Imperium order has been updated'
+    };
+    const headlineMap = {
+        placed: 'Thank you for placing your order.',
+        paid: 'We have received your payment successfully.',
+        shipped: 'Your package is on the way.',
+        delivered: 'Your package has been marked as delivered.',
+        updated: 'There is an update on your order.'
+    };
+    return {
+        subject: `${titleMap[eventType] || titleMap.updated} · ${order.id}`,
+        html: `
+            <div style="font-family:Arial,sans-serif;background:#eef3f9;padding:24px;color:#162742">
+                <div style="max-width:720px;margin:0 auto;background:#ffffff;border:1px solid #d6e1ee;padding:28px">
+                    <h1 style="margin:0 0 10px;font-size:28px;color:#162742">Ruh Imperium</h1>
+                    <p style="margin:0 0 18px;color:#53657e">${headlineMap[eventType] || headlineMap.updated}</p>
+                    <div style="padding:16px;background:#f8fbff;border:1px solid #dde6f0;margin-bottom:20px">
+                        <p style="margin:0 0 8px"><strong>Order ID:</strong> ${escapeHtml(order.id)}</p>
+                        <p style="margin:0 0 8px"><strong>Order Status:</strong> ${escapeHtml(statusLabel)}</p>
+                        <p style="margin:0 0 8px"><strong>Payment:</strong> ${escapeHtml(paymentLabel)}</p>
+                        <p style="margin:0"><strong>Total:</strong> ₹${currency(order.total || 0)}</p>
+                    </div>
+                    <p style="margin:0 0 10px"><strong>Items</strong></p>
+                    <ul style="margin:0 0 20px;padding-left:18px;color:#53657e">${itemsHtml}</ul>
+                    ${order.courierName ? `<p style="margin:0 0 8px"><strong>Courier:</strong> ${escapeHtml(order.courierName)}</p>` : ''}
+                    ${order.trackingId ? `<p style="margin:0 0 16px"><strong>Tracking ID:</strong> ${escapeHtml(order.trackingId)}</p>` : ''}
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
+                        <a href="${invoiceUrl}" style="background:#162742;color:#fff;text-decoration:none;padding:12px 16px;display:inline-block">Open Invoice</a>
+                        <a href="${packingSlipUrl}" style="background:#d3b066;color:#07111f;text-decoration:none;padding:12px 16px;display:inline-block">Open Packing Slip</a>
+                        ${trackingUrl ? `<a href="${trackingUrl}" style="background:#2d6a4f;color:#fff;text-decoration:none;padding:12px 16px;display:inline-block">Track Package</a>` : ''}
+                    </div>
+                </div>
+            </div>
+        `
+    };
+}
+
+async function sendOrderNotification(order, eventType, req) {
+    if (!isValidEmail(order.customerEmail)) {
+        return { sent: false, reason: 'missing-recipient' };
+    }
+    const transporter = await getTransporter();
+    if (!transporter) {
+        return { sent: false, reason: 'email-not-configured' };
+    }
+    const message = buildNotificationEmail(order, eventType, req);
+    await transporter.sendMail({
+        from: SMTP_FROM || SMTP_USER,
+        to: order.customerEmail,
+        subject: message.subject,
+        html: message.html
+    });
+    return { sent: true };
 }
 
 function sendFile(res, filePath) {
@@ -1106,6 +1226,11 @@ async function handleApi(req, res, pathname, url) {
         return;
     }
 
+    if (req.method === 'GET' && pathname === '/api/shipping/providers') {
+        sendJson(res, 200, { providers: SHIPPING_PROVIDERS });
+        return;
+    }
+
     if (req.method === 'POST' && pathname === '/api/payments/razorpay/order') {
         const authUser = await getAuthUser(req);
         if (!authUser) {
@@ -1188,6 +1313,11 @@ async function handleApi(req, res, pathname, url) {
             order.razorpayPaymentId = body.paymentId;
             order.paidAt = new Date().toISOString();
             await writeOrders(orders);
+            try {
+                await sendOrderNotification(order, 'paid', req);
+            } catch (error) {
+                console.error('Payment email notification failed:', error.message);
+            }
         }
         sendJson(res, 200, { verified: true });
         return;
@@ -1222,6 +1352,11 @@ async function handleApi(req, res, pathname, url) {
         });
         orders.push(order);
         await writeOrders(orders);
+        try {
+            await sendOrderNotification(order, 'placed', req);
+        } catch (error) {
+            console.error('Order email notification failed:', error.message);
+        }
         sendJson(res, 201, { orderId: order.id });
         return;
     }
@@ -1363,6 +1498,16 @@ async function handleApi(req, res, pathname, url) {
         order.courierName = nextCourierName;
         order.updatedAt = new Date().toISOString();
         await writeOrders(orders);
+        try {
+            const eventType = order.orderStatus === 'shipped'
+                ? 'shipped'
+                : order.orderStatus === 'delivered'
+                    ? 'delivered'
+                    : 'updated';
+            await sendOrderNotification(order, eventType, req);
+        } catch (error) {
+            console.error('Order status email notification failed:', error.message);
+        }
         sendJson(res, 200, { order });
         return;
     }
