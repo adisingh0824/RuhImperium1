@@ -3,8 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ruh Imperium brings pure Indian attars, modern fragrances, gifting sets, and Kannauj perfumery to customers worldwide.">
+    <meta name="google-site-verification" content="ADD_GOOGLE_SITE_VERIFICATION_TOKEN">
     <title>Ruh Imperium | Pure Indian Attars Since 1973</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+      window.RUH_CONFIG = {
+        analyticsId: 'ADD_GOOGLE_ANALYTICS_ID',
+        recaptchaSiteKey: 'ADD_RECAPTCHA_SITE_KEY'
+      };
+    </script>
+    <script>
+      if (window.RUH_CONFIG.analyticsId && !window.RUH_CONFIG.analyticsId.includes('ADD_')) {
+        const scriptA = document.createElement('script');
+        scriptA.async = true;
+        scriptA.src = `https://www.googletagmanager.com/gtag/js?id=${window.RUH_CONFIG.analyticsId}`;
+        document.head.appendChild(scriptA);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){window.dataLayer.push(arguments);}
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', window.RUH_CONFIG.analyticsId);
+      }
+    </script>
     <script defer src="/_vercel/speed-insights/script.js"></script>
     <script>
       window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -155,6 +176,7 @@
         .cart-item-info { flex:1; }
         .cart-item-name { font-family:'Playfair Display',serif; color:var(--cream); font-size:15px; font-weight:600; }
         .cart-item-price { color:var(--gold-light); font-size:14px; margin-top:4px; }
+        .cart-item-note { color:rgba(253,246,232,0.52); font-size:11px; margin-top:4px; }
         .cart-qty-row { display:flex; align-items:center; gap:10px; margin-top:8px; }
         .qty-btn { background:var(--dark-3); border:1px solid rgba(201,168,76,0.3); color:var(--gold-light); width:28px; height:28px; cursor:pointer; font-size:16px; transition:background 0.2s; }
         .qty-btn:hover { background:var(--gold); color:var(--dark); }
@@ -236,6 +258,18 @@
         }
         .modal-share-btn:hover { background:rgba(118,247,255,0.08); border-color:var(--cyan); transform:translateY(-2px); }
         .modal-features { margin-top:24px; border-top:1px solid rgba(201,168,76,0.15); padding-top:20px; display:flex; flex-direction:column; gap:10px; }
+        .customization-box { margin-top:20px; padding:16px; border:1px solid rgba(118,247,255,0.12); border-radius:18px; background:rgba(255,255,255,0.03); display:flex; flex-direction:column; gap:12px; }
+        .customization-box input { width:100%; background:rgba(253,246,232,0.05); border:1px solid rgba(201,168,76,0.25); color:var(--cream); padding:12px 14px; font-family:'Jost',sans-serif; font-size:13px; outline:none; }
+        .recommendation-list { display:flex; flex-wrap:wrap; gap:10px; }
+        .recommendation-pill { border:1px solid rgba(118,247,255,0.16); background:rgba(255,255,255,0.04); color:var(--cream); padding:10px 12px; border-radius:999px; font-size:11px; letter-spacing:1px; cursor:pointer; }
+        .recommendation-pill:hover { border-color:var(--cyan); color:var(--cyan); }
+        .pin-serviceability { margin-top:10px; color:rgba(253,246,232,0.7); font-size:12px; line-height:1.6; }
+        .security-note { margin-top:10px; color:rgba(253,246,232,0.62); font-size:11px; line-height:1.6; }
+        .currency-selector { background:transparent; border:1px solid rgba(118,247,255,0.18); color:var(--cream); padding:8px 10px; border-radius:999px; font-size:11px; }
+        .review-form { max-width:1200px; margin:30px auto 0; display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:12px; }
+        .review-form textarea { grid-column:1/-2; min-height:110px; resize:vertical; }
+        .review-form input,.review-form select,.review-form textarea { background:#fff; border:1px solid rgba(30,45,70,0.12); color:#162742; padding:12px 14px; font-family:'Jost',sans-serif; font-size:14px; }
+        .review-form button { border:none; background:linear-gradient(135deg,var(--gold),var(--gold-light)); color:var(--dark); padding:14px 18px; border-radius:999px; font-size:12px; letter-spacing:2px; text-transform:uppercase; font-weight:600; cursor:pointer; }
         .modal-feature { display:flex; gap:10px; align-items:center; font-size:13px; color:rgba(253,246,232,0.5); letter-spacing:1px; }
         .modal-feature span:first-child { color:var(--gold); font-size:16px; }
 
@@ -586,6 +620,16 @@
         .stat-card { border:1px solid rgba(118,247,255,0.1); background:rgba(255,255,255,0.88); padding:14px; border-radius:18px; }
         .stat-card span { display:block; color:var(--text-light); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
         .stat-card strong { display:block; color:var(--text); font-family:'Playfair Display',serif; font-size:22px; }
+        .setup-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:0 0 16px; }
+        .setup-card { border:1px solid rgba(118,247,255,0.1); background:rgba(255,255,255,0.9); padding:14px; border-radius:18px; display:flex; flex-direction:column; gap:8px; }
+        .setup-card strong { color:var(--text); font-size:14px; }
+        .setup-card span { color:var(--text-light); font-size:12px; line-height:1.6; }
+        .setup-card .setup-state { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:1.4px; text-transform:uppercase; }
+        .setup-card.ok .setup-state { color:#2d6a4f; }
+        .setup-card.warn .setup-state { color:#a06a00; }
+        .backup-panel { border:1px solid rgba(118,247,255,0.1); background:rgba(255,255,255,0.9); padding:16px; border-radius:20px; margin:0 0 18px; }
+        .backup-panel p { color:var(--text-light); font-size:13px; line-height:1.7; margin-bottom:12px; }
+        .backup-actions { display:flex; gap:12px; flex-wrap:wrap; }
         .admin-command-deck {
             display:flex; gap:10px; flex-wrap:wrap; margin:0 0 16px;
             padding:14px; border-radius:20px; border:1px solid rgba(118,247,255,0.12);
@@ -837,6 +881,7 @@
             .orders-tools{flex-direction:column; align-items:stretch;}
             .orders-tools input, .orders-tools select{width:100%;}
             .admin-stats{grid-template-columns:1fr 1fr;}
+            .setup-grid{grid-template-columns:1fr;}
         }
     </style>
 </head>
@@ -887,6 +932,11 @@
             <p class="modal-desc" id="modalDesc"></p>
             <div class="size-label">Select Size</div>
             <div class="size-opts" id="sizeOpts"></div>
+            <div class="customization-box">
+                <div class="size-label">Customize Before Ordering</div>
+                <input type="text" id="customTextInput" placeholder="Add your custom text / brand name">
+                <input type="url" id="customLogoInput" placeholder="Paste your logo image URL (optional)">
+            </div>
             <div class="modal-actions">
                 <button class="modal-add-btn" id="modalAddBtn">Add to Cart</button>
                 <button class="modal-wa-btn" id="modalWaBtn" title="Enquire on WhatsApp">📱</button>
@@ -897,6 +947,15 @@
                 <div class="modal-feature"><span>🌿</span> 100% pure, no synthetics</div>
                 <div class="modal-feature"><span>🔄</span> Easy 7-day return policy</div>
                 <div class="modal-feature"><span>🏺</span> Direct from Kannauj distillery</div>
+            </div>
+            <div class="customization-box">
+                <div class="size-label">Stock Alert</div>
+                <input type="email" id="stockAlertEmail" placeholder="Enter email for stock alerts">
+                <button class="secondary-btn" type="button" onclick="subscribeStockAlert()">Notify Me When Available</button>
+            </div>
+            <div class="customization-box">
+                <div class="size-label">You May Also Like</div>
+                <div class="recommendation-list" id="recommendationList"></div>
             </div>
         </div>
     </div>
@@ -924,11 +983,13 @@
                 <option>Rajasthan</option><option>Gujarat</option><option>Karnataka</option>
                 <option>Tamil Nadu</option><option>West Bengal</option><option>Other</option>
             </select>
+            <div class="pin-serviceability" id="pinServiceabilityStatus">Enter PIN code to check delivery availability and extra shipping.</div>
         </div>
         <div class="form-group">
             <label>Payment Method</label>
             <div class="payment-opts">
                 <button class="pay-opt active" id="payRazorpayBtn" type="button" onclick="selectPay(this,'Razorpay')">⚡ Razorpay</button>
+                <button class="pay-opt" id="payPartialCodBtn" type="button" onclick="selectPay(this,'Partial COD')">🪙 Partial COD</button>
                 <button class="pay-opt" id="payCodBtn" type="button" onclick="selectPay(this,'COD')">💵 Cash on Delivery</button>
             </div>
             <div class="payment-status-note" id="paymentStatusNote">Checking payment availability...</div>
@@ -939,7 +1000,7 @@
                 <input type="text" id="couponCode" placeholder="Enter coupon code">
                 <button class="coupon-btn" type="button" onclick="applyCoupon()">Apply Coupon</button>
             </div>
-            <div class="coupon-hint">Try `RAMJI20` for 20% off or `WELCOME10` for first-order savings.</div>
+            <div class="coupon-hint">Try `RAMJI20`, `WELCOME10`, or `ATTAR250`. Coupons now support expiry validation too.</div>
             <div class="coupon-chip" id="couponChip">
                 <span id="couponChipText"></span>
                 <button type="button" onclick="removeCoupon()">✕</button>
@@ -976,6 +1037,7 @@
                     <label>Password</label>
                     <input type="password" id="authPassword" placeholder="Enter password">
                 </div>
+                <div class="security-note">reCAPTCHA support is ready. Add your live site key and secret in deployment env vars to fully enable it.</div>
                 <button class="place-order-btn" type="button" id="authSubmitBtn" onclick="handleAuth()">Sign In</button>
             </div>
             <div class="auth-alt" id="authAltCopy">New here? <a class="auth-link" onclick="setAuthMode('signup')">Create an account</a></div>
@@ -991,6 +1053,7 @@
                 <span id="accountEmail"></span><br>
                 <span id="accountPhone"></span>
             </div>
+            <div id="sellerDashboardArea"></div>
             <button class="place-order-btn" type="button" onclick="logout()">Log Out</button>
             <button class="secondary-btn" type="button" style="width:100%;margin-top:12px;" onclick="closeAuthModal()">Close</button>
         </div>
@@ -1007,6 +1070,15 @@
         <div id="adminOrdersTab" style="display:none">
             <div class="orders-section-title">Admin View</div>
             <div class="admin-stats" id="adminStats"></div>
+            <div class="setup-grid" id="adminSetupGrid"></div>
+            <div class="backup-panel">
+                <p>Export a full backup of local store data or restore it later. This keeps your admin data portable while Railway, Render, MongoDB, email, reCAPTCHA, and analytics services are being finalized.</p>
+                <div class="backup-actions">
+                    <button type="button" onclick="exportAdminBackup()">Export Full Backup</button>
+                    <button type="button" onclick="triggerBackupImport()">Restore Backup</button>
+                </div>
+                <input type="file" id="backupImportInput" accept="application/json" style="display:none">
+            </div>
             <div class="admin-command-deck">
                 <button type="button" class="admin-command-btn active" data-admin-preset="all" onclick="setAdminFilterPreset('all')">All Orders</button>
                 <button type="button" class="admin-command-btn" data-admin-preset="today" onclick="setAdminFilterPreset('today')">Today</button>
@@ -1035,6 +1107,16 @@
                 <span id="adminSubscriberCount">0 subscribers shown</span>
             </div>
             <div class="subscriber-list" id="adminSubscribersList"></div>
+            <div class="orders-section-title">Seller Applications</div>
+            <div class="subscriber-list" id="sellerApplicationsList"></div>
+            <div class="orders-section-title">Seller Product Submissions</div>
+            <div class="subscriber-list" id="sellerProductsList"></div>
+            <div class="orders-section-title">Viewed But Not Bought</div>
+            <div class="subscriber-list" id="viewSignalsList"></div>
+            <div class="orders-section-title">Abandoned Carts</div>
+            <div class="subscriber-list" id="abandonedCartsList"></div>
+            <div class="orders-section-title">Stock Alerts</div>
+            <div class="subscriber-list" id="stockAlertsList"></div>
         </div>
     </div>
 </div>
@@ -1075,6 +1157,13 @@
             <span id="topAdminBadge" class="top-admin-badge">Admin</span>
             <button class="icon-btn account-pill" title="Account" onclick="openAuthModal()"><strong id="accountInitial">A</strong><span class="account-pill-text"><span id="accountLabel">Account</span><span id="accountAdminBadge" class="admin-badge">Admin</span></span></button>
             <button class="icon-btn" title="Search" onclick="openSearch()">🔍</button>
+            <select class="currency-selector" id="currencySelector" onchange="updateCurrency(this.value)">
+                <option value="INR">INR</option>
+                <option value="USD">USD</option>
+                <option value="AED">AED</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+            </select>
             <button class="icon-btn" title="Wishlist" onclick="showWishlist()">❤️<span class="cart-count" id="wishCount" style="background:var(--dark-3);display:none">0</span></button>
             <button class="icon-btn" title="Cart" onclick="openCart()" style="position:relative">🛒<span class="cart-count" id="cartBadge">0</span></button>
         </div>
@@ -1278,11 +1367,11 @@
             <span class="section-label">What Our Customers Say</span>
             <h2 class="section-title">Loved by <em>Thousands</em></h2>
             <div class="rating-summary">
-                <span class="big-rating">4.8</span>
-                <div><span class="rating-stars">★★★★★</span><span class="rating-count">Based on 1,000+ reviews</span></div>
+                <span class="big-rating" id="liveReviewAverage">4.8</span>
+                <div><span class="rating-stars">★★★★★</span><span class="rating-count" id="liveReviewCount">Based on 1,000+ reviews</span></div>
             </div>
         </div>
-        <div class="reviews-grid">
+        <div class="reviews-grid" id="customerReviewList">
             <div class="review-card reveal reveal-delay-1">
                 <div class="review-stars">★★★★★</div>
                 <p class="review-text">"The Mitti Attar brought back memories of the first rain on dry earth. Absolutely pure, long-lasting and genuine."</p>
@@ -1299,6 +1388,19 @@
                 <div class="reviewer"><div class="reviewer-avatar">A</div><div><span class="reviewer-name">Ananya Gupta</span><span class="reviewer-date">March 12, 2026</span><span class="reviewer-product">Discovery Set</span></div></div>
             </div>
         </div>
+        <div class="review-form">
+            <input type="text" id="reviewName" placeholder="Your name">
+            <select id="reviewProduct"></select>
+            <select id="reviewRating">
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+            </select>
+            <button type="button" onclick="submitReview()">Submit Review</button>
+            <textarea id="reviewComment" placeholder="Write your review"></textarea>
+        </div>
     </section>
 
     <section class="newsletter">
@@ -1310,6 +1412,7 @@
                 <input type="email" id="nlEmail" placeholder="Your email address" onkeydown="handleNewsletterKeydown(event)">
                 <button type="button" id="nlSubmitBtn" onclick="subscribe()">Subscribe</button>
             </div>
+            <div class="security-note">SMTP/email provider and reCAPTCHA hooks are ready for deployment-time configuration.</div>
             <div class="nl-status" id="nlStatus"></div>
         </div>
     </section>
@@ -1386,6 +1489,7 @@
                 <li><a>Refund Policy</a></li>
                 <li><a>Privacy Policy</a></li>
                 <li><a>Shipping Policy</a></li>
+                <li><a href="https://g.page/r/Cbm-example" target="_blank" rel="noreferrer">Google Business Profile</a></li>
             </ul>
             <div style="margin-top:30px;" id="contact">
                 <h4>Contact</h4>

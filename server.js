@@ -4,6 +4,7 @@ const path = require('path');
 const crypto = require('crypto');
 const vm = require('vm');
 const { DatabaseSync } = require('node:sqlite');
+const { MongoClient } = require('mongodb');
 
 const ROOT = __dirname;
 loadEnvFile(path.join(ROOT, '.env'));
@@ -18,21 +19,44 @@ const PORT = Number(process.env.PORT || 3000);
 const TOKEN_SECRET = process.env.AUTH_SECRET || 'change-this-auth-secret';
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
+const GOOGLE_ANALYTICS_ID = String(process.env.GOOGLE_ANALYTICS_ID || '').trim();
+const GOOGLE_SITE_VERIFICATION = String(process.env.GOOGLE_SITE_VERIFICATION || '').trim();
+const RECAPTCHA_SITE_KEY = String(process.env.RECAPTCHA_SITE_KEY || '').trim();
+const RECAPTCHA_SECRET_KEY = String(process.env.RECAPTCHA_SECRET_KEY || '').trim();
+const SMTP_HOST = String(process.env.SMTP_HOST || '').trim();
+const SMTP_PORT = String(process.env.SMTP_PORT || '').trim();
+const SMTP_USER = String(process.env.SMTP_USER || '').trim();
+const SMTP_PASS = String(process.env.SMTP_PASS || '').trim();
 const ADMIN_EMAIL = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
 const OTP_PROVIDER = String(process.env.OTP_PROVIDER || '').trim().toLowerCase();
 const MSG91_AUTH_KEY = String(process.env.MSG91_AUTH_KEY || '').trim();
 const MSG91_TEMPLATE_ID = String(process.env.MSG91_TEMPLATE_ID || '').trim();
 const MSG91_SENDER_ID = String(process.env.MSG91_SENDER_ID || '').trim();
 const MSG91_ROUTE = String(process.env.MSG91_ROUTE || '4').trim();
+const MONGODB_URI = String(process.env.MONGODB_URI || '').trim();
+const MONGODB_DB_NAME = String(process.env.MONGODB_DB_NAME || 'ruhImperium').trim();
 const SUPABASE_URL = String(process.env.SUPABASE_URL || '').trim().replace(/\/$/, '');
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-const REMOTE_DB_ENABLED = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+const MONGODB_ENABLED = Boolean(MONGODB_URI);
+const REMOTE_DB_ENABLED = MONGODB_ENABLED || Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+const ORIGIN_STATE = 'Uttar Pradesh';
+const CATEGORY_GST_RATES = {
+    'Discovery Set': 12,
+    'Ruh / Absolute Oil': 18,
+    'Authentic Indian Attars': 18,
+    'Next Gen Fragrances': 18,
+    'Modern Attars': 18,
+    'Eau De Parfum': 18
+};
+const REMOTE_STATES = new Set(['West Bengal', 'Tamil Nadu', 'Karnataka', 'Maharashtra', 'Other']);
 
 const coupons = {
-    RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer' },
-    WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer' },
-    ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off' }
+    RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer', expiresAt: '2027-03-31T23:59:59.000Z' },
+    WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer', expiresAt: '2027-03-31T23:59:59.000Z' },
+    ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off', expiresAt: '2027-03-31T23:59:59.000Z' }
 };
+
+const PARTIAL_COD_DEPOSIT_PERCENT = 20;
 
 const mimeTypes = {
     '.html': 'text/html; charset=utf-8',
@@ -48,6 +72,7 @@ const mimeTypes = {
 
 if (!REMOTE_DB_ENABLED) ensureDataStore();
 const db = REMOTE_DB_ENABLED ? null : openDatabase();
+let mongoClientPromise = null;
 const productCatalog = loadProducts();
 
 function loadEnvFile(filePath) {
@@ -118,6 +143,70 @@ function writeCollectionLocal(key, value) {
     `).run(key, JSON.stringify(value));
 }
 
+function getLegacyCollectionSeed(key) {
+    const legacyMap = {
+        users: USERS_FILE,
+        orders: ORDERS_FILE,
+        otps: OTPS_FILE,
+        subscribers: SUBSCRIBERS_FILE
+    };
+    const legacyFile = legacyMap[key];
+    if (!legacyFile || !fs.existsSync(legacyFile)) return [];
+    try {
+        return JSON.parse(fs.readFileSync(legacyFile, 'utf8'));
+    } catch (error) {
+        return [];
+    }
+}
+
+async function getMongoCollection() {
+    if (!MONGODB_ENABLED) return null;
+    if (!mongoClientPromise) {
+        mongoClientPromise = MongoClient.connect(MONGODB_URI, {
+            maxPoolSize: 10
+        });
+    }
+    const client = await mongoClientPromise;
+    const database = client.db(MONGODB_DB_NAME);
+    const collection = database.collection('app_store');
+    await collection.createIndex({ _id: 1 }, { unique: true });
+    return collection;
+}
+
+async function readCollectionMongo(key) {
+    const collection = await getMongoCollection();
+    const document = await collection.findOne({ _id: key });
+    if (!document) {
+        const seeded = getLegacyCollectionSeed(key);
+        await collection.updateOne(
+            { _id: key },
+            {
+                $setOnInsert: {
+                    value: seeded,
+                    updatedAt: new Date()
+                }
+            },
+            { upsert: true }
+        );
+        return seeded;
+    }
+    return Array.isArray(document.value) ? document.value : [];
+}
+
+async function writeCollectionMongo(key, value) {
+    const collection = await getMongoCollection();
+    await collection.updateOne(
+        { _id: key },
+        {
+            $set: {
+                value,
+                updatedAt: new Date()
+            }
+        },
+        { upsert: true }
+    );
+}
+
 async function requestRemoteCollection(resourcePath, init = {}) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/${resourcePath}`, {
         ...init,
@@ -138,6 +227,7 @@ async function requestRemoteCollection(resourcePath, init = {}) {
 }
 
 async function readCollection(key) {
+    if (MONGODB_ENABLED) return readCollectionMongo(key);
     if (!REMOTE_DB_ENABLED) return readCollectionLocal(key);
     const rows = await requestRemoteCollection(`app_store?key=eq.${encodeURIComponent(key)}&select=value&limit=1`, {
         method: 'GET',
@@ -158,6 +248,10 @@ async function readCollection(key) {
 }
 
 async function writeCollection(key, value) {
+    if (MONGODB_ENABLED) {
+        await writeCollectionMongo(key, value);
+        return;
+    }
     if (!REMOTE_DB_ENABLED) {
         writeCollectionLocal(key, value);
         return;
@@ -333,7 +427,7 @@ function sanitizeUser(user) {
     };
 }
 
-function buildOrderRecord({ user, customer, pricedCart, subtotal, coupon, total, paymentMethod, paymentStatus, orderStatus = 'pending', trackingId = '', courierName = '', razorpayOrderId = '', razorpayPaymentId = '' }) {
+function buildOrderRecord({ user, customer, pricedCart, subtotal, coupon, total, paymentMethod, paymentStatus, orderStatus = 'pending', trackingId = '', courierName = '', razorpayOrderId = '', razorpayPaymentId = '', depositAmount = 0, balanceDue = 0, deliveryCharge = 0, gstTotal = 0, gstBreakdown = null }) {
     return {
         id: crypto.randomUUID(),
         userId: user.id,
@@ -350,7 +444,12 @@ function buildOrderRecord({ user, customer, pricedCart, subtotal, coupon, total,
         subtotal,
         discount: coupon ? coupon.discountAmount : 0,
         couponCode: coupon ? coupon.code : '',
+        deliveryCharge,
+        gstTotal,
+        gstBreakdown,
         total,
+        depositAmount,
+        balanceDue,
         paymentMethod,
         paymentStatus,
         orderStatus,
@@ -450,7 +549,7 @@ function buildAdminStats(orders) {
         shippedOrders: orders.filter(order => order.orderStatus === 'shipped').length,
         deliveredOrders: orders.filter(order => order.orderStatus === 'delivered').length,
         totalRevenue: orders
-            .filter(order => order.paymentStatus === 'paid' || order.paymentMethod === 'COD')
+            .filter(order => order.paymentStatus === 'paid' || order.paymentStatus === 'partial-paid' || order.paymentMethod === 'COD')
             .reduce((sum, order) => sum + Number(order.total || 0), 0)
     };
 }
@@ -509,7 +608,9 @@ function buildOrderDocumentHtml(order, type) {
     ].join('');
     const summaryExtra = type === 'packing-slip'
         ? `<div class="summary-line"><span>Order Status</span><strong>${escapeHtml(order.orderStatus || 'pending')}</strong></div>${trackingLine}`
-        : `<div class="summary-line"><span>Discount</span><strong>₹${currency(order.discount)}</strong></div>
+        : `${order.deliveryCharge ? `<div class="summary-line"><span>Delivery</span><strong>₹${currency(order.deliveryCharge)}</strong></div>` : ''}
+           ${order.gstBreakdown?.igst ? `<div class="summary-line"><span>IGST</span><strong>₹${currency(order.gstBreakdown.igst)}</strong></div>` : `<div class="summary-line"><span>CGST</span><strong>₹${currency(order.gstBreakdown?.cgst || 0)}</strong></div><div class="summary-line"><span>SGST</span><strong>₹${currency(order.gstBreakdown?.sgst || 0)}</strong></div>`}
+           <div class="summary-line"><span>Discount</span><strong>₹${currency(order.discount)}</strong></div>
            ${trackingLine}
            <div class="summary-line total"><span>Total</span><strong>₹${currency(order.total)}</strong></div>`;
     const itemHeader = type === 'packing-slip'
@@ -616,7 +717,8 @@ function buildPricedCart(cart) {
             size,
             qty: quantity,
             unitPrice: product.price,
-            lineTotal: product.price * quantity
+            lineTotal: product.price * quantity,
+            gstRate: Number(product.gstRate || CATEGORY_GST_RATES[product.cat] || 18)
         };
     });
 }
@@ -625,10 +727,50 @@ function calculateSubtotal(pricedCart) {
     return pricedCart.reduce((sum, item) => sum + item.lineTotal, 0);
 }
 
+function calculateDeliveryCharge(state, pin, subtotal) {
+    const normalizedState = String(state || '').trim();
+    const normalizedPin = String(pin || '').trim();
+    let extraCharge = 0;
+    if (REMOTE_STATES.has(normalizedState)) extraCharge += 99;
+    if (/^[78]/.test(normalizedPin)) extraCharge += 40;
+    if (subtotal >= 2499) extraCharge = Math.max(extraCharge - 40, 0);
+    return extraCharge;
+}
+
+function calculatePricing(pricedCart, coupon, customer = {}) {
+    const subtotal = calculateSubtotal(pricedCart);
+    const discount = coupon ? coupon.discountAmount : 0;
+    const discountedSubtotal = Math.max(subtotal - discount, 0);
+    const deliveryCharge = calculateDeliveryCharge(customer.state, customer.pin, discountedSubtotal);
+    const gstBase = pricedCart.reduce((sum, item) => {
+        const lineDiscount = subtotal ? Math.round((item.lineTotal / subtotal) * discount) : 0;
+        const taxableLine = Math.max(item.lineTotal - lineDiscount, 0);
+        return sum + Math.round(taxableLine * (Number(item.gstRate || 0) / 100));
+    }, 0);
+    const intrastate = String(customer.state || '').trim().toLowerCase() === ORIGIN_STATE.toLowerCase();
+    const gstBreakdown = intrastate
+        ? { cgst: Math.round(gstBase / 2), sgst: gstBase - Math.round(gstBase / 2), igst: 0 }
+        : { cgst: 0, sgst: 0, igst: gstBase };
+    return {
+        subtotal,
+        discount,
+        deliveryCharge,
+        gstTotal: gstBase,
+        gstBreakdown,
+        total: discountedSubtotal + deliveryCharge + gstBase
+    };
+}
+
 function validateCoupon(code, subtotal) {
     const normalized = String(code || '').trim().toUpperCase();
     const coupon = coupons[normalized];
     if (!coupon) throw new Error('Invalid coupon code.');
+    if (coupon.startsAt && new Date(coupon.startsAt).getTime() > Date.now()) {
+        throw new Error('This coupon is not active yet.');
+    }
+    if (coupon.expiresAt && new Date(coupon.expiresAt).getTime() < Date.now()) {
+        throw new Error('This coupon has expired.');
+    }
     if (coupon.minOrder && subtotal < coupon.minOrder) {
         throw new Error(`Coupon works on orders above ₹${coupon.minOrder}.`);
     }
@@ -640,6 +782,7 @@ function validateCoupon(code, subtotal) {
         label: coupon.label,
         type: coupon.type,
         value: coupon.value,
+        expiresAt: coupon.expiresAt || '',
         discountAmount
     };
 }
@@ -664,6 +807,17 @@ async function createRazorpayOrder(amount, receipt, notes) {
 }
 
 async function handleApi(req, res, pathname, url) {
+    if (req.method === 'GET' && pathname === '/api/health') {
+        sendJson(res, 200, {
+            ok: true,
+            timestamp: new Date().toISOString(),
+            storage: MONGODB_ENABLED ? 'mongodb' : REMOTE_DB_ENABLED ? 'supabase' : 'sqlite',
+            paymentReady: Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET),
+            adminReady: Boolean(ADMIN_EMAIL)
+        });
+        return;
+    }
+
     if (req.method === 'GET' && pathname === '/api/config') {
         const razorpayConfigured = Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET);
         const authConfigured = Boolean(TOKEN_SECRET && TOKEN_SECRET !== 'change-this-auth-secret');
@@ -683,8 +837,13 @@ async function handleApi(req, res, pathname, url) {
             paymentEnabled,
             paymentReason,
             health: {
-                storage: REMOTE_DB_ENABLED ? 'supabase' : 'sqlite',
+                storage: MONGODB_ENABLED ? 'mongodb' : REMOTE_DB_ENABLED ? 'supabase' : 'sqlite',
                 hostedDatabaseConfigured: REMOTE_DB_ENABLED,
+                mongodbConfigured: MONGODB_ENABLED,
+                analyticsConfigured: Boolean(GOOGLE_ANALYTICS_ID),
+                searchConsoleConfigured: Boolean(GOOGLE_SITE_VERIFICATION),
+                recaptchaConfigured: Boolean(RECAPTCHA_SITE_KEY && RECAPTCHA_SECRET_KEY),
+                emailConfigured: Boolean(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS),
                 razorpayConfigured,
                 authConfigured,
                 adminConfigured,
@@ -900,12 +1059,17 @@ async function handleApi(req, res, pathname, url) {
         const pricedCart = buildPricedCart(body.cart);
         const subtotal = calculateSubtotal(pricedCart);
         const coupon = validateCoupon(body.code, subtotal);
+        const pricing = calculatePricing(pricedCart, coupon, body.customer || {});
         sendJson(res, 200, {
             coupon: {
                 ...coupon,
-                subtotal,
-                finalTotal: Math.max(subtotal - coupon.discountAmount, 0)
-            }
+                subtotal: pricing.subtotal,
+                finalTotal: pricing.total,
+                deliveryCharge: pricing.deliveryCharge,
+                gstTotal: pricing.gstTotal,
+                gstBreakdown: pricing.gstBreakdown
+            },
+            pricing
         });
         return;
     }
@@ -947,12 +1111,19 @@ async function handleApi(req, res, pathname, url) {
         const pricedCart = buildPricedCart(body.cart);
         const subtotal = calculateSubtotal(pricedCart);
         const coupon = body.couponCode ? validateCoupon(body.couponCode, subtotal) : null;
-        const total = Math.max(subtotal - (coupon ? coupon.discountAmount : 0), 0);
+        const pricing = calculatePricing(pricedCart, coupon, body.customer || {});
+        const total = pricing.total;
+        const paymentPlan = String(body.paymentPlan || 'full').trim().toLowerCase() === 'partial-cod' ? 'partial-cod' : 'full';
+        const depositAmount = paymentPlan === 'partial-cod'
+            ? Math.max(1, Math.round(total * (PARTIAL_COD_DEPOSIT_PERCENT / 100)))
+            : total;
+        const balanceDue = Math.max(total - depositAmount, 0);
         const receipt = `ruh_${Date.now()}`;
-        const order = await createRazorpayOrder(total * 100, receipt, {
+        const order = await createRazorpayOrder(depositAmount * 100, receipt, {
             customerEmail: authUser.email,
             customerPhone: authUser.phone,
-            coupon: coupon ? coupon.code : 'None'
+            coupon: coupon ? coupon.code : 'None',
+            paymentPlan
         });
         const orders = await readOrders();
         orders.push(buildOrderRecord({
@@ -962,7 +1133,12 @@ async function handleApi(req, res, pathname, url) {
             subtotal,
             coupon,
             total,
-            paymentMethod: 'Razorpay',
+            deliveryCharge: pricing.deliveryCharge,
+            gstTotal: pricing.gstTotal,
+            gstBreakdown: pricing.gstBreakdown,
+            depositAmount,
+            balanceDue,
+            paymentMethod: paymentPlan === 'partial-cod' ? 'Partial COD' : 'Razorpay',
             paymentStatus: 'created',
             orderStatus: 'pending',
             razorpayOrderId: order.id
@@ -999,7 +1175,7 @@ async function handleApi(req, res, pathname, url) {
         const orders = await readOrders();
         const order = orders.find(entry => entry.razorpayOrderId === body.orderId && entry.userId === authUser.id);
         if (order) {
-            order.paymentStatus = 'paid';
+            order.paymentStatus = order.paymentMethod === 'Partial COD' ? 'partial-paid' : 'paid';
             order.razorpayPaymentId = body.paymentId;
             order.paidAt = new Date().toISOString();
             await writeOrders(orders);
@@ -1018,7 +1194,8 @@ async function handleApi(req, res, pathname, url) {
         const pricedCart = buildPricedCart(body.cart);
         const subtotal = calculateSubtotal(pricedCart);
         const coupon = body.couponCode ? validateCoupon(body.couponCode, subtotal) : null;
-        const total = Math.max(subtotal - (coupon ? coupon.discountAmount : 0), 0);
+        const pricing = calculatePricing(pricedCart, coupon, body.customer || {});
+        const total = pricing.total;
         const orders = await readOrders();
         const order = buildOrderRecord({
             user: authUser,
@@ -1027,6 +1204,9 @@ async function handleApi(req, res, pathname, url) {
             subtotal,
             coupon,
             total,
+            deliveryCharge: pricing.deliveryCharge,
+            gstTotal: pricing.gstTotal,
+            gstBreakdown: pricing.gstBreakdown,
             paymentMethod: 'COD',
             paymentStatus: 'pending',
             orderStatus: 'pending'

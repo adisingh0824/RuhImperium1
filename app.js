@@ -10,12 +10,32 @@ const LOCAL_CHECKOUT_OTP_STORAGE_KEY = 'ruhImperiumPendingCheckoutOtp';
 const RECENTLY_VIEWED_STORAGE_KEY = 'ruhImperiumRecentlyViewed';
 
 const NEWSLETTER_STORAGE_KEY = 'ruhImperiumNewsletterSubscribers';
+const SITE_TRAFFIC_STORAGE_KEY = 'ruhImperiumSiteTraffic';
+const SITE_TRAFFIC_SESSION_KEY = 'ruhImperiumTrafficSession';
+const REVIEW_STORAGE_KEY = 'ruhImperiumCustomerReviews';
+const CURRENCY_STORAGE_KEY = 'ruhImperiumCurrency';
+const SELLER_APPLICATIONS_STORAGE_KEY = 'ruhImperiumSellerApplications';
+const SELLER_PRODUCTS_STORAGE_KEY = 'ruhImperiumSellerProducts';
+const VIEW_SIGNALS_STORAGE_KEY = 'ruhImperiumViewSignals';
+const ABANDONED_CART_STORAGE_KEY = 'ruhImperiumAbandonedCarts';
+const STOCK_ALERTS_STORAGE_KEY = 'ruhImperiumStockAlerts';
 const LOCAL_COUPONS = {
-    RAMJI20: { code: 'RAMJI20', label: 'Ram Ji Signature Offer', type: 'percent', value: 20 },
-    WELCOME10: { code: 'WELCOME10', label: 'Welcome Offer', type: 'percent', value: 10 },
-    ATTAR250: { code: 'ATTAR250', label: 'Flat Rs. 250 Off', type: 'flat', value: 250, minOrder: 1500 }
+    RAMJI20: { code: 'RAMJI20', label: 'Ram Ji Signature Offer', type: 'percent', value: 20, expiresAt: '2027-03-31T23:59:59.000Z' },
+    WELCOME10: { code: 'WELCOME10', label: 'Welcome Offer', type: 'percent', value: 10, expiresAt: '2027-03-31T23:59:59.000Z' },
+    ATTAR250: { code: 'ATTAR250', label: 'Flat Rs. 250 Off', type: 'flat', value: 250, minOrder: 1500, expiresAt: '2027-03-31T23:59:59.000Z' }
 };
 const FALLBACK_ADMIN_EMAIL = 'sadityasingh7990@gmail.com';
+const PARTIAL_COD_DEPOSIT_PERCENT = 20;
+const ORIGIN_STATE = 'Uttar Pradesh';
+const CATEGORY_GST_RATES = {
+    'Discovery Set': 12,
+    'Ruh / Absolute Oil': 18,
+    'Authentic Indian Attars': 18,
+    'Next Gen Fragrances': 18,
+    'Modern Attars': 18,
+    'Eau De Parfum': 18
+};
+const REMOTE_STATES = new Set(['West Bengal', 'Tamil Nadu', 'Karnataka', 'Maharashtra', 'Other']);
 
 let cart = [];
 let wishlist = [];
@@ -46,6 +66,23 @@ let adminFilterPreset = 'all';
 let otpRequestedFor = '';
 const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered'];
 let recentlyViewed = [];
+let selectedCurrency = 'INR';
+
+const CURRENCY_RATES = {
+    INR: 1,
+    USD: 0.012,
+    AED: 0.044,
+    EUR: 0.011,
+    GBP: 0.0094
+};
+
+const CURRENCY_SYMBOLS = {
+    INR: '₹',
+    USD: '$',
+    AED: 'AED ',
+    EUR: '€',
+    GBP: '£'
+};
 
 function loadStoredState() {
     try {
@@ -55,6 +92,7 @@ function loadStoredState() {
         sessionToken = localStorage.getItem(SESSION_STORAGE_KEY) || '';
         appliedCoupon = JSON.parse(localStorage.getItem(COUPON_STORAGE_KEY) || 'null');
         recentlyViewed = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_STORAGE_KEY) || '[]');
+        selectedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY) || guessCurrencyFromLocale();
     } catch (error) {
         cart = [];
         wishlist = [];
@@ -62,7 +100,9 @@ function loadStoredState() {
         sessionToken = '';
         appliedCoupon = null;
         recentlyViewed = [];
+        selectedCurrency = guessCurrencyFromLocale();
     }
+    syncMarketplaceProducts();
 }
 
 function applyAdminAccess(user) {
@@ -74,11 +114,70 @@ function applyAdminAccess(user) {
     };
 }
 
+function updateStoredLocalUser(email, changes) {
+    if (!email) return;
+    const users = getLocalUsers().map(user =>
+        String(user.email || '').trim().toLowerCase() === String(email).trim().toLowerCase()
+            ? { ...user, ...changes }
+            : user
+    );
+    saveLocalUsers(users);
+}
+
+function syncCurrentUserProfile(changes = {}) {
+    if (!currentUser) return;
+    currentUser = applyAdminAccess({ ...currentUser, ...changes });
+    updateStoredLocalUser(currentUser.email, changes);
+    persistUser();
+}
+
+function getApprovedSellerCatalogProducts() {
+    return getSellerProducts()
+        .filter(item => item.status === 'approved')
+        .map(item => ({
+            id: item.catalogId || Number(`9${String(item.id || '').replace(/\D/g, '').slice(-6) || Date.now()}`),
+            name: item.name,
+            img: item.image || 'gulabattar.png',
+            cat: item.category || 'Seller Collection',
+            notes: item.notes || 'Marketplace',
+            price: Number(item.price || 0),
+            oldPrice: item.oldPrice ? Number(item.oldPrice) : null,
+            stars: Number(item.rating || 4.5),
+            reviews: Number(item.reviews || 0),
+            badge: item.badge || 'SELLER',
+            sizes: item.sizes?.length ? item.sizes : ['Standard'],
+            desc: item.description || `Submitted by ${item.sellerName || 'seller'} through the marketplace dashboard.`,
+            tags: item.tags?.length ? item.tags : ['Marketplace'],
+            sellerManaged: true,
+            sellerEmail: item.sellerEmail,
+            bestseller: false
+        }));
+}
+
+function syncMarketplaceProducts() {
+    for (let index = products.length - 1; index >= 0; index -= 1) {
+        if (products[index]?.sellerManaged) {
+            products.splice(index, 1);
+        }
+    }
+    getApprovedSellerCatalogProducts().forEach(item => products.push(item));
+}
+
 function persistState() {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
     localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist));
     localStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(appliedCoupon));
     localStorage.setItem(RECENTLY_VIEWED_STORAGE_KEY, JSON.stringify(recentlyViewed));
+    localStorage.setItem(CURRENCY_STORAGE_KEY, selectedCurrency);
+}
+
+function guessCurrencyFromLocale() {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale || '';
+    if (/en-AE|ar-AE/i.test(locale)) return 'AED';
+    if (/en-US/i.test(locale)) return 'USD';
+    if (/en-GB/i.test(locale)) return 'GBP';
+    if (/de|fr|it|es|nl/i.test(locale)) return 'EUR';
+    return 'INR';
 }
 
 function persistUser() {
@@ -157,6 +256,12 @@ function clearPendingLocalCheckoutOtp() {
 function getLocalCoupon(code, subtotal) {
     const coupon = LOCAL_COUPONS[String(code || '').trim().toUpperCase()];
     if (!coupon) throw new Error('Invalid coupon code.');
+    if (coupon.startsAt && new Date(coupon.startsAt).getTime() > Date.now()) {
+        throw new Error('This coupon is not active yet.');
+    }
+    if (coupon.expiresAt && new Date(coupon.expiresAt).getTime() < Date.now()) {
+        throw new Error('This coupon has expired.');
+    }
     if (coupon.minOrder && subtotal < coupon.minOrder) {
         throw new Error(`Coupon works on orders above ₹${coupon.minOrder}.`);
     }
@@ -166,8 +271,97 @@ function getLocalCoupon(code, subtotal) {
     return { ...coupon, discountAmount, subtotal, finalTotal: Math.max(subtotal - discountAmount, 0) };
 }
 
+function getPartialCodAmounts(total) {
+    const numericTotal = Number(total || 0);
+    const deposit = Math.max(1, Math.round(numericTotal * (PARTIAL_COD_DEPOSIT_PERCENT / 100)));
+    return {
+        deposit,
+        balance: Math.max(numericTotal - deposit, 0)
+    };
+}
+
+function getLocalTrafficStats() {
+    return readLocalJson(SITE_TRAFFIC_STORAGE_KEY, { totalVisits: 0, lastVisitAt: '' });
+}
+
+function saveLocalTrafficStats(stats) {
+    writeLocalJson(SITE_TRAFFIC_STORAGE_KEY, stats);
+}
+
+function getStoredReviews() {
+    return readLocalJson(REVIEW_STORAGE_KEY, []);
+}
+
+function saveStoredReviews(reviews) {
+    writeLocalJson(REVIEW_STORAGE_KEY, reviews);
+}
+
+function getSellerApplications() {
+    return readLocalJson(SELLER_APPLICATIONS_STORAGE_KEY, []);
+}
+
+function saveSellerApplications(applications) {
+    writeLocalJson(SELLER_APPLICATIONS_STORAGE_KEY, applications);
+}
+
+function getSellerProducts() {
+    return readLocalJson(SELLER_PRODUCTS_STORAGE_KEY, []);
+}
+
+function saveSellerProducts(items) {
+    writeLocalJson(SELLER_PRODUCTS_STORAGE_KEY, items);
+}
+
+function getViewSignals() {
+    return readLocalJson(VIEW_SIGNALS_STORAGE_KEY, []);
+}
+
+function saveViewSignals(items) {
+    writeLocalJson(VIEW_SIGNALS_STORAGE_KEY, items);
+}
+
+function getAbandonedCarts() {
+    return readLocalJson(ABANDONED_CART_STORAGE_KEY, []);
+}
+
+function saveAbandonedCarts(items) {
+    writeLocalJson(ABANDONED_CART_STORAGE_KEY, items);
+}
+
+function getStockAlerts() {
+    return readLocalJson(STOCK_ALERTS_STORAGE_KEY, []);
+}
+
+function saveStockAlerts(items) {
+    writeLocalJson(STOCK_ALERTS_STORAGE_KEY, items);
+}
+
+function convertAmount(amount) {
+    const rate = CURRENCY_RATES[selectedCurrency] || 1;
+    return Number(amount || 0) * rate;
+}
+
+function formatCurrency(amount) {
+    const converted = convertAmount(amount);
+    const symbol = CURRENCY_SYMBOLS[selectedCurrency] || '₹';
+    return `${symbol}${converted.toLocaleString(selectedCurrency === 'INR' ? 'en-IN' : 'en-US', {
+        maximumFractionDigits: selectedCurrency === 'INR' ? 0 : 2
+    })}`;
+}
+
+function registerSiteVisit() {
+    const todayKey = new Date().toISOString().slice(0, 10);
+    if (sessionStorage.getItem(SITE_TRAFFIC_SESSION_KEY) === todayKey) return;
+    sessionStorage.setItem(SITE_TRAFFIC_SESSION_KEY, todayKey);
+    const stats = getLocalTrafficStats();
+    stats.totalVisits = Number(stats.totalVisits || 0) + 1;
+    stats.lastVisitAt = new Date().toISOString();
+    saveLocalTrafficStats(stats);
+}
+
 function buildLocalOrder(details, paymentMethod, paymentStatus, orderStatus) {
     const pricing = getOrderPricing();
+    const partialCod = paymentMethod === 'Partial COD' ? getPartialCodAmounts(pricing.total) : { deposit: 0, balance: 0 };
     return {
         id: 'local-' + Date.now(),
         userId: currentUser?.id || currentUser?.email || 'guest',
@@ -188,7 +382,12 @@ function buildLocalOrder(details, paymentMethod, paymentStatus, orderStatus) {
         subtotal: pricing.subtotal,
         discount: pricing.discount,
         couponCode: appliedCoupon ? appliedCoupon.code : '',
+        deliveryCharge: pricing.delivery,
+        gstTotal: pricing.gstTotal,
+        gstBreakdown: pricing.gstBreakdown,
         total: pricing.total,
+        depositAmount: partialCod.deposit,
+        balanceDue: partialCod.balance,
         paymentMethod,
         paymentStatus,
         orderStatus,
@@ -206,6 +405,15 @@ function saveLocalCodOrder(details) {
     finalizeOrder('Order placed successfully with Cash on Delivery.');
 }
 
+function saveLocalPartialCodOrder(details, paymentId = '') {
+    const orders = getLocalOrders();
+    orders.push(buildLocalOrder(details, 'Partial COD', 'partial-paid', 'pending'));
+    saveLocalOrders(orders);
+    launchWhatsAppOrder(details, 'Partial COD', paymentId);
+    const amounts = getPartialCodAmounts(getOrderPricing().total);
+    finalizeOrder(`Partial COD booked. ₹${amounts.deposit.toLocaleString()} paid now, ₹${amounts.balance.toLocaleString()} due on delivery.`);
+}
+
 function buildLocalAdminSnapshot() {
     adminOrderHistory = getLocalOrders().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     adminSubscribers = getLocalNewsletterSubscribers()
@@ -220,7 +428,8 @@ function buildLocalAdminSnapshot() {
         pendingOrders: adminOrderHistory.filter(order => (order.orderStatus || 'pending') === 'pending').length,
         shippedOrders: adminOrderHistory.filter(order => order.orderStatus === 'shipped').length,
         deliveredOrders: adminOrderHistory.filter(order => order.orderStatus === 'delivered').length,
-        totalRevenue: adminOrderHistory.reduce((sum, order) => sum + Number(order.total || 0), 0)
+        totalRevenue: adminOrderHistory.reduce((sum, order) => sum + Number(order.total || 0), 0),
+        totalVisits: Number(getLocalTrafficStats().totalVisits || 0)
     };
 }
 
@@ -244,7 +453,7 @@ function buildOrderDocumentHtmlClient(order, type) {
         ? `<tr><td>${item.name}</td><td>${item.size}</td><td>${item.qty}</td></tr>`
         : `<tr><td>${item.name}</td><td>${item.size}</td><td>${item.qty}</td><td>₹${Number(item.unitPrice || item.price || 0).toLocaleString()}</td><td>₹${Number(item.lineTotal || item.price * item.qty || 0).toLocaleString()}</td></tr>`
     ).join('');
-    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title><style>body{font-family:Arial,sans-serif;background:#eef3f9;margin:0;color:#162742}.sheet{max-width:900px;margin:24px auto;background:#fff;border:1px solid #d6e1ee;padding:32px;box-shadow:0 18px 50px rgba(17,34,55,0.08)}.top{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px}.brand h1{margin:0;font-size:30px;color:#162742}.brand p,.meta p{margin:6px 0;color:#53657e;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{border:1px solid #dbe5f0;background:#f8fbff;padding:16px}.card p{margin:10px 0}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #dde6f0;padding:10px;text-align:left;font-size:14px}th{background:#edf4fb;color:#23415f}.summary{margin-top:20px;margin-left:auto;max-width:320px}.summary-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e0e8f1}.summary-line.total{font-size:18px;font-weight:700;border-bottom:none;color:#162742}@media print{body{background:#fff}.sheet{margin:0;border:none;box-shadow:none}}</style></head><body><div class="sheet"><div class="top"><div class="brand"><h1>Ruh Imperium</h1><p>Pure Indian Fragrances · Since 1973</p><p>Kannauj, Uttar Pradesh</p></div><div class="meta"><p><strong>${title}</strong></p><p>Order ID: ${order.id}</p><p>Date: ${formatDate(order.createdAt)}</p><p>Payment: ${order.paymentMethod} · ${order.paymentStatus}</p></div></div><div class="grid"><div class="card"><p><strong>${order.customerName}</strong></p><p>${order.customerEmail || ''}</p><p>${order.customerPhone || ''}</p></div><div class="card"><p>${address.address || ''}</p><p>${address.city || ''}, ${address.state || ''} - ${address.pin || ''}</p><p>Order Status: ${order.orderStatus || 'pending'}</p>${order.courierName ? `<p>Courier: ${order.courierName}</p>` : ''}${order.trackingId ? `<p>Tracking ID: ${order.trackingId}</p>` : ''}</div></div><table><thead>${type === 'packing-slip' ? '<tr><th>Item</th><th>Size</th><th>Qty</th></tr>' : '<tr><th>Item</th><th>Size</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>'}</thead><tbody>${rows}</tbody></table><div class="summary"><div class="summary-line"><span>Subtotal</span><strong>₹${Number(order.subtotal || 0).toLocaleString()}</strong></div>${type === 'packing-slip' ? `${order.courierName ? `<div class="summary-line"><span>Courier</span><strong>${order.courierName}</strong></div>` : ''}${order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : ''}` : `<div class="summary-line"><span>Coupon</span><strong>${order.couponCode || 'None'}</strong></div><div class="summary-line"><span>Discount</span><strong>₹${Number(order.discount || 0).toLocaleString()}</strong></div>${order.courierName ? `<div class="summary-line"><span>Courier</span><strong>${order.courierName}</strong></div>` : ''}${order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : ''}<div class="summary-line total"><span>Total</span><strong>₹${Number(order.total || 0).toLocaleString()}</strong></div>`}</div></div></body></html>`;
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title><style>body{font-family:Arial,sans-serif;background:#eef3f9;margin:0;color:#162742}.sheet{max-width:900px;margin:24px auto;background:#fff;border:1px solid #d6e1ee;padding:32px;box-shadow:0 18px 50px rgba(17,34,55,0.08)}.top{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px}.brand h1{margin:0;font-size:30px;color:#162742}.brand p,.meta p{margin:6px 0;color:#53657e;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{border:1px solid #dbe5f0;background:#f8fbff;padding:16px}.card p{margin:10px 0}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #dde6f0;padding:10px;text-align:left;font-size:14px}th{background:#edf4fb;color:#23415f}.summary{margin-top:20px;margin-left:auto;max-width:320px}.summary-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e0e8f1}.summary-line.total{font-size:18px;font-weight:700;border-bottom:none;color:#162742}@media print{body{background:#fff}.sheet{margin:0;border:none;box-shadow:none}}</style></head><body><div class="sheet"><div class="top"><div class="brand"><h1>Ruh Imperium</h1><p>Pure Indian Fragrances · Since 1973</p><p>Kannauj, Uttar Pradesh</p></div><div class="meta"><p><strong>${title}</strong></p><p>Order ID: ${order.id}</p><p>Date: ${formatDate(order.createdAt)}</p><p>Payment: ${order.paymentMethod} · ${order.paymentStatus}</p></div></div><div class="grid"><div class="card"><p><strong>${order.customerName}</strong></p><p>${order.customerEmail || ''}</p><p>${order.customerPhone || ''}</p></div><div class="card"><p>${address.address || ''}</p><p>${address.city || ''}, ${address.state || ''} - ${address.pin || ''}</p><p>Order Status: ${order.orderStatus || 'pending'}</p>${order.courierName ? `<p>Courier: ${order.courierName}</p>` : ''}${order.trackingId ? `<p>Tracking ID: ${order.trackingId}</p>` : ''}</div></div><table><thead>${type === 'packing-slip' ? '<tr><th>Item</th><th>Size</th><th>Qty</th></tr>' : '<tr><th>Item</th><th>Size</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>'}</thead><tbody>${rows}</tbody></table><div class="summary"><div class="summary-line"><span>Subtotal</span><strong>₹${Number(order.subtotal || 0).toLocaleString()}</strong></div>${type === 'packing-slip' ? `${order.courierName ? `<div class="summary-line"><span>Courier</span><strong>${order.courierName}</strong></div>` : ''}${order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : ''}` : `<div class="summary-line"><span>Coupon</span><strong>${order.couponCode || 'None'}</strong></div>${order.deliveryCharge ? `<div class="summary-line"><span>Delivery</span><strong>₹${Number(order.deliveryCharge || 0).toLocaleString()}</strong></div>` : ''}${order.gstBreakdown?.igst ? `<div class="summary-line"><span>IGST</span><strong>₹${Number(order.gstBreakdown.igst || 0).toLocaleString()}</strong></div>` : `<div class="summary-line"><span>CGST</span><strong>₹${Number(order.gstBreakdown?.cgst || 0).toLocaleString()}</strong></div><div class="summary-line"><span>SGST</span><strong>₹${Number(order.gstBreakdown?.sgst || 0).toLocaleString()}</strong></div>`}<div class="summary-line"><span>Discount</span><strong>₹${Number(order.discount || 0).toLocaleString()}</strong></div>${order.courierName ? `<div class="summary-line"><span>Courier</span><strong>${order.courierName}</strong></div>` : ''}${order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : ''}<div class="summary-line total"><span>Total</span><strong>₹${Number(order.total || 0).toLocaleString()}</strong></div>`}</div></div></body></html>`;
 }
 
 async function apiFetch(path, options = {}, needsAuth = false) {
@@ -337,6 +546,140 @@ function renderBackendStatus() {
     target.className = 'backend-status healthy';
 }
 
+function downloadJsonFile(filename, payload) {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function buildAdminBackupSnapshot() {
+    return {
+        exportedAt: new Date().toISOString(),
+        version: 1,
+        config: {
+            currency: selectedCurrency,
+            adminEmail: apiConfig.adminEmail || FALLBACK_ADMIN_EMAIL
+        },
+        users: getLocalUsers(),
+        orders: getLocalOrders(),
+        subscribers: getLocalNewsletterSubscribers(),
+        sellerApplications: getSellerApplications(),
+        sellerProducts: getSellerProducts(),
+        viewSignals: getViewSignals(),
+        abandonedCarts: getAbandonedCarts(),
+        stockAlerts: getStockAlerts(),
+        reviews: getStoredReviews(),
+        traffic: getLocalTrafficStats()
+    };
+}
+
+function exportAdminBackup() {
+    if (!currentUser?.isAdmin) {
+        showToast('Admin access is required.');
+        return;
+    }
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    downloadJsonFile(`ruh-imperium-backup-${stamp}.json`, buildAdminBackupSnapshot());
+    showToast('Admin backup exported.');
+}
+
+function triggerBackupImport() {
+    if (!currentUser?.isAdmin) {
+        showToast('Admin access is required.');
+        return;
+    }
+    const input = document.getElementById('backupImportInput');
+    if (input) input.click();
+}
+
+function restoreAdminBackup(data) {
+    saveLocalUsers(Array.isArray(data.users) ? data.users : []);
+    saveLocalOrders(Array.isArray(data.orders) ? data.orders : []);
+    saveLocalNewsletterSubscribers(Array.isArray(data.subscribers) ? data.subscribers : []);
+    saveSellerApplications(Array.isArray(data.sellerApplications) ? data.sellerApplications : []);
+    saveSellerProducts(Array.isArray(data.sellerProducts) ? data.sellerProducts : []);
+    saveViewSignals(Array.isArray(data.viewSignals) ? data.viewSignals : []);
+    saveAbandonedCarts(Array.isArray(data.abandonedCarts) ? data.abandonedCarts : []);
+    saveStockAlerts(Array.isArray(data.stockAlerts) ? data.stockAlerts : []);
+    saveStoredReviews(Array.isArray(data.reviews) ? data.reviews : []);
+    saveLocalTrafficStats(data.traffic || { totalVisits: 0, lastVisitedAt: '' });
+    syncMarketplaceProducts();
+}
+
+function handleBackupImport(event) {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function onLoad() {
+        try {
+            const parsed = JSON.parse(String(reader.result || '{}'));
+            restoreAdminBackup(parsed);
+            await loadAdminOrders();
+            await loadMyOrders();
+            renderCustomerReviews();
+            renderHomeSections();
+            renderShopGrid();
+            showToast('Backup restored successfully.');
+        } catch (error) {
+            showToast('Backup file could not be restored.');
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.readAsText(file);
+}
+
+function renderAdminSetupReadiness() {
+    const target = document.getElementById('adminSetupGrid');
+    if (!target) return;
+    const health = apiConfig.health || {};
+    const cards = [
+        {
+            title: 'Storage',
+            ok: apiConfig.backendReady && (health.hostedDatabaseConfigured || health.mongodbConfigured || health.storage === 'mongodb' || health.storage === 'supabase'),
+            summary: apiConfig.backendReady ? `Mode: ${health.storage || 'local'}${health.hostedDatabaseConfigured ? ' · Hosted database ready' : ' · Local fallback active'}` : 'Running in browser fallback mode right now.'
+        },
+        {
+            title: 'Payments',
+            ok: Boolean(apiConfig.backendReady && health.razorpayConfigured),
+            summary: health.razorpayConfigured ? 'Razorpay keys detected for online payments.' : 'Add Razorpay env vars on Railway/Render before going live.'
+        },
+        {
+            title: 'reCAPTCHA',
+            ok: Boolean(apiConfig.backendReady && health.recaptchaConfigured),
+            summary: health.recaptchaConfigured ? 'Form protection keys are configured.' : 'Site key and secret are still needed to fully lock forms.'
+        },
+        {
+            title: 'Email Delivery',
+            ok: Boolean(apiConfig.backendReady && health.emailConfigured),
+            summary: health.emailConfigured ? 'SMTP/provider settings are available for notifications.' : 'SMTP/provider creds are still needed for auto mailers.'
+        },
+        {
+            title: 'Analytics',
+            ok: Boolean(health.analyticsConfigured),
+            summary: health.analyticsConfigured ? 'Google Analytics ID is connected.' : 'Google Analytics property ID still needs to be added.'
+        },
+        {
+            title: 'Search Console',
+            ok: Boolean(health.searchConsoleConfigured),
+            summary: health.searchConsoleConfigured ? 'Verification token is present in site config.' : 'Search Console verification token is still pending.'
+        }
+    ];
+    target.innerHTML = cards.map(card => `
+        <div class="setup-card ${card.ok ? 'ok' : 'warn'}">
+            <div class="setup-state">${card.ok ? 'Ready' : 'Pending'}</div>
+            <strong>${card.title}</strong>
+            <span>${card.summary}</span>
+        </div>
+    `).join('');
+}
+
 function getPaymentReadiness() {
     if (!currentUser || !sessionToken) {
         return { ready: false, message: 'Please sign in before online payment.' };
@@ -359,8 +702,9 @@ function getPaymentReadiness() {
 function updatePaymentOptionsUI() {
     const razorpayBtn = document.getElementById('payRazorpayBtn');
     const codBtn = document.getElementById('payCodBtn');
+    const partialCodBtn = document.getElementById('payPartialCodBtn');
     const note = document.getElementById('paymentStatusNote');
-    if (!razorpayBtn || !codBtn) return;
+    if (!razorpayBtn || !codBtn || !partialCodBtn) return;
 
     const readiness = getPaymentReadiness();
     const razorpayAvailable = readiness.ready;
@@ -369,16 +713,19 @@ function updatePaymentOptionsUI() {
     razorpayBtn.classList.toggle('disabled', !razorpayAvailable);
     razorpayBtn.setAttribute('aria-disabled', String(!razorpayAvailable));
 
-    if (!razorpayAvailable && selectedPayment === 'Razorpay') {
+    if (!razorpayAvailable && (selectedPayment === 'Razorpay' || selectedPayment === 'Partial COD')) {
         selectedPayment = 'COD';
     }
 
     razorpayBtn.classList.toggle('active', selectedPayment === 'Razorpay' && razorpayAvailable);
     codBtn.classList.toggle('active', selectedPayment === 'COD' || !razorpayAvailable);
+    partialCodBtn.disabled = !razorpayAvailable;
+    partialCodBtn.classList.toggle('disabled', !razorpayAvailable);
+    partialCodBtn.classList.toggle('active', selectedPayment === 'Partial COD' && razorpayAvailable);
 
     if (note) {
         note.textContent = razorpayAvailable
-            ? 'Online payment is live. Razorpay will open after your order is created.'
+            ? `Online payment is live. Razorpay and ${PARTIAL_COD_DEPOSIT_PERCENT}% Partial COD are available right now.`
             : readiness.message;
         note.className = `payment-status-note ${razorpayAvailable ? 'success' : 'warning'}`;
     }
@@ -512,8 +859,8 @@ function productCardHTML(product) {
         <div class="product-stars">${starStr(product.stars)} <span>(${product.reviews} reviews)</span></div>
         <div class="product-price-row">
           <div>
-            <span class="product-price">₹${product.price.toLocaleString()}</span>
-            ${product.oldPrice ? `<span class="product-price-old">₹${product.oldPrice.toLocaleString()}</span>` : ''}
+            <span class="product-price">${formatCurrency(product.price)}</span>
+            ${product.oldPrice ? `<span class="product-price-old">${formatCurrency(product.oldPrice)}</span>` : ''}
           </div>
           <button class="add-btn" onclick="quickAdd(event,${product.id})">Add to Cart</button>
         </div>
@@ -562,6 +909,52 @@ function rememberRecentlyViewed(productId) {
     recentlyViewed = [productId, ...recentlyViewed.filter(id => id !== productId)].slice(0, 8);
     persistState();
     renderRecentlyViewed();
+}
+
+function trackViewedProduct(product) {
+    if (!product) return;
+    const signals = getViewSignals().filter(entry => !(entry.email === (currentUser?.email || '') && entry.productId === product.id));
+    signals.unshift({
+        id: `view-${Date.now()}`,
+        productId: product.id,
+        productName: product.name,
+        email: currentUser?.email || '',
+        phone: currentUser?.phone || '',
+        viewedAt: new Date().toISOString(),
+        purchased: false
+    });
+    saveViewSignals(signals.slice(0, 100));
+}
+
+function trackAbandonedCart() {
+    if (!cart.length) return;
+    const items = getAbandonedCarts().filter(entry => entry.email !== (currentUser?.email || ''));
+    items.unshift({
+        id: `cart-${Date.now()}`,
+        email: currentUser?.email || '',
+        phone: currentUser?.phone || '',
+        customer: currentUser?.name || 'Guest',
+        items: cart.map(item => `${item.name} (${item.size}) x ${item.qty}`),
+        total: getOrderPricing().total,
+        createdAt: new Date().toISOString()
+    });
+    saveAbandonedCarts(items.slice(0, 100));
+}
+
+function getRecommendedProducts(product) {
+    if (!product) return [];
+    return products
+        .filter(item => item.id !== product.id)
+        .map(item => {
+            let score = 0;
+            if (item.cat === product.cat) score += 3;
+            if (item.notes === product.notes) score += 2;
+            score += item.tags.filter(tag => product.tags.includes(tag)).length;
+            return { item, score };
+        })
+        .sort((a, b) => b.score - a.score || b.item.stars - a.item.stars)
+        .slice(0, 4)
+        .map(entry => entry.item);
 }
 
 async function shareCurrentProduct(product, size) {
@@ -634,11 +1027,14 @@ function quickAdd(event, id) {
 }
 
 function addToCart(product, size) {
-    const existing = cart.find(item => item.id === product.id && item.size === size);
+    const customText = (document.getElementById('customTextInput')?.value || '').trim();
+    const customLogo = (document.getElementById('customLogoInput')?.value || '').trim();
+    const existing = cart.find(item => item.id === product.id && item.size === size && item.customText === customText && item.customLogo === customLogo);
     if (existing) existing.qty++;
-    else cart.push({ id: product.id, name: product.name, img: product.img, price: product.price, size, qty: 1 });
+    else cart.push({ id: product.id, name: product.name, img: product.img, price: product.price, size, qty: 1, customText, customLogo });
     resetCouponState();
     persistState();
+    trackAbandonedCart();
     updateCartBadge();
     showToast(`✓ ${product.name} added to cart`);
     renderCartItems();
@@ -676,7 +1072,9 @@ function renderCartItems() {
       <img class="cart-item-img" src="${item.img}" alt="${item.name}" onerror="this.style.display='none'">
       <div class="cart-item-info">
         <div class="cart-item-name">${item.name}</div>
-        <div class="cart-item-price">₹${(item.price * item.qty).toLocaleString()} · ${item.size}</div>
+        <div class="cart-item-price">${formatCurrency(item.price * item.qty)} · ${item.size}</div>
+        ${item.customText ? `<div class="cart-item-note">Custom: ${item.customText}</div>` : ''}
+        ${item.customLogo ? `<div class="cart-item-note">Logo: ${item.customLogo}</div>` : ''}
         <div class="cart-qty-row">
           <button class="qty-btn" onclick="changeQty(${index},-1)">−</button>
           <span class="qty-num">${item.qty}</span>
@@ -685,7 +1083,7 @@ function renderCartItems() {
       </div>
       <button class="cart-item-del" onclick="removeFromCart(${index})">🗑</button>
     </div>`).join('');
-    document.getElementById('cartTotal').textContent = '₹' + getOrderPricing().total.toLocaleString();
+    document.getElementById('cartTotal').textContent = formatCurrency(getOrderPricing().total);
 }
 
 function changeQty(index, delta) {
@@ -693,6 +1091,7 @@ function changeQty(index, delta) {
     if (cart[index].qty <= 0) cart.splice(index, 1);
     resetCouponState();
     persistState();
+    if (cart.length) trackAbandonedCart();
     updateCartBadge();
     renderCartItems();
 }
@@ -701,12 +1100,45 @@ function removeFromCart(index) {
     cart.splice(index, 1);
     resetCouponState();
     persistState();
+    if (cart.length) trackAbandonedCart();
     updateCartBadge();
     renderCartItems();
 }
 
 function getCartTotal() {
     return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+}
+
+function getCheckoutStatePin() {
+    return {
+        state: document.getElementById('cState')?.value || ORIGIN_STATE,
+        pin: document.getElementById('cPin')?.value?.trim() || ''
+    };
+}
+
+function calculateDeliveryCharge(state, pin, subtotal) {
+    const normalizedState = String(state || '').trim();
+    const normalizedPin = String(pin || '').trim();
+    let extraCharge = 0;
+    if (REMOTE_STATES.has(normalizedState)) extraCharge += 99;
+    if (/^[78]/.test(normalizedPin)) extraCharge += 40;
+    if (subtotal >= 2499) extraCharge = Math.max(extraCharge - 40, 0);
+    return extraCharge;
+}
+
+function getCartTaxProfile(subtotal, discount) {
+    return cart.map(item => {
+        const product = products.find(entry => entry.id === item.id) || {};
+        const lineTotal = Number(item.price || 0) * Number(item.qty || 0);
+        const lineDiscount = subtotal ? Math.round((lineTotal / subtotal) * discount) : 0;
+        const taxableLine = Math.max(lineTotal - lineDiscount, 0);
+        const gstRate = Number(product.gstRate || CATEGORY_GST_RATES[product.cat] || 18);
+        return {
+            taxableLine,
+            gstRate,
+            gstAmount: Math.round(taxableLine * (gstRate / 100))
+        };
+    });
 }
 
 function getDiscountAmount() {
@@ -716,11 +1148,20 @@ function getDiscountAmount() {
 function getOrderPricing() {
     const subtotal = getCartTotal();
     const discount = getDiscountAmount();
+    const { state, pin } = getCheckoutStatePin();
+    const delivery = calculateDeliveryCharge(state, pin, Math.max(subtotal - discount, 0));
+    const gstTotal = getCartTaxProfile(subtotal, discount).reduce((sum, item) => sum + item.gstAmount, 0);
+    const intrastate = String(state || '').trim().toLowerCase() === ORIGIN_STATE.toLowerCase();
+    const gstBreakdown = intrastate
+        ? { cgst: Math.round(gstTotal / 2), sgst: gstTotal - Math.round(gstTotal / 2), igst: 0 }
+        : { cgst: 0, sgst: 0, igst: gstTotal };
     return {
         subtotal,
         discount,
-        delivery: 0,
-        total: Math.max(subtotal - discount, 0)
+        delivery,
+        gstTotal,
+        gstBreakdown,
+        total: Math.max(subtotal - discount, 0) + delivery + gstTotal
     };
 }
 
@@ -817,12 +1258,13 @@ function openProductModal(id) {
     if (!product) return;
     currentProduct = product;
     rememberRecentlyViewed(product.id);
+    trackViewedProduct(product);
 
     document.getElementById('modalCat').textContent = product.cat;
     document.getElementById('modalName').textContent = product.name;
     document.getElementById('modalStars').innerHTML = starStr(product.stars) + ` <span>(${product.reviews} reviews)</span>`;
-    document.getElementById('modalPrice').textContent = '₹' + product.price.toLocaleString();
-    document.getElementById('modalOldPrice').textContent = product.oldPrice ? '₹' + product.oldPrice.toLocaleString() : '';
+    document.getElementById('modalPrice').textContent = formatCurrency(product.price);
+    document.getElementById('modalOldPrice').textContent = product.oldPrice ? formatCurrency(product.oldPrice) : '';
     document.getElementById('modalDesc').textContent = product.desc;
 
     const imgWrap = document.getElementById('modalImg');
@@ -838,6 +1280,9 @@ function openProductModal(id) {
     document.getElementById('sizeOpts').innerHTML = product.sizes.map((size, index) =>
         `<button class="size-opt ${index === 0 ? 'active' : ''}" onclick="selectSize(this,'${size}')">${size}</button>`
     ).join('');
+    document.getElementById('recommendationList').innerHTML = getRecommendedProducts(product)
+        .map(item => `<button class="recommendation-pill" type="button" onclick="openProductModal(${item.id})">${item.name}</button>`)
+        .join('');
 
     document.getElementById('modalAddBtn').onclick = () => {
         addToCart(product, selectedSize);
@@ -846,7 +1291,7 @@ function openProductModal(id) {
     };
 
     document.getElementById('modalWaBtn').onclick = () => {
-        const msg = `Hello! I am interested in *${product.name}* (${selectedSize}) at ₹${product.price.toLocaleString()}. Please help me place an order.`;
+        const msg = `Hello! I am interested in *${product.name}* (${selectedSize}) at ${formatCurrency(product.price)}. Please help me place an order.`;
         window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
     };
     document.getElementById('modalShareBtn').onclick = () => shareCurrentProduct(product, selectedSize);
@@ -865,7 +1310,7 @@ function selectSize(btn, size) {
             openCart();
         };
         document.getElementById('modalWaBtn').onclick = () => {
-            const msg = `Hello! I am interested in *${currentProduct.name}* (${size}) at ₹${currentProduct.price.toLocaleString()}. Please help me place an order.`;
+            const msg = `Hello! I am interested in *${currentProduct.name}* (${size}) at ${formatCurrency(currentProduct.price)}. Please help me place an order.`;
             window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
         };
         document.getElementById('modalShareBtn').onclick = () => shareCurrentProduct(currentProduct, size);
@@ -911,18 +1356,57 @@ function updateOrderSummary() {
     const couponLine = appliedCoupon
         ? `<div class="order-line"><span>Coupon (${appliedCoupon.code})</span><span>-₹${pricing.discount.toLocaleString()}</span></div>`
         : '';
+    const shippingLine = pricing.delivery
+        ? `<div class="order-line"><span>Location Delivery Charge</span><span>₹${pricing.delivery.toLocaleString()}</span></div>`
+        : `<div class="order-line"><span>Delivery</span><span style="color:var(--green)">FREE</span></div>`;
+    const gstLines = pricing.gstBreakdown?.igst
+        ? `<div class="order-line"><span>IGST</span><span>₹${pricing.gstBreakdown.igst.toLocaleString()}</span></div>`
+        : `<div class="order-line"><span>CGST</span><span>₹${Number(pricing.gstBreakdown?.cgst || 0).toLocaleString()}</span></div>
+        <div class="order-line"><span>SGST</span><span>₹${Number(pricing.gstBreakdown?.sgst || 0).toLocaleString()}</span></div>`;
+    const partialCodLine = selectedPayment === 'Partial COD'
+        ? (() => {
+            const amounts = getPartialCodAmounts(pricing.total);
+            return `<div class="order-line"><span>Pay Now (${PARTIAL_COD_DEPOSIT_PERCENT}%)</span><span>₹${amounts.deposit.toLocaleString()}</span></div>
+        <div class="order-line"><span>Pay on Delivery</span><span>₹${amounts.balance.toLocaleString()}</span></div>`;
+        })()
+        : '';
     summary.innerHTML = '<h3>Order Summary</h3>' +
         cart.map(item =>
             `<div class="order-line"><span>${item.name} (${item.size}) × ${item.qty}</span><span>₹${(item.price * item.qty).toLocaleString()}</span></div>`
         ).join('') +
         `<div class="order-line"><span>Subtotal</span><span>₹${pricing.subtotal.toLocaleString()}</span></div>` +
         couponLine +
-        `<div class="order-line"><span>Delivery</span><span style="color:var(--green)">FREE</span></div>` +
+        shippingLine +
+        gstLines +
+        partialCodLine +
         `<div class="order-line"><span>Total</span><span>₹${pricing.total.toLocaleString()}</span></div>`;
 }
 
+function updatePinServiceability() {
+    const pin = document.getElementById('cPin')?.value?.trim() || '';
+    const state = document.getElementById('cState')?.value || ORIGIN_STATE;
+    const target = document.getElementById('pinServiceabilityStatus');
+    if (!target) return;
+    if (!pin) {
+        target.textContent = 'Enter PIN code to check delivery availability and extra shipping.';
+        return;
+    }
+    if (!/^\d{6}$/.test(pin)) {
+        target.textContent = 'Please enter a valid 6-digit PIN code.';
+        return;
+    }
+    const charge = calculateDeliveryCharge(state, pin, getCartTotal());
+    if (/^[1-9]\d{5}$/.test(pin)) {
+        target.textContent = charge
+            ? `Delivery available. Extra location charge: ${formatCurrency(charge)}.`
+            : 'Delivery available at no extra shipping charge.';
+    } else {
+        target.textContent = 'Delivery may be limited for this PIN code.';
+    }
+}
+
 function selectPay(btn, type) {
-    if (type === 'Razorpay') {
+    if (type === 'Razorpay' || type === 'Partial COD') {
         const readiness = getPaymentReadiness();
         if (!readiness.ready) {
             selectedPayment = 'COD';
@@ -933,6 +1417,7 @@ function selectPay(btn, type) {
     }
     selectedPayment = type;
     updatePaymentOptionsUI();
+    updateOrderSummary();
 }
 
 function getCheckoutOtpIdentifier(details = getCheckoutDetails()) {
@@ -990,14 +1475,31 @@ function buildOrderMessage(details, paymentLabel, paymentId = '') {
     if (paymentId) msg += `*Payment ID:* ${paymentId}\n`;
     msg += '\n*Order Details:*\n';
     cart.forEach(item => {
-        msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`;
+        msg += `• ${item.name} (${item.size}) × ${item.qty} = ${formatCurrency(item.price * item.qty)}\n`;
+        if (item.customText) msg += `  Custom Text: ${item.customText}\n`;
+        if (item.customLogo) msg += `  Logo URL: ${item.customLogo}\n`;
     });
     if (appliedCoupon) msg += `\n*Coupon:* ${appliedCoupon.code} (-₹${pricing.discount.toLocaleString()})\n`;
+    if (pricing.delivery) msg += `*Delivery Charge:* ₹${pricing.delivery.toLocaleString()}\n`;
+    if (pricing.gstBreakdown?.igst) msg += `*IGST:* ₹${pricing.gstBreakdown.igst.toLocaleString()}\n`;
+    else msg += `*CGST:* ₹${Number(pricing.gstBreakdown?.cgst || 0).toLocaleString()} | *SGST:* ₹${Number(pricing.gstBreakdown?.sgst || 0).toLocaleString()}\n`;
+    if (paymentLabel === 'Partial COD') {
+        const amounts = getPartialCodAmounts(pricing.total);
+        msg += `\n*Paid Now:* ₹${amounts.deposit.toLocaleString()}\n*Pay on Delivery:* ₹${amounts.balance.toLocaleString()}\n`;
+    }
     msg += `\n*Total: ₹${pricing.total.toLocaleString()}*`;
     return msg;
 }
 
 function finalizeOrder(successMessage) {
+    if (currentUser?.email) {
+        const signals = getViewSignals().map(entry => (
+            entry.email === currentUser.email ? { ...entry, purchased: true } : entry
+        ));
+        saveViewSignals(signals);
+        const remainingAbandoned = getAbandonedCarts().filter(entry => entry.email !== currentUser.email);
+        saveAbandonedCarts(remainingAbandoned);
+    }
     closeCheckout();
     cart = [];
     appliedCoupon = null;
@@ -1055,6 +1557,83 @@ async function processCodOrder(details) {
             return;
         }
         showToast(error.message);
+    }
+}
+
+async function processPartialCodOrder(details) {
+    await refreshPaymentReadiness();
+    const readiness = getPaymentReadiness();
+    if (!readiness.ready) {
+        updatePaymentOptionsUI();
+        showToast(readiness.message);
+        return;
+    }
+    try {
+        const orderData = await apiFetch('/api/payments/razorpay/order', {
+            method: 'POST',
+            body: JSON.stringify({
+                cart,
+                couponCode: appliedCoupon ? appliedCoupon.code : '',
+                customer: details,
+                paymentPlan: 'partial-cod'
+            })
+        }, true);
+        const amounts = getPartialCodAmounts(getOrderPricing().total);
+        const options = {
+            key: orderData.keyId,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            order_id: orderData.orderId,
+            name: 'Ruh Imperium',
+            description: `Partial COD deposit for ${details.name}`,
+            image: 'gulabattar.png',
+            handler: async function handler(response) {
+                try {
+                    await apiFetch('/api/payments/razorpay/verify', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            orderId: response.razorpay_order_id,
+                            paymentId: response.razorpay_payment_id,
+                            signature: response.razorpay_signature
+                        })
+                    }, true);
+                    launchWhatsAppOrder(details, 'Partial COD', response.razorpay_payment_id);
+                    finalizeOrder(`Partial COD booked. ₹${amounts.deposit.toLocaleString()} paid now, ₹${amounts.balance.toLocaleString()} due on delivery.`);
+                } catch (error) {
+                    showToast(error.message);
+                }
+            },
+            prefill: {
+                name: details.name,
+                email: details.email,
+                contact: details.phone
+            },
+            notes: {
+                address: `${details.address}, ${details.city}, ${details.state} - ${details.pin}`,
+                coupon: appliedCoupon ? appliedCoupon.code : 'None',
+                paymentPlan: 'partial-cod',
+                payNow: String(amounts.deposit),
+                payOnDelivery: String(amounts.balance)
+            },
+            theme: {
+                color: '#c9a84c'
+            },
+            modal: {
+                ondismiss() {
+                    showToast('Partial COD payment was closed.');
+                }
+            }
+        };
+        const razorpay = new Razorpay(options);
+        razorpay.open();
+    } catch (error) {
+        const message = String(error.message || '');
+        if (isRecoverableApiError(message)) {
+            saveLocalPartialCodOrder(details);
+            showToast('Partial COD saved in fallback mode because the live payment API is unavailable.');
+            return;
+        }
+        showToast(message);
     }
 }
 
@@ -1159,6 +1738,10 @@ async function placeOrder() {
         await processCodOrder(details);
         return;
     }
+    if (selectedPayment === 'Partial COD') {
+        await processPartialCodOrder(details);
+        return;
+    }
     await processRazorpayOrder(details);
 }
 
@@ -1167,6 +1750,210 @@ function formatDate(value) {
         dateStyle: 'medium',
         timeStyle: 'short'
     });
+}
+
+function renderCustomerReviews() {
+    const list = document.getElementById('customerReviewList');
+    const average = document.getElementById('liveReviewAverage');
+    const count = document.getElementById('liveReviewCount');
+    if (!list || !average || !count) return;
+    const reviews = getStoredReviews().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (!reviews.length) {
+        average.textContent = '4.8';
+        count.textContent = 'Based on 1,000+ reviews';
+        list.innerHTML = '';
+        return;
+    }
+    const avgValue = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length;
+    average.textContent = avgValue.toFixed(1);
+    count.textContent = `Based on ${reviews.length.toLocaleString()} customer reviews`;
+    list.innerHTML = reviews.slice(0, 6).map(review => `
+        <div class="review-card reveal">
+            <div class="review-stars">${starStr(Number(review.rating || 5))}</div>
+            <p class="review-text">"${review.comment}"</p>
+            <div class="reviewer">
+                <div class="reviewer-avatar">${String(review.name || 'R').charAt(0).toUpperCase()}</div>
+                <div>
+                    <span class="reviewer-name">${review.name}</span>
+                    <span class="reviewer-date">${formatDate(review.createdAt)}</span>
+                    <span class="reviewer-product">${review.productName || 'Ruh Imperium Product'}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function populateReviewProductOptions() {
+    const select = document.getElementById('reviewProduct');
+    if (!select) return;
+    select.innerHTML = `<option value="">Select product</option>${products.map(product => `<option value="${product.id}">${product.name}</option>`).join('')}`;
+}
+
+function submitReview() {
+    const name = document.getElementById('reviewName')?.value?.trim();
+    const productId = Number(document.getElementById('reviewProduct')?.value || 0);
+    const rating = Number(document.getElementById('reviewRating')?.value || 0);
+    const comment = document.getElementById('reviewComment')?.value?.trim();
+    const product = products.find(item => item.id === productId);
+    if (!name || !product || !rating || !comment) {
+        showToast('Please complete all review fields.');
+        return;
+    }
+    const reviews = getStoredReviews();
+    reviews.unshift({
+        id: `review-${Date.now()}`,
+        name,
+        productId,
+        productName: product.name,
+        rating,
+        comment,
+        createdAt: new Date().toISOString()
+    });
+    saveStoredReviews(reviews);
+    document.getElementById('reviewName').value = '';
+    document.getElementById('reviewProduct').value = '';
+    document.getElementById('reviewRating').value = '5';
+    document.getElementById('reviewComment').value = '';
+    renderCustomerReviews();
+    showToast('Review submitted successfully.');
+}
+
+function updateCurrency(newCurrency) {
+    selectedCurrency = newCurrency || 'INR';
+    persistState();
+    renderHomeSections();
+    if (document.getElementById('shop-page').classList.contains('active')) renderShopGrid();
+    renderCartItems();
+    updateOrderSummary();
+    if (currentProduct) openProductModal(currentProduct.id);
+}
+
+function submitSellerApplication() {
+    if (!currentUser) {
+        showToast('Please sign in before applying as a seller.');
+        openAuthModal();
+        return;
+    }
+    const businessName = document.getElementById('sellerBusinessName')?.value?.trim();
+    const businessCategory = document.getElementById('sellerBusinessCategory')?.value?.trim();
+    if (!businessName || !businessCategory) {
+        showToast('Please complete seller application details.');
+        return;
+    }
+    const applications = getSellerApplications().filter(item => item.email !== currentUser.email);
+    applications.unshift({
+        id: `seller-${Date.now()}`,
+        name: currentUser.name,
+        email: currentUser.email,
+        phone: currentUser.phone,
+        businessName,
+        businessCategory,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+    });
+    saveSellerApplications(applications);
+    syncCurrentUserProfile({ sellerStatus: 'pending' });
+    document.getElementById('sellerBusinessName').value = '';
+    document.getElementById('sellerBusinessCategory').value = '';
+    renderSellerDashboard();
+    showToast('Seller application submitted.');
+}
+
+function submitSellerProduct() {
+    if (!currentUser) {
+        showToast('Please sign in before adding seller products.');
+        openAuthModal();
+        return;
+    }
+    const productName = document.getElementById('sellerProductName')?.value?.trim();
+    const productPrice = Number(document.getElementById('sellerProductPrice')?.value || 0);
+    const productCategory = document.getElementById('sellerProductCategory')?.value?.trim();
+    const productDescription = document.getElementById('sellerProductDescription')?.value?.trim();
+    const productImage = document.getElementById('sellerProductImage')?.value?.trim();
+    const myApplication = getSellerApplications().find(item => item.email === currentUser.email);
+    if (myApplication?.status !== 'approved') {
+        showToast('Seller application approval is required before adding products.');
+        return;
+    }
+    if (!productName || !productPrice || !productCategory) {
+        showToast('Please complete seller product details.');
+        return;
+    }
+    const sellerProducts = getSellerProducts();
+    sellerProducts.unshift({
+        id: `seller-product-${Date.now()}`,
+        sellerEmail: currentUser.email,
+        sellerName: currentUser.name,
+        name: productName,
+        price: productPrice,
+        category: productCategory,
+        description: productDescription,
+        image: productImage,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+    });
+    saveSellerProducts(sellerProducts);
+    document.getElementById('sellerProductName').value = '';
+    document.getElementById('sellerProductPrice').value = '';
+    document.getElementById('sellerProductCategory').value = '';
+    document.getElementById('sellerProductDescription').value = '';
+    document.getElementById('sellerProductImage').value = '';
+    renderSellerDashboard();
+    showToast('Seller product submitted for approval.');
+}
+
+function subscribeStockAlert() {
+    const email = (currentUser?.email || document.getElementById('stockAlertEmail')?.value || '').trim().toLowerCase();
+    const productId = currentProduct?.id || 0;
+    if (!email || !productId) {
+        showToast('Open a product and enter email to subscribe for stock alerts.');
+        return;
+    }
+    const alerts = getStockAlerts().filter(item => !(item.email === email && item.productId === productId));
+    alerts.unshift({
+        id: `stock-${Date.now()}`,
+        email,
+        productId,
+        productName: currentProduct.name,
+        createdAt: new Date().toISOString()
+    });
+    saveStockAlerts(alerts);
+    const target = document.getElementById('stockAlertEmail');
+    if (target) target.value = '';
+    showToast('Stock alert subscription saved.');
+}
+
+function renderSellerDashboard() {
+    const wrap = document.getElementById('sellerDashboardArea');
+    if (!wrap) return;
+    if (!currentUser) {
+        wrap.innerHTML = '<p class="auth-help">Sign in to apply as a seller and add products from the front end.</p>';
+        return;
+    }
+    const myApplication = getSellerApplications().find(item => item.email === currentUser.email);
+    const myProducts = getSellerProducts().filter(item => item.sellerEmail === currentUser.email).slice(0, 5);
+    wrap.innerHTML = `
+        <div class="account-card">
+            <strong>Seller Dashboard</strong>
+            <div class="order-meta-line">Application status: ${titleCase(myApplication?.status || 'not applied')}</div>
+            <div class="order-meta-line">Submitted products: ${myProducts.length}</div>
+            ${myApplication?.status === 'approved' ? '<div class="order-meta-line">Marketplace access is active. Approved products can be published to the storefront.</div>' : '<div class="order-meta-line">Apply first, then wait for admin approval to unlock catalog submission.</div>'}
+        </div>
+        <div class="auth-form">
+            <div class="form-group"><label>Business Name</label><input type="text" id="sellerBusinessName" placeholder="Your brand / store name"></div>
+            <div class="form-group"><label>Business Category</label><input type="text" id="sellerBusinessCategory" placeholder="Perfume, apparel, gifting, etc."></div>
+            <button class="secondary-btn" type="button" onclick="submitSellerApplication()">Apply As Seller</button>
+            <div class="form-group"><label>Product Name</label><input type="text" id="sellerProductName" placeholder="Seller product name"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Product Price</label><input type="number" id="sellerProductPrice" placeholder="1999"></div>
+                <div class="form-group"><label>Product Category</label><input type="text" id="sellerProductCategory" placeholder="Category"></div>
+            </div>
+            <div class="form-group"><label>Product Description</label><textarea id="sellerProductDescription" placeholder="Describe your product for the storefront"></textarea></div>
+            <div class="form-group"><label>Product Image URL</label><input type="url" id="sellerProductImage" placeholder="https://example.com/image.jpg"></div>
+            <button class="secondary-btn" type="button" onclick="submitSellerProduct()">Submit Product</button>
+        </div>
+        ${myProducts.length ? `<div class="account-card">${myProducts.map(item => `<div class="order-meta-line">${item.name} · ${formatCurrency(item.price)} · ${titleCase(item.status)}</div>`).join('')}</div>` : ''}
+    `;
 }
 
 function titleCase(value) {
@@ -1336,6 +2123,7 @@ function renderOrders(list, targetId, emptyMessage) {
             <div class="order-items">${order.items.map(item => `${item.name} (${item.size}) × ${item.qty}`).join('<br>')}</div>
             ${buildOrderTimeline(order)}
             <div class="order-meta-line">Total: ₹${Number(order.total).toLocaleString()}${order.couponCode ? ` · Coupon: ${order.couponCode}` : ''}</div>
+            ${order.paymentMethod === 'Partial COD' ? `<div class="order-meta-line">Paid Now: ₹${Number(order.depositAmount || 0).toLocaleString()} · Due on Delivery: ₹${Number(order.balanceDue || 0).toLocaleString()}</div>` : ''}
             ${order.courierName ? `<div class="order-meta-line">Courier: ${order.courierName}</div>` : ''}
             ${order.trackingId ? `<div class="order-meta-line">Tracking ID: ${order.trackingId}</div>` : ''}
             <div class="order-action-row">
@@ -1385,6 +2173,36 @@ function renderSubscribers(list, targetId, emptyMessage) {
     `).join('');
 }
 
+function renderSimpleAdminCards(list, targetId, emptyMessage, formatter) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    if (!list.length) {
+        target.innerHTML = `<div class="orders-empty">${emptyMessage}</div>`;
+        return;
+    }
+    target.innerHTML = list.map(item => `
+        <div class="subscriber-card">
+            <div>${formatter(item)}</div>
+        </div>
+    `).join('');
+}
+
+function contactLead(email, phone, label) {
+    if (phone) {
+        const cleaned = String(phone).replace(/[^\d]/g, '');
+        const message = `Hello from Ruh Imperium. We are following up regarding your ${label}.`;
+        window.open(`https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`, '_blank');
+        return;
+    }
+    if (email) {
+        const subject = `Ruh Imperium follow-up`;
+        const body = `Hello,%0D%0A%0D%0AWe are following up regarding your ${label}.`;
+        window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${body}`;
+        return;
+    }
+    showToast('No contact info is available for this lead.');
+}
+
 async function loadMyOrders() {
     if (!apiConfig.backendReady) {
         const localOrders = getLocalOrders().filter(order =>
@@ -1413,8 +2231,10 @@ async function loadAdminOrders() {
     if (!apiConfig.backendReady) {
         buildLocalAdminSnapshot();
         renderAdminStats();
+        renderAdminSetupReadiness();
         filterAdminOrders();
         filterAdminSubscribers();
+        renderAdminExtras();
         return;
     }
     try {
@@ -1427,15 +2247,137 @@ async function loadAdminOrders() {
         adminStats = statsData.stats || null;
         adminSubscribers = subscribersData.subscribers || [];
         renderAdminStats();
+        renderAdminSetupReadiness();
         filterAdminOrders();
         filterAdminSubscribers();
+        renderAdminExtras();
     } catch (error) {
         buildLocalAdminSnapshot();
         renderAdminStats();
+        renderAdminSetupReadiness();
         filterAdminOrders();
         filterAdminSubscribers();
+        renderAdminExtras();
         showToast('Admin dashboard loaded in fallback mode.');
     }
+}
+
+function renderAdminExtras() {
+    renderSimpleAdminCards(
+        getSellerApplications(),
+        'sellerApplicationsList',
+        'No seller applications yet.',
+        item => `<strong>${item.businessName}</strong><span>${item.name} · ${item.email} · ${titleCase(item.status)}</span><span>${item.businessCategory}${item.phone ? ` · ${item.phone}` : ''}</span><div class="admin-quick-actions"><button class="admin-quick-btn" type="button" onclick="updateSellerApplicationStatus('${item.id}','approved')">Approve</button><button class="admin-quick-btn" type="button" onclick="updateSellerApplicationStatus('${item.id}','rejected')">Reject</button><button class="admin-quick-btn" type="button" onclick="contactLead(${JSON.stringify(item.email)}, ${JSON.stringify(item.phone)}, 'seller application')">Contact</button><button class="admin-quick-btn" type="button" onclick="deleteSellerApplication('${item.id}')">Remove</button></div>`
+    );
+    renderSimpleAdminCards(
+        getSellerProducts(),
+        'sellerProductsList',
+        'No seller products submitted yet.',
+        item => `<strong>${item.name}</strong><span>${item.sellerName} · ${item.sellerEmail}</span><span>${item.category} · ${formatCurrency(item.price)} · ${titleCase(item.status)}</span><span>${item.description || 'No description added yet.'}</span><div class="admin-quick-actions"><button class="admin-quick-btn" type="button" onclick="updateSellerProductStatus('${item.id}','approved')">Approve</button><button class="admin-quick-btn" type="button" onclick="updateSellerProductStatus('${item.id}','rejected')">Reject</button><button class="admin-quick-btn" type="button" onclick="deleteSellerProduct('${item.id}')">Remove</button></div>`
+    );
+    renderSimpleAdminCards(
+        getViewSignals().filter(item => !item.purchased),
+        'viewSignalsList',
+        'No product-view leads yet.',
+        item => `<strong>${item.productName}</strong><span>${item.email || 'Guest user'}${item.phone ? ` · ${item.phone}` : ''}</span><span>Viewed: ${formatDate(item.viewedAt)}</span><div class="admin-quick-actions"><button class="admin-quick-btn" type="button" onclick="contactLead(${JSON.stringify(item.email)}, ${JSON.stringify(item.phone)}, 'product interest')">Contact</button><button class="admin-quick-btn" type="button" onclick="markViewSignalPurchased('${item.id}')">Mark Purchased</button><button class="admin-quick-btn" type="button" onclick="dismissViewSignal('${item.id}')">Dismiss</button></div>`
+    );
+    renderSimpleAdminCards(
+        getAbandonedCarts(),
+        'abandonedCartsList',
+        'No abandoned carts recorded yet.',
+        item => `<strong>${item.customer || 'Guest'}</strong><span>${item.email || 'No email'}${item.phone ? ` · ${item.phone}` : ''}</span><span>${item.items.join(', ')}</span><span>Total: ${formatCurrency(item.total)}</span><div class="admin-quick-actions"><button class="admin-quick-btn" type="button" onclick="contactLead(${JSON.stringify(item.email)}, ${JSON.stringify(item.phone)}, 'abandoned cart')">Contact</button><button class="admin-quick-btn" type="button" onclick="markAbandonedCartRecovered('${item.id}')">Recovered</button><button class="admin-quick-btn" type="button" onclick="dismissAbandonedCart('${item.id}')">Dismiss</button></div>`
+    );
+    renderSimpleAdminCards(
+        getStockAlerts(),
+        'stockAlertsList',
+        'No stock alerts yet.',
+        item => `<strong>${item.productName}</strong><span>${item.email}</span><span>Subscribed: ${formatDate(item.createdAt)}</span><div class="admin-quick-actions"><button class="admin-quick-btn" type="button" onclick="contactLead(${JSON.stringify(item.email)}, '', 'stock alert update')">Notify</button><button class="admin-quick-btn" type="button" onclick="removeStockAlert('${item.id}')">Resolve</button></div>`
+    );
+}
+
+function updateSellerApplicationStatus(applicationId, status) {
+    const items = getSellerApplications().map(item => item.id === applicationId ? { ...item, status, updatedAt: new Date().toISOString() } : item);
+    const updated = items.find(item => item.id === applicationId);
+    saveSellerApplications(items);
+    if (updated?.email) {
+        updateStoredLocalUser(updated.email, { sellerStatus: status, isSeller: status === 'approved' });
+        if (currentUser && String(currentUser.email || '').trim().toLowerCase() === String(updated.email || '').trim().toLowerCase()) {
+            syncCurrentUserProfile({ sellerStatus: status, isSeller: status === 'approved' });
+        }
+    }
+    renderAdminExtras();
+    renderSellerDashboard();
+    showToast(`Seller application ${titleCase(status)}.`);
+}
+
+function updateSellerProductStatus(productId, status) {
+    const items = getSellerProducts().map(item => item.id === productId ? {
+        ...item,
+        status,
+        catalogId: item.catalogId || Number(`9${String(item.id || '').replace(/\D/g, '').slice(-6) || Date.now()}`),
+        updatedAt: new Date().toISOString()
+    } : item);
+    saveSellerProducts(items);
+    syncMarketplaceProducts();
+    renderAdminExtras();
+    renderSellerDashboard();
+    renderHomeSections();
+    renderShopGrid();
+    showToast(`Seller product ${titleCase(status)}.`);
+}
+
+function deleteSellerApplication(applicationId) {
+    const next = getSellerApplications().filter(item => item.id !== applicationId);
+    saveSellerApplications(next);
+    renderAdminExtras();
+    renderSellerDashboard();
+    showToast('Seller application removed.');
+}
+
+function deleteSellerProduct(productId) {
+    const next = getSellerProducts().filter(item => item.id !== productId);
+    saveSellerProducts(next);
+    syncMarketplaceProducts();
+    renderAdminExtras();
+    renderSellerDashboard();
+    renderHomeSections();
+    renderShopGrid();
+    showToast('Seller product removed.');
+}
+
+function dismissViewSignal(signalId) {
+    const next = getViewSignals().filter(item => item.id !== signalId);
+    saveViewSignals(next);
+    renderAdminExtras();
+    showToast('Viewed-product lead dismissed.');
+}
+
+function markViewSignalPurchased(signalId) {
+    const next = getViewSignals().map(item => item.id === signalId ? { ...item, purchased: true, updatedAt: new Date().toISOString() } : item);
+    saveViewSignals(next);
+    renderAdminExtras();
+    showToast('Lead marked as converted.');
+}
+
+function dismissAbandonedCart(entryId) {
+    const next = getAbandonedCarts().filter(item => item.id !== entryId);
+    saveAbandonedCarts(next);
+    renderAdminExtras();
+    showToast('Abandoned cart dismissed.');
+}
+
+function markAbandonedCartRecovered(entryId) {
+    const next = getAbandonedCarts().filter(item => item.id !== entryId);
+    saveAbandonedCarts(next);
+    renderAdminExtras();
+    showToast('Abandoned cart marked as recovered.');
+}
+
+function removeStockAlert(alertId) {
+    const next = getStockAlerts().filter(item => item.id !== alertId);
+    saveStockAlerts(next);
+    renderAdminExtras();
+    showToast('Stock alert removed.');
 }
 
 function renderAdminStats() {
@@ -1445,11 +2387,13 @@ function renderAdminStats() {
         summary.innerHTML = '';
         return;
     }
+    const visitCount = Number(adminStats.totalVisits || getLocalTrafficStats().totalVisits || 0);
     summary.innerHTML = `
         <div class="stat-card"><span>Total Orders</span><strong>${adminStats.totalOrders}</strong></div>
         <div class="stat-card"><span>Pending</span><strong>${adminStats.pendingOrders}</strong></div>
         <div class="stat-card"><span>Shipped</span><strong>${adminStats.shippedOrders}</strong></div>
         <div class="stat-card"><span>Revenue</span><strong>₹${Number(adminStats.totalRevenue).toLocaleString()}</strong></div>
+        <div class="stat-card"><span>Visitors</span><strong>${visitCount.toLocaleString()}</strong></div>
     `;
 }
 
@@ -1530,15 +2474,18 @@ async function updateAdminOrderStatus(orderId, orderStatus) {
         await loadMyOrders();
     } catch (error) {
         if (isRecoverableApiError(error.message)) {
-            const remaining = adminSubscribers.filter(subscriber => subscriber.id !== subscriberId);
-            if (remaining.length === adminSubscribers.length) {
-                showToast('Subscriber not found.');
+            const orders = getLocalOrders();
+            const order = orders.find(item => item.id === orderId);
+            if (!order) {
+                showToast('Order not found.');
                 return;
             }
-            adminSubscribers = remaining;
-            saveLocalNewsletterSubscribers(adminSubscribers.map(subscriber => subscriber.email));
-            filterAdminSubscribers();
-            showToast('Subscriber deleted.');
+            order.orderStatus = orderStatus;
+            order.updatedAt = new Date().toISOString();
+            saveLocalOrders(orders);
+            await loadAdminOrders();
+            await loadMyOrders();
+            showToast(`Order marked as ${titleCase(orderStatus)}.`);
             return;
         }
         showToast(error.message);
@@ -1920,6 +2867,7 @@ function renderAuthView() {
         document.getElementById('accountEmail').textContent = currentUser.email || 'No email saved';
         document.getElementById('accountPhone').textContent = currentUser.phone || 'No phone saved';
         if (cardBadge) cardBadge.classList.toggle('show', Boolean(currentUser.isAdmin));
+        renderSellerDashboard();
     } else {
         guestView.style.display = 'block';
         userView.style.display = 'none';
@@ -1950,6 +2898,7 @@ function updateAccountUI() {
     if (adminTab) adminTab.style.display = currentUser && currentUser.isAdmin ? 'block' : 'none';
     renderAuthView();
     renderBackendStatus();
+    renderAdminSetupReadiness();
     renderCartItems();
 }
 
@@ -2143,25 +3092,38 @@ document.addEventListener('keydown', event => {
 });
 
 async function initApp() {
+    registerSiteVisit();
     loadStoredState();
     await loadApiConfig();
+    populateReviewProductOptions();
     renderHomeSections();
+    renderCustomerReviews();
     updateWishBadge();
     updateCartBadge();
     updateAccountUI();
     renderBackendStatus();
+    renderAdminSetupReadiness();
     updateCouponUI();
     updateOrderSummary();
     prefillCheckout();
     updatePaymentOptionsUI();
     renderCartItems();
+    const currencySelect = document.getElementById('currencySelector');
+    if (currencySelect) currencySelect.value = selectedCurrency;
     ['cName', 'cPhone', 'cEmail', 'cAddress', 'cCity', 'cPin', 'cState'].forEach(id => {
         const element = document.getElementById(id);
         if (!element) return;
         element.addEventListener('input', handleCheckoutIdentityChange);
         element.addEventListener('change', handleCheckoutIdentityChange);
+        element.addEventListener('input', updatePinServiceability);
+        element.addEventListener('change', updatePinServiceability);
     });
+    const backupImportInput = document.getElementById('backupImportInput');
+    if (backupImportInput) {
+        backupImportInput.addEventListener('change', handleBackupImport);
+    }
     updateCheckoutOtpUI();
+    updatePinServiceability();
     if (currentUser) loadMyOrders();
     initReveals();
 }
