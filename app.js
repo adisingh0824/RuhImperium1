@@ -908,6 +908,17 @@ function renderHomeSections() {
         .filter(product => product.tags.includes('Gifting') || product.cat === 'Discovery Set')
         .slice(0, 4);
     document.getElementById('giftingGrid').innerHTML = giftingPicks.map(product => productCardHTML(product)).join('');
+    const poojaPicks = products
+        .filter(product =>
+            product.tags.includes('Festival') ||
+            product.cat === 'Authentic Indian Attars' ||
+            ['Mogra Attar', 'Gulab Attar', 'Kewra Attar', 'Hina Attar', 'Mitti Attar', 'Sandalwood Attar'].includes(product.name)
+        )
+        .slice(0, 4);
+    const poojaGrid = document.getElementById('poojaGrid');
+    if (poojaGrid) {
+        poojaGrid.innerHTML = poojaPicks.map(product => productCardHTML(product)).join('');
+    }
     renderRecentlyViewed();
 }
 
