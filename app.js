@@ -447,6 +447,9 @@ function isRecoverableApiError(message) {
         /failed to fetch/.test(text) ||
         /internal server error/.test(text) ||
         /api route not found/.test(text) ||
+        /not_found/.test(text) ||
+        /the page could not be found/.test(text) ||
+        /\bnot found\b/.test(text) ||
         /network/.test(text) ||
         /unexpected token/.test(text)
     );
@@ -490,7 +493,7 @@ async function apiFetch(path, options = {}, needsAuth = false) {
 
     if (!response.ok) {
         const message = data.error || text || 'Request failed.';
-        if (String(path || '').startsWith('/api/') && isRecoverableApiError(message) && response.status >= 500) {
+        if (String(path || '').startsWith('/api/') && isRecoverableApiError(message)) {
             apiConfig = { ...apiConfig, backendReady: false };
         }
         throw new Error(message);
