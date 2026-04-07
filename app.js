@@ -2862,8 +2862,8 @@ function setAuthMode(mode) {
     document.getElementById('signupTab').classList.toggle('active', isSignup);
     document.getElementById('authTitle').textContent = isSignup ? 'Create Your Account' : 'Welcome Back';
     document.getElementById('authSubtitle').textContent = isSignup
-        ? (apiConfig.backendReady ? 'Create your account on the backend so checkout and payments stay tied to a real user profile.' : 'Create an account saved in this browser so your details and orders still work on the live site.')
-        : (apiConfig.backendReady ? 'Sign in to access saved details, backend coupon validation, and Razorpay checkout.' : 'Sign in to your browser-saved account. Cash on Delivery and order history will still work.');
+        ? 'Create your account to save checkout details, orders, and a smoother shopping flow on this site.'
+        : 'Sign in to access saved details, orders, coupons, and faster checkout on this site.';
     document.getElementById('authName').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authPhone').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authPassword').parentElement.style.display = 'block';
