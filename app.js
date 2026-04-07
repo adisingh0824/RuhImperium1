@@ -1,3 +1,4 @@
+// CORE STORE STORAGE SETUP
 const CART_STORAGE_KEY = 'ruhImperiumCart';
 const WISHLIST_STORAGE_KEY = 'ruhImperiumWishlist';
 const USER_STORAGE_KEY = 'ruhImperiumUser';
@@ -19,6 +20,7 @@ const SELLER_PRODUCTS_STORAGE_KEY = 'ruhImperiumSellerProducts';
 const VIEW_SIGNALS_STORAGE_KEY = 'ruhImperiumViewSignals';
 const ABANDONED_CART_STORAGE_KEY = 'ruhImperiumAbandonedCarts';
 const STOCK_ALERTS_STORAGE_KEY = 'ruhImperiumStockAlerts';
+// COUPON VALIDATION SETUP
 const LOCAL_COUPONS = {
     RAMJI20: { code: 'RAMJI20', label: 'Ram Ji Signature Offer', type: 'percent', value: 20, expiresAt: '2027-03-31T23:59:59.000Z' },
     WELCOME10: { code: 'WELCOME10', label: 'Welcome Offer', type: 'percent', value: 10, expiresAt: '2027-03-31T23:59:59.000Z' },
@@ -84,6 +86,7 @@ const CURRENCY_SYMBOLS = {
     GBP: '£'
 };
 
+// LOCAL STATE BOOTSTRAP SETUP
 function loadStoredState() {
     try {
         cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]');
@@ -105,6 +108,7 @@ function loadStoredState() {
     syncMarketplaceProducts();
 }
 
+// ADMIN ACCESS SETUP
 function applyAdminAccess(user) {
     if (!user) return user;
     const adminEmail = String(apiConfig.adminEmail || FALLBACK_ADMIN_EMAIL).trim().toLowerCase();
@@ -193,6 +197,7 @@ function clearUserState() {
     localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
+// LOCAL DATA HELPERS SETUP
 function readLocalJson(key, fallback) {
     try {
         return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
@@ -253,6 +258,7 @@ function clearPendingLocalCheckoutOtp() {
     localStorage.removeItem(LOCAL_CHECKOUT_OTP_STORAGE_KEY);
 }
 
+// COUPON VALIDATION SETUP
 function getLocalCoupon(code, subtotal) {
     const coupon = LOCAL_COUPONS[String(code || '').trim().toUpperCase()];
     if (!coupon) throw new Error('Invalid coupon code.');
@@ -456,6 +462,7 @@ function buildOrderDocumentHtmlClient(order, type) {
     return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title><style>body{font-family:Arial,sans-serif;background:#eef3f9;margin:0;color:#162742}.sheet{max-width:900px;margin:24px auto;background:#fff;border:1px solid #d6e1ee;padding:32px;box-shadow:0 18px 50px rgba(17,34,55,0.08)}.top{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px}.brand h1{margin:0;font-size:30px;color:#162742}.brand p,.meta p{margin:6px 0;color:#53657e;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{border:1px solid #dbe5f0;background:#f8fbff;padding:16px}.card p{margin:10px 0}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #dde6f0;padding:10px;text-align:left;font-size:14px}th{background:#edf4fb;color:#23415f}.summary{margin-top:20px;margin-left:auto;max-width:320px}.summary-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e0e8f1}.summary-line.total{font-size:18px;font-weight:700;border-bottom:none;color:#162742}@media print{body{background:#fff}.sheet{margin:0;border:none;box-shadow:none}}</style></head><body><div class="sheet"><div class="top"><div class="brand"><h1>Ruh Imperium</h1><p>Pure Indian Fragrances · Since 1973</p><p>Kannauj, Uttar Pradesh</p></div><div class="meta"><p><strong>${title}</strong></p><p>Order ID: ${order.id}</p><p>Date: ${formatDate(order.createdAt)}</p><p>Payment: ${order.paymentMethod} · ${order.paymentStatus}</p></div></div><div class="grid"><div class="card"><p><strong>${order.customerName}</strong></p><p>${order.customerEmail || ''}</p><p>${order.customerPhone || ''}</p></div><div class="card"><p>${address.address || ''}</p><p>${address.city || ''}, ${address.state || ''} - ${address.pin || ''}</p><p>Order Status: ${order.orderStatus || 'pending'}</p>${order.courierName ? `<p>Courier: ${order.courierName}</p>` : ''}${order.trackingId ? `<p>Tracking ID: ${order.trackingId}</p>` : ''}</div></div><table><thead>${type === 'packing-slip' ? '<tr><th>Item</th><th>Size</th><th>Qty</th></tr>' : '<tr><th>Item</th><th>Size</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>'}</thead><tbody>${rows}</tbody></table><div class="summary"><div class="summary-line"><span>Subtotal</span><strong>₹${Number(order.subtotal || 0).toLocaleString()}</strong></div>${type === 'packing-slip' ? `${order.courierName ? `<div class="summary-line"><span>Courier</span><strong>${order.courierName}</strong></div>` : ''}${order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : ''}` : `<div class="summary-line"><span>Coupon</span><strong>${order.couponCode || 'None'}</strong></div>${order.deliveryCharge ? `<div class="summary-line"><span>Delivery</span><strong>₹${Number(order.deliveryCharge || 0).toLocaleString()}</strong></div>` : ''}${order.gstBreakdown?.igst ? `<div class="summary-line"><span>IGST</span><strong>₹${Number(order.gstBreakdown.igst || 0).toLocaleString()}</strong></div>` : `<div class="summary-line"><span>CGST</span><strong>₹${Number(order.gstBreakdown?.cgst || 0).toLocaleString()}</strong></div><div class="summary-line"><span>SGST</span><strong>₹${Number(order.gstBreakdown?.sgst || 0).toLocaleString()}</strong></div>`}<div class="summary-line"><span>Discount</span><strong>₹${Number(order.discount || 0).toLocaleString()}</strong></div>${order.courierName ? `<div class="summary-line"><span>Courier</span><strong>${order.courierName}</strong></div>` : ''}${order.trackingId ? `<div class="summary-line"><span>Tracking ID</span><strong>${order.trackingId}</strong></div>` : ''}<div class="summary-line total"><span>Total</span><strong>₹${Number(order.total || 0).toLocaleString()}</strong></div>`}</div></div></body></html>`;
 }
 
+// BACKEND API COMMUNICATION SETUP
 async function apiFetch(path, options = {}, needsAuth = false) {
     const headers = {
         'Content-Type': 'application/json',
@@ -495,6 +502,7 @@ async function apiFetch(path, options = {}, needsAuth = false) {
     return data;
 }
 
+// LIVE BACKEND READINESS SETUP
 async function loadApiConfig() {
     try {
         const data = await apiFetch('/api/config');
@@ -1180,20 +1188,28 @@ function updateCouponUI() {
     }
 }
 
+// COUPON VALIDATION SETUP
 async function applyCoupon() {
     const code = document.getElementById('couponCode').value.trim().toUpperCase();
     if (!code) {
         showToast('Enter a coupon code first.');
         return;
     }
+    const customer = {
+        state: document.getElementById('cState')?.value?.trim() || currentUser?.state || '',
+        pin: document.getElementById('cPin')?.value?.trim() || ''
+    };
+    const fallbackApplyCoupon = (successMessage) => {
+        appliedCoupon = getLocalCoupon(code, getCartTotal());
+        persistState();
+        updateCouponUI();
+        renderCartItems();
+        updateOrderSummary();
+        showToast(successMessage);
+    };
     if (!apiConfig.backendReady) {
         try {
-            appliedCoupon = getLocalCoupon(code, getCartTotal());
-            persistState();
-            updateCouponUI();
-            renderCartItems();
-            updateOrderSummary();
-            showToast(`${code} applied successfully.`);
+            fallbackApplyCoupon(`${code} applied successfully.`);
         } catch (error) {
             showToast(error.message);
         }
@@ -1202,7 +1218,7 @@ async function applyCoupon() {
     try {
         const data = await apiFetch('/api/coupons/validate', {
             method: 'POST',
-            body: JSON.stringify({ code, cart })
+            body: JSON.stringify({ code, cart, customer })
         });
         appliedCoupon = data.coupon;
         persistState();
@@ -1211,21 +1227,17 @@ async function applyCoupon() {
         updateOrderSummary();
         showToast(`${code} applied successfully.`);
     } catch (error) {
-        if (isRecoverableApiError(error.message)) {
-            try {
-                appliedCoupon = getLocalCoupon(code, getCartTotal());
-                persistState();
-                updateCouponUI();
-                renderCartItems();
-                updateOrderSummary();
-                showToast(`${code} applied successfully in fallback mode.`);
-                return;
-            } catch (localError) {
-                showToast(localError.message);
+        try {
+            fallbackApplyCoupon(`${code} applied successfully in fallback mode.`);
+            return;
+        } catch (localError) {
+            if (!isRecoverableApiError(error.message)) {
+                showToast(error.message);
                 return;
             }
+            showToast(localError.message);
+            return;
         }
-        showToast(error.message);
     }
 }
 
@@ -1828,6 +1840,7 @@ function updateCurrency(newCurrency) {
     if (currentProduct) openProductModal(currentProduct.id);
 }
 
+// SELLER APPLICATION SETUP
 function submitSellerApplication() {
     if (!currentUser) {
         showToast('Please sign in before applying as a seller.');
@@ -1859,6 +1872,7 @@ function submitSellerApplication() {
     showToast('Seller application submitted.');
 }
 
+// SELLER PRODUCT SUBMISSION SETUP
 function submitSellerProduct() {
     if (!currentUser) {
         showToast('Please sign in before adding seller products.');
@@ -1902,6 +1916,7 @@ function submitSellerProduct() {
     showToast('Seller product submitted for approval.');
 }
 
+// STOCK ALERT SUBSCRIPTION SETUP
 function subscribeStockAlert() {
     const email = (currentUser?.email || document.getElementById('stockAlertEmail')?.value || '').trim().toLowerCase();
     const productId = currentProduct?.id || 0;
@@ -1923,6 +1938,7 @@ function subscribeStockAlert() {
     showToast('Stock alert subscription saved.');
 }
 
+// SELLER DASHBOARD SETUP
 function renderSellerDashboard() {
     const wrap = document.getElementById('sellerDashboardArea');
     if (!wrap) return;
@@ -2101,6 +2117,7 @@ async function openOrderDocument(orderId, type, event) {
     }
 }
 
+// ORDER HISTORY AND ADMIN ORDER VIEW SETUP
 function renderOrders(list, targetId, emptyMessage) {
     const target = document.getElementById(targetId);
     if (!target) return;
@@ -2262,6 +2279,7 @@ async function loadAdminOrders() {
     }
 }
 
+// ADMIN LEADS AND MARKETPLACE ACTIONS SETUP
 function renderAdminExtras() {
     renderSimpleAdminCards(
         getSellerApplications(),
@@ -2380,6 +2398,7 @@ function removeStockAlert(alertId) {
     showToast('Stock alert removed.');
 }
 
+// ADMIN DASHBOARD STATS SETUP
 function renderAdminStats() {
     const summary = document.getElementById('adminStats');
     if (!summary) return;
@@ -2775,6 +2794,7 @@ function handleNewsletterKeydown(event) {
     subscribe();
 }
 
+// NEWSLETTER SUBSCRIPTION SETUP
 async function subscribe() {
     const input = document.getElementById('nlEmail');
     const button = document.getElementById('nlSubmitBtn');
@@ -2854,6 +2874,7 @@ function closeAuthModal() {
     document.body.style.overflow = '';
 }
 
+// AUTHENTICATION UI SETUP
 function renderAuthView() {
     const guestView = document.getElementById('authGuestView');
     const userView = document.getElementById('authUserView');
@@ -2943,6 +2964,7 @@ function getLocalUserByEmail(email) {
     return getLocalUsers().find(user => user.email === email) || null;
 }
 
+// AUTHENTICATION FLOW SETUP
 async function handleAuth() {
     const name = document.getElementById('authName').value.trim();
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
@@ -3091,6 +3113,7 @@ document.addEventListener('keydown', event => {
     }
 });
 
+// APPLICATION INIT SETUP
 async function initApp() {
     registerSiteVisit();
     loadStoredState();

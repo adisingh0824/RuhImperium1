@@ -1,3 +1,4 @@
+// SERVER CORE AND DEPLOYMENT SETUP
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -15,6 +16,7 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 const OTPS_FILE = path.join(DATA_DIR, 'otps.json');
 const SUBSCRIBERS_FILE = path.join(DATA_DIR, 'subscribers.json');
+// ENVIRONMENT AND SERVICE CONFIG SETUP
 const PORT = Number(process.env.PORT || 3000);
 const TOKEN_SECRET = process.env.AUTH_SECRET || 'change-this-auth-secret';
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
@@ -50,10 +52,12 @@ const CATEGORY_GST_RATES = {
 };
 const REMOTE_STATES = new Set(['West Bengal', 'Tamil Nadu', 'Karnataka', 'Maharashtra', 'Other']);
 
+// COUPON VALIDATION SETUP
 const coupons = {
     RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer', expiresAt: '2027-03-31T23:59:59.000Z' },
     WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer', expiresAt: '2027-03-31T23:59:59.000Z' },
-    ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off', expiresAt: '2027-03-31T23:59:59.000Z' }
+    ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off', expiresAt: '2027-03-31T23:59:59.000Z' },
+    ADI50: { type: 'percent', value: 50, label: 'SPECIAL OFFER', expiresAt: '2027-03-31T23:59:59.000Z' }
 };
 
 const PARTIAL_COD_DEPOSIT_PERCENT = 20;
@@ -703,6 +707,7 @@ function buildOrderDocumentHtml(order, type) {
 </html>`;
 }
 
+// CART PRICING SETUP
 function buildPricedCart(cart) {
     if (!Array.isArray(cart) || cart.length === 0) throw new Error('Your cart is empty.');
     return cart.map(item => {
@@ -737,6 +742,7 @@ function calculateDeliveryCharge(state, pin, subtotal) {
     return extraCharge;
 }
 
+// GST AND DELIVERY CALCULATION SETUP
 function calculatePricing(pricedCart, coupon, customer = {}) {
     const subtotal = calculateSubtotal(pricedCart);
     const discount = coupon ? coupon.discountAmount : 0;
@@ -761,6 +767,7 @@ function calculatePricing(pricedCart, coupon, customer = {}) {
     };
 }
 
+// COUPON VALIDATION SETUP
 function validateCoupon(code, subtotal) {
     const normalized = String(code || '').trim().toUpperCase();
     const coupon = coupons[normalized];
@@ -787,6 +794,7 @@ function validateCoupon(code, subtotal) {
     };
 }
 
+// RAZORPAY PAYMENT ORDER SETUP
 async function createRazorpayOrder(amount, receipt, notes) {
     const response = await fetch('https://api.razorpay.com/v1/orders', {
         method: 'POST',
@@ -806,6 +814,7 @@ async function createRazorpayOrder(amount, receipt, notes) {
     return data;
 }
 
+// API ROUTES SETUP
 async function handleApi(req, res, pathname, url) {
     if (req.method === 'GET' && pathname === '/api/health') {
         sendJson(res, 200, {
