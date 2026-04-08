@@ -833,7 +833,11 @@
         }
         @media(max-width:768px){
             html,body{width:100%; max-width:100%; overflow-x:hidden;}
-            header,section,footer,.hero,.products-section,#shop-page{max-width:100%; overflow-x:hidden;}
+            body{position:relative;}
+            #home-page,#shop-page,header,footer,section,.hero,.products-section,.story-banner,.process-section,.use-section,.reviews-section,.newsletter{width:100%; max-width:100%; overflow-x:hidden;}
+            .section-header,.products-grid,.shop-products-grid,.cat-grid,.notes-grid,.process-grid,.use-grid,.trust-grid,.reviews-grid,.footer-grid,.story-banner,.story-text,.story-visual{max-width:100%; min-width:0;}
+            section[style], div[style*="max-width:1400px"], div[style*="max-width:1000px"]{max-width:100% !important;}
+            section[style*="padding:80px 40px"], .products-section, .process-section, .use-section, .reviews-section, .newsletter, #shop-page{padding-left:14px !important; padding-right:14px !important;}
             .announcement{font-size:10px; letter-spacing:1px; padding:8px 10px; line-height:1.5;}
             .header-inner{padding:10px 14px; height:auto; gap:12px; align-items:center;}
             .header-icons{gap:10px; min-width:0;}
@@ -862,12 +866,14 @@
             .nl-form{flex-direction:column;}
             .nl-form input{border-right:1px solid rgba(201,168,76,0.3);}
             .footer-grid{grid-template-columns:1fr;}
-            .hero{min-height:540px; height:auto; padding:20px 14px 36px;}
+            .hero{min-height:540px; height:auto; padding:20px 14px 36px; justify-content:center;}
             .hero-btns{flex-direction:column; align-items:center;}
             .hero-content{padding:24px 14px; width:100%; max-width:100%; border-radius:24px;}
             .hero-title{font-size:clamp(36px, 12vw, 54px);}
             .hero-subtitle{font-size:18px; line-height:1.5;}
             .hero-tech-strip{grid-template-columns:1fr; width:100%;}
+            .hero-ornament{display:none;}
+            .hero-bg-pattern{background-size:64px 64px, 64px 64px, auto, auto;}
             .view-all-wrap .btn-primary,
             .view-all-wrap .btn-outline{min-width: min(100%, 320px);}
             .cart-drawer{width:100%; right:0; transform:translateX(100%); transition:transform 0.4s ease;}
@@ -891,6 +897,7 @@
             .setup-grid{grid-template-columns:1fr;}
         }
         @media(max-width:480px){
+            html,body{overflow-x:hidden;}
             .header-inner{padding:8px 10px; gap:8px;}
             .logo-main{font-size:15px;}
             .logo-sub,.logo-marketed{display:none;}
@@ -902,10 +909,13 @@
             .hero-title{font-size:clamp(28px, 11vw, 42px);}
             .hero-subtitle{font-size:15px; letter-spacing:1px;}
             .hero-tech-pill{font-size:10px; letter-spacing:1.4px; padding:8px 10px;}
+            .hero-divider span{width:36px;}
             .btn-primary,.btn-outline{width:100%; max-width:280px; text-align:center;}
             .products-grid,.shop-products-grid{grid-template-columns:1fr; gap:14px;}
             .cat-grid,.notes-grid,.trust-grid,.use-grid{grid-template-columns:1fr;}
             .use-card.large{grid-column:span 1;}
+            .story-text{padding:32px 16px;}
+            .process-step,.review-card,.action-card,.action-card.dark,.order-card,.subscriber-card{padding-left:16px; padding-right:16px;}
         }
     </style>
 </head>
