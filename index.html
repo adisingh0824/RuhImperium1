@@ -134,6 +134,40 @@
         .icon-btn { background:none; border:none; cursor:pointer; color:var(--gold-light); font-size:18px; transition:color 0.3s, transform 0.3s; position:relative; }
         .icon-btn:hover { color:var(--cyan); transform:translateY(-1px); }
         .cart-count { position:absolute; top:-6px; right:-6px; background:var(--red-accent); color:white; font-size:9px; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; }
+        .mobile-quick-nav {
+            display:none;
+            background:rgba(16,30,48,0.94);
+            border-bottom:1px solid rgba(118,247,255,0.12);
+            overflow-x:auto;
+            -webkit-overflow-scrolling:touch;
+            scrollbar-width:none;
+        }
+        .mobile-quick-nav::-webkit-scrollbar { display:none; }
+        .mobile-quick-nav-inner {
+            display:flex;
+            gap:10px;
+            padding:10px 12px;
+            min-width:max-content;
+        }
+        .mobile-quick-nav a {
+            color:rgba(253,246,232,0.86);
+            text-decoration:none;
+            font-size:11px;
+            letter-spacing:1.4px;
+            text-transform:uppercase;
+            font-weight:600;
+            padding:8px 12px;
+            border-radius:999px;
+            border:1px solid rgba(118,247,255,0.12);
+            background:rgba(255,255,255,0.03);
+            white-space:nowrap;
+            cursor:pointer;
+            flex:0 0 auto;
+        }
+        .mobile-quick-nav a:hover {
+            color:var(--gold-light);
+            border-color:rgba(201,168,76,0.32);
+        }
 
         .search-overlay {
             position:fixed; inset:0; background:rgba(26,18,8,0.95); z-index:2000;
@@ -852,6 +886,7 @@
             .account-pill-text{display:none;}
             .top-admin-badge{display:none !important;}
             .icon-btn{font-size:16px;}
+            .mobile-quick-nav{display:block;}
             .cat-grid{grid-template-columns:repeat(2,1fr);}
             .products-grid,.shop-products-grid{grid-template-columns:1fr 1fr; gap:16px;}
             .notes-grid{grid-template-columns:repeat(2,1fr);}
@@ -987,6 +1022,9 @@
             .currency-selector,
             .top-admin-badge{
                 display:none !important;
+            }
+            .mobile-quick-nav{
+                display:block;
             }
             .header-inner{
                 padding:10px 14px;
@@ -1387,6 +1425,17 @@
         </div>
     </div>
 </header>
+
+<div class="mobile-quick-nav">
+    <div class="mobile-quick-nav-inner">
+        <a onclick="showHome()">Home</a>
+        <a onclick="filterShop('all')">Shop</a>
+        <a onclick="goSection('wellness')">Wellness</a>
+        <a onclick="goSection('gifting')">Gifting</a>
+        <a onclick="goSection('story')">Our Story</a>
+        <a onclick="goSection('contact')">Contact</a>
+    </div>
+</div>
 
 <div id="home-page">
 
