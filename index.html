@@ -917,6 +917,171 @@
             .story-text{padding:32px 16px;}
             .process-step,.review-card,.action-card,.action-card.dark,.order-card,.subscriber-card{padding-left:16px; padding-right:16px;}
         }
+        @media (hover:none) and (pointer:coarse){
+            html,body{
+                width:100%;
+                max-width:100%;
+                overflow-x:hidden;
+            }
+            body{
+                position:relative;
+                touch-action:pan-y;
+            }
+            header,
+            footer,
+            #home-page,
+            #shop-page,
+            section,
+            .announcement,
+            .hero,
+            .hero-content,
+            .products-section,
+            .recently-viewed-section,
+            .story-banner,
+            .process-section,
+            .use-section,
+            .reviews-section,
+            .newsletter{
+                width:100%;
+                max-width:100%;
+                min-width:0;
+                overflow-x:hidden;
+            }
+            .header-inner,
+            .section-header,
+            .products-grid,
+            .shop-products-grid,
+            .cat-grid,
+            .notes-grid,
+            .process-grid,
+            .use-grid,
+            .trust-grid,
+            .reviews-grid,
+            .footer-grid,
+            .story-text,
+            .story-visual,
+            .footer-bottom{
+                width:100%;
+                max-width:100%;
+                min-width:0;
+            }
+            section[style],
+            div[style*="max-width:1400px"],
+            div[style*="max-width:1000px"]{
+                width:100% !important;
+                max-width:100% !important;
+            }
+            section[style*="padding:80px 40px"],
+            .products-section,
+            .process-section,
+            .use-section,
+            .reviews-section,
+            .newsletter,
+            #shop-page{
+                padding-left:14px !important;
+                padding-right:14px !important;
+            }
+            .nav-desktop,
+            .header-inner > .nav-desktop,
+            .header-icons > .nav-desktop,
+            .currency-selector,
+            .top-admin-badge{
+                display:none !important;
+            }
+            .header-inner{
+                padding:10px 14px;
+                gap:10px;
+                height:auto;
+            }
+            .logo{
+                flex:1;
+                min-width:0;
+            }
+            .logo-main{
+                font-size:16px;
+            }
+            .logo-sub,
+            .logo-marketed{
+                display:none;
+            }
+            .account-pill-text{
+                display:none;
+            }
+            .header-icons{
+                gap:10px;
+                min-width:0;
+            }
+            .icon-btn{
+                font-size:15px;
+            }
+            .hero{
+                min-height:auto;
+                padding:18px 12px 30px;
+                justify-content:center;
+            }
+            .hero-content{
+                padding:22px 12px;
+                border-radius:24px;
+            }
+            .hero-tagline{
+                font-size:11px;
+                letter-spacing:4px;
+            }
+            .hero-title{
+                font-size:clamp(28px, 10vw, 44px);
+            }
+            .hero-subtitle{
+                font-size:15px;
+                line-height:1.45;
+            }
+            .hero-tech-strip,
+            .hero-btns{
+                width:100%;
+            }
+            .hero-tech-strip{
+                grid-template-columns:1fr;
+            }
+            .hero-tech-pill,
+            .btn-primary,
+            .btn-outline{
+                width:100%;
+                max-width:none;
+            }
+            .hero-ornament{
+                display:none;
+            }
+            .hero-bg-pattern{
+                background-size:56px 56px, 56px 56px, auto, auto;
+            }
+            .cat-grid,
+            .products-grid,
+            .shop-products-grid,
+            .notes-grid,
+            .use-grid,
+            .trust-grid,
+            .reviews-grid,
+            .footer-grid,
+            .process-grid{
+                grid-template-columns:1fr !important;
+            }
+            .use-card.large{
+                grid-column:span 1;
+            }
+            .story-banner{
+                grid-template-columns:1fr;
+            }
+            .story-text{
+                padding:32px 16px;
+            }
+            .cart-drawer{
+                width:100%;
+                right:0;
+                transform:translateX(100%);
+            }
+            .cart-drawer.open{
+                transform:translateX(0);
+            }
+        }
     </style>
 </head>
 <body>
