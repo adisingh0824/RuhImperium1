@@ -7,7 +7,7 @@ const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
 const coupons = {
     RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer' },
     WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer' },
-    ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off' }
+    ATTAR250: { type: 'flat', value: 250, label: 'Flat Rs. 250 Off' }
 };
 
 let cart = [];
