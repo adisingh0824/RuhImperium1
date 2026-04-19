@@ -159,6 +159,16 @@ function showHome() {
     initReveals();
 }
 
+function openMobileMenu() {
+    document.getElementById('mobileMenu')?.classList.add('open');
+    document.getElementById('mobileMenuBackdrop')?.classList.add('open');
+}
+
+function closeMobileMenu() {
+    document.getElementById('mobileMenu')?.classList.remove('open');
+    document.getElementById('mobileMenuBackdrop')?.classList.remove('open');
+}
+
 function goSection(id) {
     showHome();
     setTimeout(() => {
@@ -947,7 +957,7 @@ function initReveals() {
 }
 
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCheckout(); closeAuthModal(); }
+    if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCheckout(); closeAuthModal(); closeMobileMenu(); closeCompareModal(); }
 });
 
 window.addEventListener('beforeinstallprompt', event => {

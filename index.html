@@ -153,54 +153,33 @@
         .icon-btn { background:none; border:none; cursor:pointer; color:var(--text); font-size:18px; transition:color 0.3s, transform 0.3s; position:relative; }
         .icon-btn:hover { color:var(--gold); transform:translateY(-1px); }
         .cart-count { position:absolute; top:-6px; right:-6px; background:var(--red-accent); color:white; font-size:9px; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; }
-        .mobile-quick-nav {
-            display:none;
-            background:rgba(255,255,255,0.94);
-            border-bottom:1px solid rgba(31,42,56,0.08);
-            overflow-x:auto;
-            -webkit-overflow-scrolling:touch;
-            scrollbar-width:none;
+        .mobile-menu-toggle { display:none; }
+        .mobile-menu-backdrop {
+            position:fixed; inset:0; background:rgba(15,23,36,0.22); backdrop-filter:blur(4px);
+            opacity:0; pointer-events:none; transition:opacity 0.25s ease; z-index:1050;
         }
-        .mobile-quick-nav::-webkit-scrollbar { display:none; }
-        .mobile-quick-nav-inner {
-            display:flex;
-            align-items:center;
-            gap:8px;
-            padding:8px 12px;
-            min-width:max-content;
+        .mobile-menu-backdrop.open { opacity:1; pointer-events:auto; }
+        .mobile-menu {
+            position:fixed; top:0; left:0; width:min(84vw,340px); height:100vh;
+            background:rgba(255,255,255,0.98); border-right:1px solid rgba(31,42,56,0.08);
+            box-shadow:20px 0 44px rgba(18,28,44,0.12); z-index:1060;
+            transform:translateX(-100%); transition:transform 0.28s ease; padding:20px 18px 24px;
+            display:flex; flex-direction:column; gap:18px;
         }
-        .mobile-quick-nav a {
-            color:var(--text);
-            text-decoration:none;
-            font-size:10px;
-            letter-spacing:1.1px;
-            text-transform:uppercase;
-            font-weight:600;
-            padding:7px 10px;
-            border-radius:999px;
-            border:1px solid rgba(31,42,56,0.1);
-            background:rgba(255,255,255,0.72);
-            white-space:nowrap;
-            cursor:pointer;
-            flex:0 0 auto;
+        .mobile-menu.open { transform:translateX(0); }
+        .mobile-menu-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .mobile-menu-head strong { font-family:'Playfair Display',serif; font-size:24px; color:var(--text); }
+        .mobile-menu-head button { background:none; border:none; color:var(--text); font-size:26px; cursor:pointer; }
+        .mobile-menu-links { display:flex; flex-direction:column; gap:10px; }
+        .mobile-menu-links a {
+            text-decoration:none; color:var(--text); font-size:13px; letter-spacing:1.4px; text-transform:uppercase;
+            font-weight:600; padding:12px 14px; border-radius:16px; border:1px solid rgba(31,42,56,0.08);
+            background:rgba(255,255,255,0.8); cursor:pointer;
         }
-        .mobile-quick-nav a:hover {
-            color:var(--gold);
-            border-color:rgba(201,168,76,0.32);
-        }
-        .mobile-currency-selector {
-            border:1px solid rgba(31,42,56,0.1);
-            background:rgba(255,255,255,0.78);
-            color:var(--text);
-            border-radius:999px;
-            padding:7px 12px;
-            font-size:10px;
-            letter-spacing:1px;
-            text-transform:uppercase;
-            font-family:'Jost',sans-serif;
-            font-weight:600;
-            outline:none;
-            flex:0 0 auto;
+        .mobile-menu-currency {
+            border:1px solid rgba(31,42,56,0.1); background:rgba(255,255,255,0.9); color:var(--text);
+            border-radius:14px; padding:12px 14px; font-size:12px; letter-spacing:1px;
+            text-transform:uppercase; font-family:'Jost',sans-serif; font-weight:600; outline:none; width:100%;
         }
 
         .search-overlay {
@@ -960,7 +939,7 @@
             .account-pill-text{display:none;}
             .top-admin-badge{display:none !important;}
             .icon-btn{font-size:16px;}
-            .mobile-quick-nav{display:block;}
+            .mobile-menu-toggle{display:inline-flex; align-items:center; justify-content:center;}
             .cat-grid{grid-template-columns:repeat(2,1fr);}
             .products-grid,.shop-products-grid{grid-template-columns:1fr 1fr; gap:16px;}
             .notes-grid{grid-template-columns:repeat(2,1fr);}
@@ -1012,15 +991,7 @@
             .logo-sub,.logo-marketed{display:none;}
             .icon-btn{font-size:15px;}
             .cart-count{width:14px; height:14px; font-size:8px;}
-            .mobile-quick-nav-inner{
-                gap:6px;
-                padding:8px 10px;
-            }
-            .mobile-quick-nav a{
-                font-size:9px;
-                letter-spacing:1px;
-                padding:7px 9px;
-            }
+            .mobile-menu{width:min(88vw,320px);}
             .install-btn{
                 right:16px;
                 bottom:82px;
@@ -1130,9 +1101,7 @@
             .top-admin-badge{
                 display:none !important;
             }
-            .mobile-quick-nav{
-                display:block;
-            }
+            .mobile-menu-toggle{display:inline-flex; align-items:center; justify-content:center;}
             .header-inner{
                 padding:10px 14px;
                 gap:10px;
@@ -1237,6 +1206,28 @@
 <button class="install-btn" id="installAppBtn" onclick="installPWA()">Install App</button>
 <a class="wa-float" href="https://wa.me/919785854770?text=Hello!%20I%20am%20interested%20in%20your%20attars.%20Please%20help%20me." target="_blank" title="Chat on WhatsApp">💬</a>
 <div class="wa-tooltip">💬 Chat with us on WhatsApp</div>
+<div class="mobile-menu-backdrop" id="mobileMenuBackdrop" onclick="closeMobileMenu()"></div>
+<aside class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-head">
+        <strong>Menu</strong>
+        <button type="button" onclick="closeMobileMenu()">✕</button>
+    </div>
+    <div class="mobile-menu-links">
+        <a onclick="closeMobileMenu();showHome()">Home</a>
+        <a onclick="closeMobileMenu();filterShop('all')">Shop</a>
+        <a onclick="closeMobileMenu();goSection('wellness')">Wellness</a>
+        <a onclick="closeMobileMenu();goSection('gifting')">Gifting</a>
+        <a onclick="closeMobileMenu();goSection('story')">Our Story</a>
+        <a onclick="closeMobileMenu();goSection('contact')">Contact</a>
+    </div>
+    <select class="mobile-menu-currency" id="mobileCurrencySelector" onchange="updateCurrency(this.value)">
+        <option value="INR">INR</option>
+        <option value="USD">USD</option>
+        <option value="AED">AED</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+    </select>
+</aside>
 
 <!-- CART DRAWER SETUP -->
 <div class="cart-backdrop" id="cartBackdrop" onclick="closeCart()"></div>
@@ -1531,6 +1522,7 @@
             <span class="logo-marketed">Marketed by Ram Ji Attar Wala</span>
         </div>
         <div class="header-icons">
+            <button class="icon-btn mobile-menu-toggle" title="Menu" onclick="openMobileMenu()">☰</button>
             <nav class="nav-desktop">
                 <a onclick="goSection('story')">Our Story</a>
                 <a onclick="goSection('contact')">Contact</a>
@@ -1551,24 +1543,6 @@
         </div>
     </div>
 </header>
-
-<div class="mobile-quick-nav">
-    <div class="mobile-quick-nav-inner">
-        <a onclick="showHome()">Home</a>
-        <a onclick="filterShop('all')">Shop</a>
-        <a onclick="goSection('wellness')">Wellness</a>
-        <a onclick="goSection('gifting')">Gifting</a>
-        <a onclick="goSection('story')">Our Story</a>
-        <a onclick="goSection('contact')">Contact</a>
-        <select class="mobile-currency-selector" id="mobileCurrencySelector" onchange="updateCurrency(this.value)">
-            <option value="INR">INR</option>
-            <option value="USD">USD</option>
-            <option value="AED">AED</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-        </select>
-    </div>
-</div>
 
 <div id="home-page">
 
