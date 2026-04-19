@@ -164,18 +164,18 @@
         .mobile-quick-nav::-webkit-scrollbar { display:none; }
         .mobile-quick-nav-inner {
             display:flex;
-            gap:10px;
-            padding:10px 12px;
+            gap:8px;
+            padding:8px 12px;
             min-width:max-content;
         }
         .mobile-quick-nav a {
-            color:rgba(253,246,232,0.86);
+            color:var(--text);
             text-decoration:none;
-            font-size:11px;
-            letter-spacing:1.4px;
+            font-size:10px;
+            letter-spacing:1.1px;
             text-transform:uppercase;
             font-weight:600;
-            padding:8px 12px;
+            padding:7px 10px;
             border-radius:999px;
             border:1px solid rgba(31,42,56,0.1);
             background:rgba(255,255,255,0.72);
@@ -901,7 +901,7 @@
             .account-pill-text{display:none;}
             .top-admin-badge{display:none !important;}
             .icon-btn{font-size:16px;}
-            .mobile-quick-nav{display:block;}
+            .mobile-quick-nav{display:block; position:sticky; top:0; z-index:999;}
             .cat-grid{grid-template-columns:repeat(2,1fr);}
             .products-grid,.shop-products-grid{grid-template-columns:1fr 1fr; gap:16px;}
             .notes-grid{grid-template-columns:repeat(2,1fr);}
@@ -953,6 +953,15 @@
             .logo-sub,.logo-marketed{display:none;}
             .icon-btn{font-size:15px;}
             .cart-count{width:14px; height:14px; font-size:8px;}
+            .mobile-quick-nav-inner{
+                gap:6px;
+                padding:8px 10px;
+            }
+            .mobile-quick-nav a{
+                font-size:9px;
+                letter-spacing:1px;
+                padding:7px 9px;
+            }
             .install-btn{
                 right:16px;
                 bottom:82px;
@@ -965,11 +974,11 @@
             .wa-float{right:16px; bottom:16px; width:56px; height:56px;}
             .wa-tooltip{right:16px; bottom:82px;}
             .hero{padding:16px 10px 28px; min-height:auto;}
-            .hero-content{padding:20px 12px;}
+            .hero-content{padding:18px 12px; margin-top:8px;}
             .hero-tagline{font-size:11px; letter-spacing:4px;}
             .hero-title{font-size:clamp(28px, 11vw, 42px);}
-            .hero-subtitle{font-size:15px; letter-spacing:1px;}
-            .hero-tech-pill{font-size:10px; letter-spacing:1.4px; padding:8px 10px;}
+            .hero-subtitle{font-size:15px; letter-spacing:0.6px;}
+            .hero-tech-pill{font-size:9px; letter-spacing:1.1px; padding:8px 10px;}
             .hero-divider span{width:36px;}
             .btn-primary,.btn-outline{width:100%; max-width:280px; text-align:center;}
             .products-grid,.shop-products-grid{grid-template-columns:1fr; gap:14px;}

@@ -2,8 +2,18 @@ const CART_STORAGE_KEY = 'ruhImperiumCart';
 const WISHLIST_STORAGE_KEY = 'ruhImperiumWishlist';
 const USER_STORAGE_KEY = 'ruhImperiumUser';
 const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
+const CURRENCY_STORAGE_KEY = 'ruhImperiumCurrency';
 const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
 let deferredInstallPrompt = null;
+let selectedCurrency = 'INR';
+
+const currencyConfig = {
+    INR: { symbol: '₹', rate: 1, locale: 'en-IN' },
+    USD: { symbol: '$', rate: 0.012, locale: 'en-US' },
+    AED: { symbol: 'AED ', rate: 0.044, locale: 'en-AE' },
+    EUR: { symbol: '€', rate: 0.011, locale: 'de-DE' },
+    GBP: { symbol: '£', rate: 0.0095, locale: 'en-GB' }
+};
 
 const coupons = {
     RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer' },
@@ -22,17 +32,72 @@ let currentUser = null;
 let appliedCoupon = null;
 let authMode = 'login';
 
+function detectPreferredCurrency() {
+    const language = (navigator.language || '').toUpperCase();
+    if (language.includes('-US')) return 'USD';
+    if (language.includes('-GB')) return 'GBP';
+    if (language.includes('-AE') || language.startsWith('AR')) return 'AED';
+    if (language.includes('-DE') || language.includes('-FR') || language.includes('-ES') || language.includes('-IT')) return 'EUR';
+
+    try {
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        if (timeZone.includes('Dubai')) return 'AED';
+        if (timeZone.includes('London')) return 'GBP';
+        if (timeZone.includes('Berlin') || timeZone.includes('Paris') || timeZone.includes('Rome') || timeZone.includes('Madrid')) return 'EUR';
+        if (timeZone.includes('New_York') || timeZone.includes('Chicago') || timeZone.includes('Los_Angeles')) return 'USD';
+    } catch (error) {}
+
+    return 'INR';
+}
+
+function getCurrencyConfig(code = selectedCurrency) {
+    return currencyConfig[code] || currencyConfig.INR;
+}
+
+function convertAmount(amount, code = selectedCurrency) {
+    const config = getCurrencyConfig(code);
+    return Math.round(amount * config.rate * 100) / 100;
+}
+
+function formatMoney(amount, code = selectedCurrency) {
+    const config = getCurrencyConfig(code);
+    const converted = convertAmount(amount, code);
+    const maximumFractionDigits = code === 'INR' ? 0 : 2;
+    if (code === 'AED') {
+        return `AED ${converted.toLocaleString(config.locale, { minimumFractionDigits: 0, maximumFractionDigits })}`;
+    }
+    return `${config.symbol}${converted.toLocaleString(config.locale, { minimumFractionDigits: 0, maximumFractionDigits })}`;
+}
+
+function updateCurrency(code, persist = true) {
+    selectedCurrency = currencyConfig[code] ? code : 'INR';
+    const selector = document.getElementById('currencySelector');
+    if (selector) selector.value = selectedCurrency;
+    if (persist) {
+        localStorage.setItem(CURRENCY_STORAGE_KEY, selectedCurrency);
+    }
+    const priceVal = document.getElementById('priceVal');
+    if (priceVal) priceVal.textContent = formatMoney(maxPrice);
+    renderHomeSections();
+    if (document.getElementById('shop-page')?.classList.contains('active')) renderShopGrid();
+    if (document.getElementById('cartItems')) renderCartItems();
+    updateCouponUI();
+    updateOrderSummary();
+}
+
 function loadStoredState() {
     try {
         cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]');
         wishlist = JSON.parse(localStorage.getItem(WISHLIST_STORAGE_KEY) || '[]');
         currentUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
         appliedCoupon = JSON.parse(localStorage.getItem(COUPON_STORAGE_KEY) || 'null');
+        selectedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY) || detectPreferredCurrency();
     } catch (error) {
         cart = [];
         wishlist = [];
         currentUser = null;
         appliedCoupon = null;
+        selectedCurrency = detectPreferredCurrency();
     }
 }
 
@@ -117,7 +182,7 @@ function sortProducts(val) { sortMode = val; renderShopGrid(); }
 
 function filterByPrice(val) {
     maxPrice = parseInt(val);
-    document.getElementById('priceVal').textContent = '₹' + val;
+    document.getElementById('priceVal').textContent = formatMoney(val);
     renderShopGrid();
 }
 
@@ -158,8 +223,8 @@ function productCardHTML(p) {
         <div class="product-stars">${starStr(p.stars)} <span>(${p.reviews} reviews)</span></div>
         <div class="product-price-row">
           <div>
-            <span class="product-price">₹${p.price.toLocaleString()}</span>
-            ${p.oldPrice ? `<span class="product-price-old">₹${p.oldPrice.toLocaleString()}</span>` : ''}
+            <span class="product-price">${formatMoney(p.price)}</span>
+            ${p.oldPrice ? `<span class="product-price-old">${formatMoney(p.oldPrice)}</span>` : ''}
           </div>
           <button class="add-btn" onclick="quickAdd(event,${p.id})">Add to Cart</button>
         </div>
@@ -263,7 +328,7 @@ function renderCartItems() {
       <img class="cart-item-img" src="${item.img}" alt="${item.name}" onerror="this.style.display='none'">
       <div class="cart-item-info">
         <div class="cart-item-name">${item.name}</div>
-        <div class="cart-item-price">₹${(item.price * item.qty).toLocaleString()} · ${item.size}</div>
+        <div class="cart-item-price">${formatMoney(item.price * item.qty)} · ${item.size}</div>
         <div class="cart-qty-row">
           <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
           <span class="qty-num">${item.qty}</span>
@@ -272,7 +337,7 @@ function renderCartItems() {
       </div>
       <button class="cart-item-del" onclick="removeFromCart(${i})">🗑</button>
     </div>`).join('');
-    document.getElementById('cartTotal').textContent = '₹' + getOrderPricing().total.toLocaleString();
+    document.getElementById('cartTotal').textContent = formatMoney(getOrderPricing().total);
 }
 
 function changeQty(i, delta) {
@@ -329,7 +394,7 @@ function isCouponValidForCart(code, showFeedback = true) {
         return false;
     }
     if (coupon.minOrder && getCartTotal() < coupon.minOrder) {
-        if (showFeedback) showToast(`Coupon works on orders above ₹${coupon.minOrder}.`);
+        if (showFeedback) showToast(`Coupon works on orders above ${formatMoney(coupon.minOrder)}.`);
         return false;
     }
     return true;
@@ -343,7 +408,7 @@ function updateCouponUI() {
     if (appliedCoupon) {
         const discount = getDiscountAmount();
         chip.classList.add('show');
-        chipText.textContent = `${appliedCoupon.code} applied · You save ₹${discount.toLocaleString()}`;
+        chipText.textContent = `${appliedCoupon.code} applied · You save ${formatMoney(discount)}`;
         couponInput.value = appliedCoupon.code;
     } else {
         chip.classList.remove('show');
@@ -381,9 +446,9 @@ function whatsappOrder() {
     if (cart.length === 0) { showToast('Cart is empty!'); return; }
     const pricing = getOrderPricing();
     let msg = '🌹 *Ruh Imperium Order* 🌹\n\nI would like to order:\n\n';
-    cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`; });
-    if (appliedCoupon) msg += `\nCoupon: ${appliedCoupon.code} (-₹${pricing.discount.toLocaleString()})\n`;
-    msg += `\n*Total: ₹${pricing.total.toLocaleString()}*\n\nPlease confirm my order. Thank you!`;
+    cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ${formatMoney(item.price * item.qty)}\n`; });
+    if (appliedCoupon) msg += `\nCoupon: ${appliedCoupon.code} (-${formatMoney(pricing.discount)})\n`;
+    msg += `\n*Total: ${formatMoney(pricing.total)}*\n\nPlease confirm my order. Thank you!`;
     window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
 }
 
@@ -395,8 +460,8 @@ function openProductModal(id) {
     document.getElementById('modalCat').textContent    = p.cat;
     document.getElementById('modalName').textContent   = p.name;
     document.getElementById('modalStars').innerHTML    = starStr(p.stars) + ` <span>(${p.reviews} reviews)</span>`;
-    document.getElementById('modalPrice').textContent  = '₹' + p.price.toLocaleString();
-    document.getElementById('modalOldPrice').textContent = p.oldPrice ? '₹' + p.oldPrice.toLocaleString() : '';
+    document.getElementById('modalPrice').textContent  = formatMoney(p.price);
+    document.getElementById('modalOldPrice').textContent = p.oldPrice ? formatMoney(p.oldPrice) : '';
     document.getElementById('modalDesc').textContent   = p.desc;
 
     const imgWrap = document.getElementById('modalImg');
@@ -423,7 +488,7 @@ function openProductModal(id) {
     setAddBtn(selectedSize);
 
     document.getElementById('modalWaBtn').onclick = () => {
-        const msg = `Hello! I am interested in *${p.name}* (${selectedSize}) at ₹${p.price.toLocaleString()}. Please help me place an order.`;
+        const msg = `Hello! I am interested in *${p.name}* (${selectedSize}) at ${formatMoney(p.price)}. Please help me place an order.`;
         window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
     };
 
@@ -441,7 +506,7 @@ function selectSize(btn, size) {
             openCart();
         };
         document.getElementById('modalWaBtn').onclick = () => {
-            const msg = `Hello! I am interested in *${currentProduct.name}* (${size}) at ₹${currentProduct.price.toLocaleString()}. Please help me place an order.`;
+            const msg = `Hello! I am interested in *${currentProduct.name}* (${size}) at ${formatMoney(currentProduct.price)}. Please help me place an order.`;
             window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
         };
     }
@@ -481,16 +546,16 @@ function updateOrderSummary() {
     if (!summary) return;
     const pricing = getOrderPricing();
     const couponLine = appliedCoupon
-        ? `<div class="order-line"><span>Coupon (${appliedCoupon.code})</span><span>-₹${pricing.discount.toLocaleString()}</span></div>`
+        ? `<div class="order-line"><span>Coupon (${appliedCoupon.code})</span><span>-${formatMoney(pricing.discount)}</span></div>`
         : '';
     summary.innerHTML = '<h3>Order Summary</h3>' +
         cart.map(item =>
-            `<div class="order-line"><span>${item.name} (${item.size}) × ${item.qty}</span><span>₹${(item.price * item.qty).toLocaleString()}</span></div>`
+            `<div class="order-line"><span>${item.name} (${item.size}) × ${item.qty}</span><span>${formatMoney(item.price * item.qty)}</span></div>`
         ).join('') +
-        `<div class="order-line"><span>Subtotal</span><span>₹${pricing.subtotal.toLocaleString()}</span></div>` +
+        `<div class="order-line"><span>Subtotal</span><span>${formatMoney(pricing.subtotal)}</span></div>` +
         couponLine +
         `<div class="order-line"><span>Delivery</span><span style="color:var(--green)">FREE</span></div>` +
-        `<div class="order-line"><span>Total</span><span>₹${pricing.total.toLocaleString()}</span></div>`;
+        `<div class="order-line"><span>Total</span><span>${formatMoney(pricing.total)}</span></div>`;
 }
 
 function selectPay(btn, type) {
@@ -533,9 +598,9 @@ function buildOrderMessage(details, paymentLabel, paymentId = '') {
     msg += `*Payment:* ${paymentLabel}\n`;
     if (paymentId) msg += `*Payment ID:* ${paymentId}\n`;
     msg += `\n*Order Details:*\n`;
-    cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`; });
-    if (appliedCoupon) msg += `\n*Coupon:* ${appliedCoupon.code} (-₹${pricing.discount.toLocaleString()})\n`;
-    msg += `\n*Total: ₹${pricing.total.toLocaleString()}*`;
+    cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ${formatMoney(item.price * item.qty)}\n`; });
+    if (appliedCoupon) msg += `\n*Coupon:* ${appliedCoupon.code} (-${formatMoney(pricing.discount)})\n`;
+    msg += `\n*Total: ${formatMoney(pricing.total)}*`;
     return msg;
 }
 
@@ -649,7 +714,7 @@ function doSearch(query) {
       <img class="sri-img" src="${p.img}" alt="${p.name}" onerror="this.style.display='none'">
       <div class="sri-info">
         <h4>${p.name}</h4>
-        <p>${p.cat} · ₹${p.price.toLocaleString()}</p>
+        <p>${p.cat} · ${formatMoney(p.price)}</p>
       </div>
     </div>`).join('');
 }
@@ -788,6 +853,7 @@ window.addEventListener('appinstalled', () => {
 });
 
 loadStoredState();
+updateCurrency(selectedCurrency, false);
 renderHomeSections();
 updateWishBadge();
 updateCartBadge();
