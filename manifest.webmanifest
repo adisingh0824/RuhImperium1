@@ -1,13 +1,17 @@
 {
   "name": "Ruh Imperium",
   "short_name": "Ruh",
+  "id": "/",
   "description": "Pure Indian attars, gifting sets, and Kannauj fragrances from Ruh Imperium.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#07111f",
   "theme_color": "#07111f",
   "orientation": "portrait",
+  "categories": ["shopping", "lifestyle", "beauty"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/pwa-icon.svg",

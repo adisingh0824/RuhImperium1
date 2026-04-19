@@ -88,6 +88,18 @@
             box-shadow:0 4px 20px rgba(37,211,102,0.5);
             animation:waPulse 2s infinite; transition:transform 0.3s;
         }
+        .install-btn {
+            position:fixed; bottom:102px; right:30px; z-index:9001;
+            min-width:60px; height:60px; padding:0 18px;
+            border:none; border-radius:999px; cursor:pointer;
+            display:none; align-items:center; justify-content:center;
+            background:linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%);
+            color:var(--dark); text-transform:uppercase; text-decoration:none;
+            font-size:12px; font-weight:700; letter-spacing:1.3px;
+            box-shadow:0 10px 28px rgba(211,176,102,0.34); transition:transform 0.3s, box-shadow 0.3s;
+        }
+        .install-btn.show { display:flex; }
+        .install-btn:hover { transform:translateY(-2px); box-shadow:0 14px 34px rgba(211,176,102,0.42); }
         .wa-float:hover { transform:scale(1.1); }
         @keyframes waPulse {
             0%,100% { box-shadow:0 4px 20px rgba(37,211,102,0.5); }
@@ -946,6 +958,17 @@
             .logo-sub,.logo-marketed{display:none;}
             .icon-btn{font-size:15px;}
             .cart-count{width:14px; height:14px; font-size:8px;}
+            .install-btn{
+                right:16px;
+                bottom:82px;
+                height:52px;
+                min-width:52px;
+                padding:0 14px;
+                font-size:10px;
+                letter-spacing:1.1px;
+            }
+            .wa-float{right:16px; bottom:16px; width:56px; height:56px;}
+            .wa-tooltip{right:16px; bottom:82px;}
             .hero{padding:16px 10px 28px; min-height:auto;}
             .hero-content{padding:20px 12px;}
             .hero-tagline{font-size:11px; letter-spacing:4px;}
@@ -1135,6 +1158,7 @@
 <!-- GLOBAL TOAST AND QUICK CONTACT SETUP -->
 <div id="toast"></div>
 
+<button class="install-btn" id="installAppBtn" onclick="installPWA()">Install App</button>
 <a class="wa-float" href="https://wa.me/919785854770?text=Hello!%20I%20am%20interested%20in%20your%20attars.%20Please%20help%20me." target="_blank" title="Chat on WhatsApp">💬</a>
 <div class="wa-tooltip">💬 Chat with us on WhatsApp</div>
 

@@ -3,6 +3,7 @@ const WISHLIST_STORAGE_KEY = 'ruhImperiumWishlist';
 const USER_STORAGE_KEY = 'ruhImperiumUser';
 const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
 const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
+let deferredInstallPrompt = null;
 
 const coupons = {
     RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer' },
@@ -50,6 +51,33 @@ function showToast(msg) {
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function setInstallButtonVisibility(shouldShow) {
+    const btn = document.getElementById('installAppBtn');
+    if (!btn) return;
+    btn.classList.toggle('show', !!shouldShow);
+}
+
+function isStandaloneMode() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function installPWA() {
+    if (!deferredInstallPrompt) {
+        if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !isStandaloneMode()) {
+            showToast('On iPhone, tap Share and then Add to Home Screen.');
+            return;
+        }
+        showToast('Install prompt is not available yet. Open the site once more after deploy.');
+        return;
+    }
+
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => {
+        deferredInstallPrompt = null;
+        setInstallButtonVisibility(false);
+    });
 }
 
 function showHome() {
@@ -747,6 +775,18 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCheckout(); closeAuthModal(); }
 });
 
+window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    setInstallButtonVisibility(true);
+});
+
+window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    setInstallButtonVisibility(false);
+    showToast('Ruh Imperium app installed successfully.');
+});
+
 loadStoredState();
 renderHomeSections();
 updateWishBadge();
@@ -757,3 +797,4 @@ updateOrderSummary();
 prefillCheckout();
 renderCartItems();
 initReveals();
+setInstallButtonVisibility(false);
