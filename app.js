@@ -5,6 +5,8 @@ const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
 const CURRENCY_STORAGE_KEY = 'ruhImperiumCurrency';
 const COMPARE_STORAGE_KEY = 'ruhImperiumCompare';
 const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
+const ADMIN_USERNAME = 'adi24';
+const ADMIN_PASSWORD = 'Adi19983@';
 let deferredInstallPrompt = null;
 let selectedCurrency = 'INR';
 
@@ -133,6 +135,14 @@ function showToast(msg) {
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function isAdminUser(user) {
+    return !!(user && user.isAdmin);
+}
+
+function isAdminCredentials(identifier, password) {
+    return identifier.trim().toLowerCase() === ADMIN_USERNAME.toLowerCase() && password === ADMIN_PASSWORD;
 }
 
 function setInstallButtonVisibility(shouldShow) {
@@ -866,7 +876,7 @@ function setAuthMode(mode) {
     document.getElementById('authTitle').textContent = isSignup ? 'Create Your Account' : 'Welcome Back';
     document.getElementById('authSubtitle').textContent = isSignup
         ? 'Create a simple account on this device so checkout details and offers stay saved.'
-        : 'Sign in to save your details, apply coupons faster, and move through checkout smoothly.';
+        : 'Sign in with your email or username to access saved details, orders, and admin tools.';
     document.getElementById('authName').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authPhone').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
@@ -889,12 +899,14 @@ function closeAuthModal() {
 function renderAuthView() {
     const guestView = document.getElementById('authGuestView');
     const userView = document.getElementById('authUserView');
+    const adminBadgeCard = document.getElementById('accountAdminBadgeCard');
     if (currentUser) {
         guestView.style.display = 'none';
         userView.style.display = 'block';
         document.getElementById('accountName').textContent = currentUser.name || 'Ruh Imperium Customer';
-        document.getElementById('accountEmail').textContent = currentUser.email || 'No email saved';
+        document.getElementById('accountEmail').textContent = currentUser.email || currentUser.username || 'No email saved';
         document.getElementById('accountPhone').textContent = currentUser.phone || 'No phone saved';
+        adminBadgeCard.classList.toggle('show', isAdminUser(currentUser));
     } else {
         guestView.style.display = 'block';
         userView.style.display = 'none';
@@ -905,13 +917,23 @@ function renderAuthView() {
 function updateAccountUI() {
     const label = document.getElementById('accountLabel');
     const initial = document.getElementById('accountInitial');
+    const accountAdminBadge = document.getElementById('accountAdminBadge');
+    const topAdminBadge = document.getElementById('topAdminBadge');
+    const ordersBtn = document.getElementById('ordersBtn');
+    const adminOrdersTab = document.getElementById('adminOrdersTab');
     if (currentUser) {
-        label.textContent = currentUser.name.split(' ')[0];
-        initial.textContent = currentUser.name.charAt(0).toUpperCase();
+        const displayName = currentUser.name || currentUser.username || 'Account';
+        label.textContent = displayName.split(' ')[0];
+        initial.textContent = displayName.charAt(0).toUpperCase();
     } else {
         label.textContent = 'Account';
         initial.textContent = 'A';
     }
+    const showAdmin = isAdminUser(currentUser);
+    if (accountAdminBadge) accountAdminBadge.classList.toggle('show', showAdmin);
+    if (topAdminBadge) topAdminBadge.classList.toggle('show', showAdmin);
+    if (ordersBtn) ordersBtn.style.display = currentUser ? 'inline-flex' : 'none';
+    if (adminOrdersTab) adminOrdersTab.style.display = showAdmin ? 'block' : 'none';
     renderAuthView();
     renderCartItems();
 }
@@ -922,12 +944,16 @@ function handleAuth() {
     const phone = document.getElementById('authPhone').value.trim();
     const password = document.getElementById('authPassword').value.trim();
     if (!email || !password) {
-        showToast('Email and password are required.');
+        showToast('Username/email and password are required.');
         return;
     }
     if (authMode === 'signup') {
         if (!name || !phone) {
             showToast('Please complete all signup fields.');
+            return;
+        }
+        if (email === ADMIN_USERNAME.toLowerCase()) {
+            showToast('This username is reserved for admin login.');
             return;
         }
         currentUser = { name, email, phone, password };
@@ -936,6 +962,21 @@ function handleAuth() {
         prefillCheckout();
         closeAuthModal();
         showToast('Account created successfully.');
+        return;
+    }
+    if (isAdminCredentials(email, password)) {
+        currentUser = {
+            name: 'Adi Admin',
+            username: ADMIN_USERNAME,
+            email: `${ADMIN_USERNAME}@ruhimperium.local`,
+            phone: 'Admin Access',
+            password,
+            isAdmin: true
+        };
+        persistUser();
+        updateAccountUI();
+        closeAuthModal();
+        showToast('Admin signed in successfully.');
         return;
     }
     const savedUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
@@ -956,6 +997,54 @@ function logout() {
     updateAccountUI();
     closeAuthModal();
     showToast('You have been logged out.');
+}
+
+function openOrdersModal() {
+    if (!currentUser) {
+        showToast('Please sign in first.');
+        openAuthModal();
+        return;
+    }
+    const backendStatus = document.getElementById('backendStatus');
+    const ordersList = document.getElementById('ordersList');
+    const adminOrdersList = document.getElementById('adminOrdersList');
+    const adminStats = document.getElementById('adminStats');
+    const adminSetupGrid = document.getElementById('adminSetupGrid');
+
+    if (backendStatus) {
+        backendStatus.className = 'backend-status warning';
+        backendStatus.innerHTML = `<strong>Local Mode Active</strong><span>Orders and admin tools are currently running from this device session.</span>`;
+    }
+    if (ordersList) {
+        ordersList.innerHTML = `<div class="order-card"><div class="order-card-head"><strong>No orders yet</strong><span>Place an order to see it here.</span></div></div>`;
+    }
+    if (isAdminUser(currentUser)) {
+        if (adminStats) {
+            adminStats.innerHTML = `
+                <div class="stat-card"><span>Role</span><strong>Admin</strong></div>
+                <div class="stat-card"><span>Username</span><strong>${ADMIN_USERNAME}</strong></div>
+                <div class="stat-card"><span>Mode</span><strong>Local</strong></div>
+                <div class="stat-card"><span>Orders</span><strong>0</strong></div>
+            `;
+        }
+        if (adminSetupGrid) {
+            adminSetupGrid.innerHTML = `
+                <div class="setup-card ok"><strong>Admin Access</strong><span class="setup-state">Ready</span><span>Username/password admin login is active.</span></div>
+                <div class="setup-card warn"><strong>Backend</strong><span class="setup-state">Local</span><span>Deploy the backend for shared admin data across devices.</span></div>
+                <div class="setup-card ok"><strong>Orders Panel</strong><span class="setup-state">Visible</span><span>Admin dashboard is unlocked for this session.</span></div>
+            `;
+        }
+        if (adminOrdersList) {
+            adminOrdersList.innerHTML = `<div class="order-card"><div class="order-card-head"><strong>Admin Panel Ready</strong><span>No order records available yet in this local session.</span></div></div>`;
+        }
+    }
+    document.getElementById('ordersModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeOrdersModal() {
+    document.getElementById('ordersModal').classList.remove('open');
+    document.body.style.overflow = '';
 }
 
 function initReveals() {
