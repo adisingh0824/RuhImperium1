@@ -75,8 +75,10 @@ function updateCurrency(code, persist = true) {
     selectedCurrency = currencyConfig[code] ? code : 'INR';
     const selector = document.getElementById('currencySelector');
     const mobileSelector = document.getElementById('mobileCurrencySelector');
+    const chipBtn = document.getElementById('currencyChipBtn');
     if (selector) selector.value = selectedCurrency;
     if (mobileSelector) mobileSelector.value = selectedCurrency;
+    if (chipBtn) chipBtn.textContent = selectedCurrency;
     if (persist) {
         localStorage.setItem(CURRENCY_STORAGE_KEY, selectedCurrency);
     }
@@ -87,6 +89,14 @@ function updateCurrency(code, persist = true) {
     if (document.getElementById('cartItems')) renderCartItems();
     updateCouponUI();
     updateOrderSummary();
+}
+
+function cycleCurrency() {
+    const codes = Object.keys(currencyConfig);
+    const currentIndex = codes.indexOf(selectedCurrency);
+    const nextCode = codes[(currentIndex + 1) % codes.length];
+    updateCurrency(nextCode);
+    showToast(`Currency changed to ${nextCode}`);
 }
 
 function loadStoredState() {

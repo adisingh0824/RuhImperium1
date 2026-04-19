@@ -134,6 +134,7 @@
             max-width:1400px; margin:0 auto; padding:0 40px;
             display:flex; align-items:center; justify-content:space-between; height:72px;
         }
+        .header-left-mobile { display:none; }
         .logo { text-align:center; line-height:1.4; cursor:pointer; }
         .logo-main { font-family:'Playfair Display',serif; font-size:22px; color:var(--text); letter-spacing:0.5px; font-weight:700; display:block; }
         .logo-sub { font-family:'Cormorant Garamond',serif; font-size:11px; color:var(--gold); letter-spacing:4px; text-transform:uppercase; font-style:italic; display:block; white-space:nowrap; }
@@ -312,7 +313,16 @@
         .recommendation-pill:hover { border-color:var(--cyan); color:var(--cyan); }
         .pin-serviceability { margin-top:10px; color:rgba(253,246,232,0.7); font-size:12px; line-height:1.6; }
         .security-note { margin-top:10px; color:rgba(253,246,232,0.62); font-size:11px; line-height:1.6; }
-        .currency-selector { background:transparent; border:1px solid rgba(118,247,255,0.18); color:var(--cream); padding:8px 10px; border-radius:999px; font-size:11px; }
+        .currency-selector {
+            background:#fff; border:1px solid rgba(31,42,56,0.12); color:var(--text);
+            padding:8px 12px; border-radius:999px; font-size:11px; font-family:'Jost',sans-serif;
+            font-weight:600; min-width:76px; outline:none; box-shadow:var(--shadow-card);
+        }
+        .currency-chip-btn {
+            display:none; border:1px solid rgba(31,42,56,0.12); background:#fff; color:var(--text);
+            padding:9px 12px; border-radius:999px; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+            font-family:'Jost',sans-serif; font-weight:700; cursor:pointer; box-shadow:var(--shadow-card);
+        }
         .review-form { max-width:1200px; margin:30px auto 0; display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:12px; }
         .review-form textarea { grid-column:1/-2; min-height:110px; resize:vertical; }
         .review-form input,.review-form select,.review-form textarea { background:#fff; border:1px solid rgba(30,45,70,0.12); color:#162742; padding:12px 14px; font-family:'Jost',sans-serif; font-size:14px; }
@@ -826,7 +836,7 @@
         .account-pill {
             min-width:112px; padding:10px 14px; border:1px solid rgba(201,168,76,0.28);
             background:rgba(253,246,232,0.04); color:var(--gold-light); font-size:12px; letter-spacing:1.5px;
-            text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:8px;
+            text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:8px; border-radius:999px;
         }
         .account-pill-text { display:flex; align-items:center; gap:8px; }
         .account-pill strong {
@@ -926,7 +936,8 @@
             section[style], div[style*="max-width:1400px"], div[style*="max-width:1000px"]{max-width:100% !important;}
             section[style*="padding:80px 40px"], .products-section, .process-section, .use-section, .reviews-section, .newsletter, #shop-page{padding-left:14px !important; padding-right:14px !important;}
             .announcement{font-size:10px; letter-spacing:1px; padding:8px 10px; line-height:1.5;}
-            .header-inner{padding:10px 14px; height:auto; gap:12px; align-items:center;}
+            .header-inner{padding:10px 14px; height:auto; gap:12px; align-items:center; display:grid; grid-template-columns:auto 1fr auto;}
+            .header-left-mobile{display:flex; align-items:center;}
             .header-icons{gap:10px; min-width:0;}
             .logo-main{font-size:17px;}
             .logo-sub{font-size:9px; letter-spacing:2px;}
@@ -936,9 +947,11 @@
             .header-icons > .nav-desktop{display:none !important;}
             .logo{flex:1; min-width:0;}
             .currency-selector{display:none;}
+            .currency-chip-btn{display:inline-flex; align-items:center; justify-content:center;}
             .account-pill-text{display:none;}
             .top-admin-badge{display:none !important;}
             .icon-btn{font-size:16px;}
+            .account-pill{min-width:auto; padding:8px 10px;}
             .mobile-menu-toggle{display:inline-flex; align-items:center; justify-content:center;}
             .cat-grid{grid-template-columns:repeat(2,1fr);}
             .products-grid,.shop-products-grid{grid-template-columns:1fr 1fr; gap:16px;}
@@ -990,6 +1003,10 @@
             .logo-main{font-size:15px;}
             .logo-sub,.logo-marketed{display:none;}
             .icon-btn{font-size:15px;}
+            .header-left-mobile{min-width:auto;}
+            .header-icons{gap:8px;}
+            .currency-chip-btn{padding:8px 10px; font-size:10px;}
+            .account-pill{padding:8px; min-width:auto;}
             .cart-count{width:14px; height:14px; font-size:8px;}
             .mobile-menu{width:min(88vw,320px);}
             .install-btn{
@@ -1108,10 +1125,13 @@
                 padding:10px 14px;
                 gap:10px;
                 height:auto;
+                display:grid;
+                grid-template-columns:auto 1fr auto;
             }
             .logo{
                 flex:1;
                 min-width:0;
+                text-align:left;
             }
             .logo-main{
                 font-size:16px;
@@ -1127,6 +1147,7 @@
                 gap:10px;
                 min-width:0;
             }
+            .currency-chip-btn{display:inline-flex; align-items:center; justify-content:center;}
             .icon-btn{
                 font-size:15px;
             }
@@ -1511,6 +1532,9 @@
 <!-- HEADER, NAVIGATION, ACCOUNT, CURRENCY, WISHLIST, AND CART ACCESS SETUP -->
 <header>
     <div class="header-inner">
+        <div class="header-left-mobile">
+            <button class="icon-btn mobile-menu-toggle" title="Menu" onclick="openMobileMenu()">☰</button>
+        </div>
         <div style="display:flex;gap:32px;align-items:center;" class="nav-desktop">
             <nav>
                 <a onclick="showHome()">Home</a>
@@ -1535,7 +1559,6 @@
             <span class="logo-marketed">Marketed by Ram Ji Attar Wala</span>
         </div>
         <div class="header-icons">
-            <button class="icon-btn mobile-menu-toggle" title="Menu" onclick="openMobileMenu()">☰</button>
             <nav class="nav-desktop">
                 <a onclick="goSection('story')">Our Story</a>
                 <a onclick="goSection('contact')">Contact</a>
@@ -1544,6 +1567,7 @@
             <span id="topAdminBadge" class="top-admin-badge">Admin</span>
             <button class="icon-btn account-pill" title="Account" onclick="openAuthModal()"><strong id="accountInitial">A</strong><span class="account-pill-text"><span id="accountLabel">Account</span><span id="accountAdminBadge" class="admin-badge">Admin</span></span></button>
             <button class="icon-btn" title="Search" onclick="openSearch()">🔍</button>
+            <button class="currency-chip-btn" id="currencyChipBtn" type="button" onclick="cycleCurrency()">INR</button>
             <select class="currency-selector" id="currencySelector" onchange="updateCurrency(this.value)">
                 <option value="INR">INR</option>
                 <option value="USD">USD</option>
