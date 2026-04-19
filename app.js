@@ -3,6 +3,7 @@ const WISHLIST_STORAGE_KEY = 'ruhImperiumWishlist';
 const USER_STORAGE_KEY = 'ruhImperiumUser';
 const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
 const CURRENCY_STORAGE_KEY = 'ruhImperiumCurrency';
+const COMPARE_STORAGE_KEY = 'ruhImperiumCompare';
 const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
 let deferredInstallPrompt = null;
 let selectedCurrency = 'INR';
@@ -31,6 +32,7 @@ let currentProduct = null;
 let currentUser = null;
 let appliedCoupon = null;
 let authMode = 'login';
+let compareProducts = [];
 
 function detectPreferredCurrency() {
     const language = (navigator.language || '').toUpperCase();
@@ -72,7 +74,9 @@ function formatMoney(amount, code = selectedCurrency) {
 function updateCurrency(code, persist = true) {
     selectedCurrency = currencyConfig[code] ? code : 'INR';
     const selector = document.getElementById('currencySelector');
+    const mobileSelector = document.getElementById('mobileCurrencySelector');
     if (selector) selector.value = selectedCurrency;
+    if (mobileSelector) mobileSelector.value = selectedCurrency;
     if (persist) {
         localStorage.setItem(CURRENCY_STORAGE_KEY, selectedCurrency);
     }
@@ -92,12 +96,14 @@ function loadStoredState() {
         currentUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
         appliedCoupon = JSON.parse(localStorage.getItem(COUPON_STORAGE_KEY) || 'null');
         selectedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY) || detectPreferredCurrency();
+        compareProducts = JSON.parse(localStorage.getItem(COMPARE_STORAGE_KEY) || '[]');
     } catch (error) {
         cart = [];
         wishlist = [];
         currentUser = null;
         appliedCoupon = null;
         selectedCurrency = detectPreferredCurrency();
+        compareProducts = [];
     }
 }
 
@@ -105,6 +111,7 @@ function persistState() {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
     localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist));
     localStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(appliedCoupon));
+    localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(compareProducts));
 }
 
 function persistUser() {
@@ -210,6 +217,7 @@ function starStr(s) {
 
 function productCardHTML(p) {
     const inWish = wishlist.includes(p.id);
+    const inCompare = compareProducts.includes(p.id);
     return `
     <div class="product-card" onclick="openProductModal(${p.id})">
       ${p.badge ? `<span class="product-badge ${p.badge === 'NEW' ? 'new' : ''}">${p.badge}</span>` : ''}
@@ -226,7 +234,11 @@ function productCardHTML(p) {
             <span class="product-price">${formatMoney(p.price)}</span>
             ${p.oldPrice ? `<span class="product-price-old">${formatMoney(p.oldPrice)}</span>` : ''}
           </div>
+        </div>
+        <div class="product-actions">
           <button class="add-btn" onclick="quickAdd(event,${p.id})">Add to Cart</button>
+          <button class="buy-now-btn" onclick="quickBuy(event,${p.id})">Buy Now</button>
+          <button class="compare-btn ${inCompare ? 'active' : ''}" onclick="toggleCompare(event,${p.id})">Compare</button>
         </div>
       </div>
     </div>`;
@@ -284,6 +296,92 @@ function quickAdd(e, id) {
     e.stopPropagation();
     const p = products.find(x => x.id === id);
     addToCart(p, p.sizes[0]);
+}
+
+function quickBuy(e, id) {
+    e.stopPropagation();
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    addToCart(p, p.sizes[0]);
+    openCheckout();
+}
+
+function toggleCompare(e, id) {
+    if (e) e.stopPropagation();
+    if (compareProducts.includes(id)) {
+        compareProducts = compareProducts.filter(x => x !== id);
+        showToast('Removed from compare');
+    } else {
+        if (compareProducts.length >= 3) {
+            showToast('You can compare up to 3 products.');
+            return;
+        }
+        compareProducts.push(id);
+        showToast('Added to compare');
+    }
+    persistState();
+    renderCompareBar();
+    renderHomeSections();
+    if (document.getElementById('shop-page').classList.contains('active')) renderShopGrid();
+    if (currentProduct && document.getElementById('modalCompareBtn')) {
+        document.getElementById('modalCompareBtn').classList.toggle('active', compareProducts.includes(currentProduct.id));
+    }
+}
+
+function renderCompareBar() {
+    const bar = document.getElementById('compareBar');
+    const items = document.getElementById('compareItems');
+    if (!bar || !items) return;
+    if (!compareProducts.length) {
+        bar.classList.remove('show');
+        items.innerHTML = '';
+        return;
+    }
+    const compared = compareProducts.map(id => products.find(p => p.id === id)).filter(Boolean);
+    items.innerHTML = compared.map(p => `<span class="compare-pill">${p.name}</span>`).join('');
+    bar.classList.add('show');
+}
+
+function clearCompare() {
+    compareProducts = [];
+    persistState();
+    renderCompareBar();
+    renderHomeSections();
+    if (document.getElementById('shop-page').classList.contains('active')) renderShopGrid();
+    closeCompareModal();
+}
+
+function openCompareModal() {
+    if (compareProducts.length < 2) {
+        showToast('Select at least 2 products to compare.');
+        return;
+    }
+    const grid = document.getElementById('compareGrid');
+    const compared = compareProducts.map(id => products.find(p => p.id === id)).filter(Boolean);
+    grid.innerHTML = compared.map(p => `
+        <div class="compare-card">
+            <img src="${p.img}" alt="${p.name}" onerror="this.style.display='none'">
+            <div class="compare-card-body">
+                <h3>${p.name}</h3>
+                <span class="compare-price">${formatMoney(p.price)}</span>
+                <p>${p.desc}</p>
+                <div class="compare-meta">
+                    Category: ${p.cat}<br>
+                    Rating: ${p.stars} / 5<br>
+                    Sizes: ${p.sizes.join(', ')}<br>
+                    Notes: ${p.notes}
+                </div>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('compareModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCompareModal(event) {
+    if (event && event.target !== document.getElementById('compareModal')) return;
+    document.getElementById('compareModal').classList.remove('open');
+    document.body.style.overflow = '';
 }
 
 function addToCart(p, size) {
@@ -484,8 +582,15 @@ function openProductModal(id) {
             closeProductModal();
             openCart();
         };
+        document.getElementById('modalBuyNowBtn').onclick = () => {
+            addToCart(p, size);
+            closeProductModal();
+            openCheckout();
+        };
     };
     setAddBtn(selectedSize);
+    document.getElementById('modalCompareBtn').classList.toggle('active', compareProducts.includes(p.id));
+    document.getElementById('modalCompareBtn').onclick = () => toggleCompare(null, p.id);
 
     document.getElementById('modalWaBtn').onclick = () => {
         const msg = `Hello! I am interested in *${p.name}* (${selectedSize}) at ${formatMoney(p.price)}. Please help me place an order.`;
@@ -504,6 +609,11 @@ function selectSize(btn, size) {
             addToCart(currentProduct, size);
             closeProductModal();
             openCart();
+        };
+        document.getElementById('modalBuyNowBtn').onclick = () => {
+            addToCart(currentProduct, size);
+            closeProductModal();
+            openCheckout();
         };
         document.getElementById('modalWaBtn').onclick = () => {
             const msg = `Hello! I am interested in *${currentProduct.name}* (${size}) at ${formatMoney(currentProduct.price)}. Please help me place an order.`;
@@ -862,5 +972,6 @@ updateCouponUI();
 updateOrderSummary();
 prefillCheckout();
 renderCartItems();
+renderCompareBar();
 initReveals();
 setInstallButtonVisibility(false);

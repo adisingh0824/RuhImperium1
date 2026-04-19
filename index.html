@@ -164,6 +164,7 @@
         .mobile-quick-nav::-webkit-scrollbar { display:none; }
         .mobile-quick-nav-inner {
             display:flex;
+            align-items:center;
             gap:8px;
             padding:8px 12px;
             min-width:max-content;
@@ -186,6 +187,20 @@
         .mobile-quick-nav a:hover {
             color:var(--gold);
             border-color:rgba(201,168,76,0.32);
+        }
+        .mobile-currency-selector {
+            border:1px solid rgba(31,42,56,0.1);
+            background:rgba(255,255,255,0.78);
+            color:var(--text);
+            border-radius:999px;
+            padding:7px 12px;
+            font-size:10px;
+            letter-spacing:1px;
+            text-transform:uppercase;
+            font-family:'Jost',sans-serif;
+            font-weight:600;
+            outline:none;
+            flex:0 0 auto;
         }
 
         .search-overlay {
@@ -335,17 +350,15 @@
         }
         .hero-bg-pattern {
             position:absolute; inset:0;
-            background-image:
-                linear-gradient(rgba(31,42,56,0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(31,42,56,0.05) 1px, transparent 1px),
-                radial-gradient(ellipse at 20% 50%,rgba(185,144,75,0.1) 0%,transparent 60%);
-            background-size: 120px 120px, 120px 120px, auto;
-            mask-image: linear-gradient(180deg, rgba(0,0,0,0.8), rgba(0,0,0,0.25));
+            background:
+                radial-gradient(circle at 20% 24%, rgba(185,144,75,0.12), transparent 18%),
+                radial-gradient(circle at 82% 20%, rgba(143,185,211,0.1), transparent 20%),
+                linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
         }
         .hero-bg-pattern::after {
             content:''; position:absolute; inset:0;
             background:
-                radial-gradient(circle at 50% 48%, rgba(185,144,75,0.08), transparent 16%);
+                linear-gradient(180deg, rgba(255,255,255,0.06), transparent 45%);
         }
         .hero-ornament { position:absolute; width:500px; height:500px; border:1px solid rgba(185,144,75,0.12); border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); animation:pulse 6s ease-in-out infinite; }
         .hero-ornament:nth-child(2) { width:700px; height:700px; animation-delay:1s; border-color:rgba(31,42,56,0.08); }
@@ -470,6 +483,15 @@
         .product-price-old { font-size:13px; color:rgba(105,119,139,0.7); text-decoration:line-through; margin-left:6px; }
         .add-btn { background:transparent; border:1px solid rgba(185,144,75,0.28); color:var(--text); padding:8px 16px; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:all 0.3s; font-family:'Jost',sans-serif; font-weight:500; border-radius:999px; }
         .add-btn:hover { background:var(--gold); color:var(--dark); border-color:var(--gold); }
+        .product-actions { display:flex; gap:8px; margin-top:14px; }
+        .product-actions button { flex:1; }
+        .buy-now-btn, .compare-btn {
+            border:1px solid rgba(31,42,56,0.12); background:#fff; color:var(--text);
+            padding:10px 12px; font-size:11px; letter-spacing:1.2px; text-transform:uppercase;
+            cursor:pointer; transition:all 0.2s; border-radius:999px; font-family:'Jost',sans-serif; font-weight:600;
+        }
+        .buy-now-btn:hover, .compare-btn:hover, .compare-btn.active { background:rgba(244,234,216,0.68); border-color:rgba(185,144,75,0.24); }
+        .compare-btn.active { color:var(--gold); }
         .view-all-wrap { text-align:center; margin-top:50px; }
         .view-all-wrap .btn-primary,
         .view-all-wrap .btn-outline {
@@ -849,6 +871,43 @@
             margin-bottom:20px; color:var(--text-light);
         }
         .account-card strong { display:block; color:var(--text); font-size:18px; margin-bottom:6px; }
+        .compare-bar {
+            position:fixed; left:50%; bottom:20px; transform:translateX(-50%);
+            width:min(92vw, 920px); display:none; align-items:center; justify-content:space-between; gap:14px;
+            padding:14px 16px; border-radius:24px; background:rgba(255,255,255,0.96);
+            border:1px solid rgba(31,42,56,0.1); box-shadow:0 22px 48px rgba(18,28,44,0.14); z-index:7000;
+        }
+        .compare-bar.show { display:flex; }
+        .compare-items { display:flex; gap:10px; flex-wrap:wrap; }
+        .compare-pill {
+            padding:8px 12px; border-radius:999px; background:rgba(244,234,216,0.56);
+            border:1px solid rgba(185,144,75,0.16); color:var(--text); font-size:12px;
+        }
+        .compare-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .compare-actions button {
+            border:none; border-radius:999px; padding:10px 14px; cursor:pointer; font-size:11px;
+            letter-spacing:1.2px; text-transform:uppercase; font-family:'Jost',sans-serif; font-weight:600;
+        }
+        .compare-primary { background:linear-gradient(135deg,var(--gold),var(--gold-light)); color:var(--dark); }
+        .compare-secondary { background:#fff; color:var(--text); border:1px solid rgba(31,42,56,0.12); }
+        .compare-modal {
+            position:fixed; inset:0; background:rgba(244,247,251,0.88); z-index:7200;
+            display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; padding:20px;
+            backdrop-filter:blur(8px);
+        }
+        .compare-modal.open { opacity:1; pointer-events:all; }
+        .compare-box {
+            width:min(100%, 1000px); max-height:90vh; overflow:auto; background:#fff; border-radius:28px;
+            border:1px solid rgba(31,42,56,0.08); box-shadow:0 24px 60px rgba(18,28,44,0.12); padding:28px; position:relative;
+        }
+        .compare-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:18px; }
+        .compare-card { border:1px solid rgba(31,42,56,0.08); border-radius:20px; overflow:hidden; background:#fff; }
+        .compare-card img { width:100%; aspect-ratio:1; object-fit:cover; display:block; background:#eef1f5; }
+        .compare-card-body { padding:16px; }
+        .compare-card h3 { font-family:'Playfair Display',serif; font-size:20px; color:var(--text); margin-bottom:8px; }
+        .compare-card p { color:var(--text-light); font-size:13px; line-height:1.7; margin-bottom:8px; }
+        .compare-price { font-family:'Playfair Display',serif; font-size:24px; color:var(--gold); margin-bottom:10px; display:block; }
+        .compare-meta { font-size:12px; color:var(--text-light); line-height:1.7; }
 
         footer { background:linear-gradient(180deg,#162131 0%,#1d2a3c 100%); padding:70px 40px 40px; border-top:1px solid rgba(255,255,255,0.06); }
         .footer-grid { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; gap:50px; max-width:1400px; margin:0 auto 60px; }
@@ -901,7 +960,7 @@
             .account-pill-text{display:none;}
             .top-admin-badge{display:none !important;}
             .icon-btn{font-size:16px;}
-            .mobile-quick-nav{display:block; position:sticky; top:0; z-index:999;}
+            .mobile-quick-nav{display:block;}
             .cat-grid{grid-template-columns:repeat(2,1fr);}
             .products-grid,.shop-products-grid{grid-template-columns:1fr 1fr; gap:16px;}
             .notes-grid{grid-template-columns:repeat(2,1fr);}
@@ -923,7 +982,7 @@
             .hero-subtitle{font-size:18px; line-height:1.5;}
             .hero-tech-strip{grid-template-columns:1fr; width:100%;}
             .hero-ornament{display:none;}
-            .hero-bg-pattern{background-size:64px 64px, 64px 64px, auto, auto;}
+            .hero-bg-pattern{background:none;}
             .view-all-wrap .btn-primary,
             .view-all-wrap .btn-outline{min-width: min(100%, 320px);}
             .cart-drawer{width:100%; right:0; transform:translateX(100%); transition:transform 0.4s ease;}
@@ -986,6 +1045,19 @@
             .use-card.large{grid-column:span 1;}
             .story-text{padding:32px 16px;}
             .process-step,.review-card,.action-card,.action-card.dark,.order-card,.subscriber-card{padding-left:16px; padding-right:16px;}
+            .compare-bar{
+                width:calc(100vw - 20px);
+                left:10px;
+                right:10px;
+                transform:none;
+                bottom:86px;
+                padding:12px;
+                align-items:flex-start;
+                flex-direction:column;
+            }
+            .compare-items,.compare-actions{width:100%;}
+            .compare-actions button{flex:1;}
+            .compare-grid{grid-template-columns:1fr;}
         }
         @media (hover:none) and (pointer:coarse){
             html,body{
@@ -1124,7 +1196,7 @@
                 display:none;
             }
             .hero-bg-pattern{
-                background-size:56px 56px, 56px 56px, auto, auto;
+                background:none;
             }
             .cat-grid,
             .products-grid,
@@ -1193,6 +1265,22 @@
     </div>
 </div>
 
+<div class="compare-bar" id="compareBar">
+    <div class="compare-items" id="compareItems"></div>
+    <div class="compare-actions">
+        <button class="compare-secondary" type="button" onclick="clearCompare()">Clear</button>
+        <button class="compare-primary" type="button" onclick="openCompareModal()">Compare Now</button>
+    </div>
+</div>
+
+<div class="compare-modal" id="compareModal" onclick="closeCompareModal(event)">
+    <div class="compare-box">
+        <button class="auth-close" type="button" onclick="closeCompareModal()">✕</button>
+        <h2 style="font-family:'Playfair Display',serif;color:var(--text);font-size:28px;">Compare Products</h2>
+        <div class="compare-grid" id="compareGrid"></div>
+    </div>
+</div>
+
 <!-- PRODUCT MODAL, CUSTOMIZATION, SHARE, STOCK ALERT, AND RECOMMENDATION SETUP -->
 <div class="modal-overlay" id="productModal" onclick="closeModal(event)">
     <div class="modal-box" id="modalBox">
@@ -1216,6 +1304,8 @@
             </div>
             <div class="modal-actions">
                 <button class="modal-add-btn" id="modalAddBtn">Add to Cart</button>
+                <button class="buy-now-btn" id="modalBuyNowBtn" type="button">Buy Now</button>
+                <button class="compare-btn" id="modalCompareBtn" type="button">Compare</button>
                 <button class="modal-wa-btn" id="modalWaBtn" title="Enquire on WhatsApp">📱</button>
                 <button class="modal-share-btn" id="modalShareBtn" title="Share this product">↗</button>
             </div>
@@ -1470,6 +1560,13 @@
         <a onclick="goSection('gifting')">Gifting</a>
         <a onclick="goSection('story')">Our Story</a>
         <a onclick="goSection('contact')">Contact</a>
+        <select class="mobile-currency-selector" id="mobileCurrencySelector" onchange="updateCurrency(this.value)">
+            <option value="INR">INR</option>
+            <option value="USD">USD</option>
+            <option value="AED">AED</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+        </select>
     </div>
 </div>
 
