@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'ruh-imperium-static-v1';
+const STATIC_CACHE = 'ruh-imperium-static-v2';
 const RUNTIME_CACHE = 'ruh-imperium-runtime-v1';
 const OFFLINE_URL = '/offline.html';
 
@@ -9,9 +9,9 @@ const APP_SHELL = [
   '/products.js',
   '/manifest.webmanifest',
   '/offline.html',
-  '/pwa-icon.svg',
-  '/pwa-icon-maskable.svg',
-  '/gulabattar.png'
+  '/pwa-icons/ruh-logo-192.png',
+  '/pwa-icons/ruh-logo-512.png',
+  '/pwa-icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', event => {
@@ -80,7 +80,7 @@ self.addEventListener('fetch', event => {
         })
         .catch(() => {
           if (request.destination === 'image') {
-            return caches.match('/pwa-icon.svg');
+            return caches.match('/pwa-icons/ruh-logo-192.png');
           }
           return caches.match(OFFLINE_URL);
         });

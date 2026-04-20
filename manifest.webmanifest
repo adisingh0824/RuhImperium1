@@ -7,27 +7,27 @@
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
-  "background_color": "#07111f",
-  "theme_color": "#07111f",
+  "background_color": "#fbfaf6",
+  "theme_color": "#fbfaf6",
   "orientation": "portrait",
   "categories": ["shopping", "lifestyle", "beauty"],
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/pwa-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/pwa-icons/ruh-logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icon-maskable.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "src": "/pwa-icons/ruh-logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/gulabattar.png",
-      "sizes": "512x512",
+      "src": "/pwa-icons/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     }

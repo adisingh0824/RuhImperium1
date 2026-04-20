@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#07111f">
+    <meta name="theme-color" content="#fbfaf6">
     <title>Offline | Ruh Imperium</title>
     <style>
         :root {
@@ -22,26 +22,33 @@
             place-items: center;
             padding: 24px;
             font-family: Georgia, serif;
-            color: var(--cream);
+            color: #2b211b;
             background:
-                radial-gradient(circle at top left, rgba(118,247,255,0.08), transparent 30%),
-                linear-gradient(135deg, var(--dark) 0%, var(--dark-2) 55%, #152746 100%);
+                radial-gradient(circle at top left, rgba(163, 91, 47, 0.08), transparent 32%),
+                linear-gradient(135deg, #fbfaf6 0%, #f3eee6 55%, #eef3f6 100%);
         }
         .offline-card {
             width: min(100%, 560px);
             border-radius: 28px;
             padding: 32px 24px;
-            border: 1px solid rgba(118,247,255,0.16);
-            background: rgba(10, 22, 39, 0.82);
-            box-shadow: 0 24px 60px rgba(3, 10, 20, 0.4);
+            border: 1px solid rgba(163, 91, 47, 0.16);
+            background: rgba(255, 255, 255, 0.86);
+            box-shadow: 0 24px 60px rgba(58, 44, 34, 0.12);
             text-align: center;
+        }
+        .offline-logo {
+            width: min(220px, 70vw);
+            height: auto;
+            display: block;
+            margin: 0 auto 20px;
+            border-radius: 22px;
         }
         .badge {
             display: inline-block;
             padding: 8px 14px;
             border-radius: 999px;
-            border: 1px solid rgba(118,247,255,0.22);
-            color: var(--cyan);
+            border: 1px solid rgba(163, 91, 47, 0.22);
+            color: #a35b2f;
             letter-spacing: 2px;
             font-size: 11px;
             text-transform: uppercase;
@@ -49,7 +56,7 @@
         }
         h1 {
             margin: 0 0 12px;
-            color: var(--gold-light);
+            color: #2b211b;
             font-size: clamp(32px, 8vw, 54px);
             line-height: 1;
         }
@@ -57,7 +64,7 @@
             margin: 0 auto 18px;
             max-width: 420px;
             line-height: 1.7;
-            color: rgba(246,244,239,0.8);
+            color: rgba(43,33,27,0.72);
             font-size: 16px;
         }
         a {
@@ -65,8 +72,8 @@
             margin-top: 8px;
             padding: 14px 22px;
             border-radius: 999px;
-            color: var(--dark);
-            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: #fffaf4;
+            background: linear-gradient(135deg, #7b3f20 0%, #a35b2f 100%);
             text-decoration: none;
             font-weight: 700;
             letter-spacing: 1.2px;
@@ -77,6 +84,7 @@
 </head>
 <body>
     <div class="offline-card">
+        <img class="offline-logo" src="/pwa-icons/ruh-logo-512.png" alt="Ruh Imperium logo">
         <span class="badge">Offline Mode</span>
         <h1>Ruh Imperium</h1>
         <p>Your connection looks offline right now. The app shell is ready, and you can reload once your internet is back to continue shopping.</p>

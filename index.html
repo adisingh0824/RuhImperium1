@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Ruh Imperium brings pure Indian attars, modern fragrances, gifting sets, and Kannauj perfumery to customers worldwide.">
     <meta name="google-site-verification" content="ADD_GOOGLE_SITE_VERIFICATION_TOKEN">
-    <meta name="theme-color" content="#07111f">
+    <meta name="theme-color" content="#fbfaf6">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Ruh Imperium">
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="icon" href="/pwa-icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/gulabattar.png">
+    <link rel="icon" href="/pwa-icons/ruh-logo-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="/pwa-icons/apple-touch-icon.png">
     <title>Ruh Imperium | Pure Indian Attars Since 1973</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script>
@@ -833,6 +833,12 @@
         .auth-help { font-size:12px; color:var(--text-light); margin-top:-4px; }
         .auth-alt { margin-top:16px; text-align:center; font-size:13px; color:var(--text-light); }
         .auth-link { color:var(--gold-light); cursor:pointer; text-decoration:none; }
+        .admin-login-link {
+            margin-top:12px; width:100%; border:1px solid rgba(31,42,56,0.12); background:#fff; color:var(--text);
+            padding:12px 14px; border-radius:999px; font-size:11px; letter-spacing:1.6px; text-transform:uppercase;
+            font-family:'Jost',sans-serif; font-weight:700; cursor:pointer;
+        }
+        .admin-login-link:hover { background:rgba(244,234,216,0.56); border-color:rgba(185,144,75,0.22); }
         .account-pill {
             min-width:112px; padding:10px 14px; border:1px solid rgba(201,168,76,0.28);
             background:rgba(253,246,232,0.04); color:var(--gold-light); font-size:12px; letter-spacing:1.5px;
@@ -1435,6 +1441,7 @@
                 <button class="place-order-btn" type="button" id="authSubmitBtn" onclick="handleAuth()">Sign In</button>
             </div>
             <div class="auth-alt" id="authAltCopy">New here? <a class="auth-link" onclick="setAuthMode('signup')">Create an account</a></div>
+            <button class="admin-login-link" type="button" onclick="setAuthMode('admin')">Admin Login</button>
         </div>
         <div id="authUserView" style="display:none">
             <h2>Your Account</h2>
