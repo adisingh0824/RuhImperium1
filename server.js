@@ -60,7 +60,7 @@ const coupons = {
     RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer', expiresAt: '2027-03-31T23:59:59.000Z' },
     WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer', expiresAt: '2027-03-31T23:59:59.000Z' },
     ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off', expiresAt: '2027-03-31T23:59:59.000Z' },
-    ADI50: { type: 'percent', value: 50, label: 'SPECIAL OFFER', expiresAt: '2027-03-31T23:59:59.000Z' }
+    ADI50: { type: 'percent', value: 50, label: 'SPECIAL OFFER', expiresAt: '2026-05-31T23:59:59.000Z' }
 };
 
 const PARTIAL_COD_DEPOSIT_PERCENT = 20;
