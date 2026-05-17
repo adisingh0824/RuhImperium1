@@ -4,6 +4,10 @@ const USER_STORAGE_KEY = 'ruhImperiumUser';
 const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
 const CURRENCY_STORAGE_KEY = 'ruhImperiumCurrency';
 const COMPARE_STORAGE_KEY = 'ruhImperiumCompare';
+const RECENTLY_VIEWED_STORAGE_KEY = 'ruhImperiumRecentlyViewed';
+const REVIEWS_STORAGE_KEY = 'ruhImperiumReviews';
+const STOCK_ALERTS_STORAGE_KEY = 'ruhImperiumStockAlerts';
+const BACKUP_VERSION = 'ruh-mobile-ai-2026-05';
 const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
 const ADMIN_USERNAME = 'adi24';
 const ADMIN_PASSWORD = 'Adi19983@';
@@ -35,6 +39,16 @@ let currentUser = null;
 let appliedCoupon = null;
 let authMode = 'login';
 let compareProducts = [];
+let recentlyViewed = [];
+let customerReviews = [];
+let stockAlerts = [];
+let currentAdminPreset = 'all';
+
+const baseReviews = [
+    { name: 'Rajesh Kumar', product: 'Mitti Attar', rating: 5, comment: 'The Mitti Attar brought back memories of the first rain on dry earth. Absolutely pure, long-lasting and genuine.', date: 'March 18, 2026' },
+    { name: 'Priya Sharma', product: 'Mogra Attar', rating: 5, comment: 'Mogra Attar smells exactly like real mogra flowers. Even a tiny amount lasts the whole day. Truly authentic!', date: 'March 15, 2026' },
+    { name: 'Ananya Gupta', product: 'Traditional Discovery Set', rating: 5, comment: "The Discovery Set is the perfect way to experience Ram Ji's range. Pure and truly traditional Indian perfumery.", date: 'March 12, 2026' }
+];
 
 function detectPreferredCurrency() {
     const language = (navigator.language || '').toUpperCase();
@@ -109,6 +123,9 @@ function loadStoredState() {
         appliedCoupon = JSON.parse(localStorage.getItem(COUPON_STORAGE_KEY) || 'null');
         selectedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY) || detectPreferredCurrency();
         compareProducts = JSON.parse(localStorage.getItem(COMPARE_STORAGE_KEY) || '[]');
+        recentlyViewed = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_STORAGE_KEY) || '[]');
+        customerReviews = JSON.parse(localStorage.getItem(REVIEWS_STORAGE_KEY) || '[]');
+        stockAlerts = JSON.parse(localStorage.getItem(STOCK_ALERTS_STORAGE_KEY) || '[]');
     } catch (error) {
         cart = [];
         wishlist = [];
@@ -116,6 +133,9 @@ function loadStoredState() {
         appliedCoupon = null;
         selectedCurrency = detectPreferredCurrency();
         compareProducts = [];
+        recentlyViewed = [];
+        customerReviews = [];
+        stockAlerts = [];
     }
 }
 
@@ -124,6 +144,9 @@ function persistState() {
     localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist));
     localStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(appliedCoupon));
     localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(compareProducts));
+    localStorage.setItem(RECENTLY_VIEWED_STORAGE_KEY, JSON.stringify(recentlyViewed));
+    localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(customerReviews));
+    localStorage.setItem(STOCK_ALERTS_STORAGE_KEY, JSON.stringify(stockAlerts));
 }
 
 function persistUser() {
@@ -135,6 +158,23 @@ function showToast(msg) {
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function escapeHTML(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function debounce(fn, wait = 250) {
+    let timer = null;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), wait);
+    };
 }
 
 function isAdminUser(user) {
@@ -285,9 +325,75 @@ function renderShopGrid() {
 
 function renderHomeSections() {
     const bestsellers = products.filter(p => p.bestseller).slice(0, 4);
-    document.getElementById('bestsellerGrid').innerHTML = bestsellers.map(p => productCardHTML(p)).join('');
+    const bestsellerGrid = document.getElementById('bestsellerGrid');
+    if (bestsellerGrid) bestsellerGrid.innerHTML = bestsellers.map(p => productCardHTML(p)).join('');
     const newArrivals = products.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4);
-    document.getElementById('newArrivalsGrid').innerHTML = newArrivals.map(p => productCardHTML(p)).join('');
+    const newArrivalsGrid = document.getElementById('newArrivalsGrid');
+    if (newArrivalsGrid) newArrivalsGrid.innerHTML = newArrivals.map(p => productCardHTML(p)).join('');
+    const wellnessGrid = document.getElementById('wellnessGrid');
+    if (wellnessGrid) {
+        const wellness = products.filter(p =>
+            p.notes === 'Fresh' || p.notes === 'Woody' || p.tags.includes('Daily') || p.tags.includes('Office') || p.tags.includes('Summer')
+        ).slice(0, 4);
+        wellnessGrid.innerHTML = wellness.map(p => productCardHTML(p)).join('');
+    }
+    const poojaGrid = document.getElementById('poojaGrid');
+    if (poojaGrid) {
+        const pooja = products.filter(p =>
+            p.cat.includes('Authentic') || p.tags.includes('Festival') || ['Rose', 'Mogra', 'Sandalwood', 'Kewra', 'Hina'].some(term => p.name.includes(term))
+        ).slice(0, 4);
+        poojaGrid.innerHTML = pooja.map(p => productCardHTML(p)).join('');
+    }
+    const giftingGrid = document.getElementById('giftingGrid');
+    if (giftingGrid) {
+        const gifting = products.filter(p => p.tags.includes('Gifting') || p.tags.includes('Festival') || p.cat === 'Discovery Set').slice(0, 4);
+        giftingGrid.innerHTML = gifting.map(p => productCardHTML(p)).join('');
+    }
+    renderRecentlyViewed();
+}
+
+function addRecentlyViewed(id) {
+    recentlyViewed = [id, ...recentlyViewed.filter(itemId => itemId !== id)].slice(0, 8);
+    persistState();
+    renderRecentlyViewed();
+}
+
+function renderRecentlyViewed() {
+    const grid = document.getElementById('recentlyViewedGrid');
+    if (!grid) return;
+    const viewedProducts = recentlyViewed.map(id => products.find(p => p.id === id)).filter(Boolean).slice(0, 4);
+    if (!viewedProducts.length) {
+        grid.innerHTML = '<div class="recently-viewed-empty">Products you open will appear here for quicker mobile browsing.</div>';
+        return;
+    }
+    grid.innerHTML = viewedProducts.map(p => productCardHTML(p)).join('');
+}
+
+function getRelatedProducts(product, limit = 4) {
+    if (!product) return [];
+    const related = products
+        .filter(p => p.id !== product.id)
+        .map(p => {
+            let score = 0;
+            if (p.cat === product.cat) score += 4;
+            if (p.notes === product.notes) score += 4;
+            (p.tags || []).forEach(tag => {
+                if ((product.tags || []).includes(tag)) score += 2;
+            });
+            if (p.bestseller) score += 1;
+            return { product: p, score };
+        })
+        .sort((a, b) => b.score - a.score || b.product.stars - a.product.stars);
+    return related.slice(0, limit).map(entry => entry.product);
+}
+
+function renderRecommendations(product) {
+    const list = document.getElementById('recommendationList');
+    if (!list) return;
+    const related = getRelatedProducts(product, 4);
+    list.innerHTML = related.map(item =>
+        `<button class="recommendation-pill" type="button" onclick="openProductModal(${item.id})">${escapeHTML(item.name)}</button>`
+    ).join('');
 }
 
 function toggleWish(e, id) {
@@ -425,7 +531,11 @@ function addToCart(p, size) {
 }
 
 function updateCartBadge() {
-    document.getElementById('cartBadge').textContent = cart.reduce((a, x) => a + x.qty, 0);
+    const count = cart.reduce((a, x) => a + x.qty, 0);
+    const cartBadge = document.getElementById('cartBadge');
+    const mobileCartBadge = document.getElementById('mobileCartBadge');
+    if (cartBadge) cartBadge.textContent = count;
+    if (mobileCartBadge) mobileCartBadge.textContent = count;
 }
 
 function openCart() {
@@ -497,6 +607,25 @@ function getCartTotal() {
     return cart.reduce((a, x) => a + x.price * x.qty, 0);
 }
 
+function getCheckoutCustomerSnapshot() {
+    const stateEl = document.getElementById('cState');
+    const pinEl = document.getElementById('cPin');
+    return {
+        state: stateEl ? stateEl.value : '',
+        pin: pinEl ? pinEl.value.trim() : ''
+    };
+}
+
+function getDeliveryCharge(subtotal = getCartTotal()) {
+    const { state, pin } = getCheckoutCustomerSnapshot();
+    if (!state && !pin) return 0;
+    let charge = 0;
+    if (['West Bengal', 'Tamil Nadu', 'Karnataka', 'Maharashtra', 'Other'].includes(state)) charge += 99;
+    if (/^[78]/.test(pin)) charge += 40;
+    if (subtotal >= 2499) charge = Math.max(charge - 40, 0);
+    return charge;
+}
+
 function getDiscountAmount(subtotal = getCartTotal()) {
     if (!appliedCoupon) return 0;
     if (appliedCoupon.type === 'percent') return Math.round(subtotal * (appliedCoupon.value / 100));
@@ -506,11 +635,12 @@ function getDiscountAmount(subtotal = getCartTotal()) {
 function getOrderPricing() {
     const subtotal = getCartTotal();
     const discount = getDiscountAmount(subtotal);
+    const delivery = getDeliveryCharge(Math.max(subtotal - discount, 0));
     return {
         subtotal,
         discount,
-        delivery: 0,
-        total: Math.max(subtotal - discount, 0)
+        delivery,
+        total: Math.max(subtotal - discount, 0) + delivery
     };
 }
 
@@ -576,6 +706,7 @@ function whatsappOrder() {
     let msg = '🌹 *Ruh Imperium Order* 🌹\n\nI would like to order:\n\n';
     cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ${formatMoney(item.price * item.qty)}\n`; });
     if (appliedCoupon) msg += `\nCoupon: ${appliedCoupon.code} (-${formatMoney(pricing.discount)})\n`;
+    if (pricing.delivery) msg += `Delivery: ${formatMoney(pricing.delivery)}\n`;
     msg += `\n*Total: ${formatMoney(pricing.total)}*\n\nPlease confirm my order. Thank you!`;
     window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
 }
@@ -584,6 +715,8 @@ function openProductModal(id) {
     const p = products.find(x => x.id === id);
     if (!p) return;
     currentProduct = p;
+    addRecentlyViewed(p.id);
+    renderRecommendations(p);
 
     document.getElementById('modalCat').textContent    = p.cat;
     document.getElementById('modalName').textContent   = p.name;
@@ -626,6 +759,7 @@ function openProductModal(id) {
         const msg = `Hello! I am interested in *${p.name}* (${selectedSize}) at ${formatMoney(p.price)}. Please help me place an order.`;
         window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
     };
+    document.getElementById('modalShareBtn').onclick = () => shareProduct(p);
 
     document.getElementById('productModal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -661,6 +795,53 @@ function closeModal(e) {
     if (e.target === document.getElementById('productModal')) closeProductModal();
 }
 
+async function shareProduct(product) {
+    const url = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
+    const shareData = {
+        title: `${product.name} | Ruh Imperium`,
+        text: `${product.name} - ${product.notes} ${product.cat} at ${formatMoney(product.price)}`,
+        url
+    };
+    if (navigator.share) {
+        try {
+            await navigator.share(shareData);
+            return;
+        } catch (error) {}
+    }
+    if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        showToast('Product link copied.');
+    } else {
+        showToast('Share link: ' + url);
+    }
+}
+
+function subscribeStockAlert() {
+    const emailInput = document.getElementById('stockAlertEmail');
+    const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+    if (!currentProduct) {
+        showToast('Open a product first.');
+        return;
+    }
+    if (!email || !email.includes('@')) {
+        showToast('Enter a valid email for stock alerts.');
+        return;
+    }
+    const existing = stockAlerts.find(alert => alert.email === email && alert.productId === currentProduct.id);
+    if (!existing) {
+        stockAlerts.push({
+            id: Date.now().toString(36),
+            email,
+            productId: currentProduct.id,
+            productName: currentProduct.name,
+            createdAt: new Date().toISOString()
+        });
+        persistState();
+    }
+    if (emailInput) emailInput.value = '';
+    showToast('Stock alert saved.');
+}
+
 function openCheckout() {
     if (cart.length === 0) { showToast('Cart is empty!'); return; }
     if (!currentUser) {
@@ -694,7 +875,7 @@ function updateOrderSummary() {
         ).join('') +
         `<div class="order-line"><span>Subtotal</span><span>${formatMoney(pricing.subtotal)}</span></div>` +
         couponLine +
-        `<div class="order-line"><span>Delivery</span><span style="color:var(--green)">FREE</span></div>` +
+        `<div class="order-line"><span>Delivery</span><span style="color:${pricing.delivery ? 'var(--gold-light)' : 'var(--green)'}">${pricing.delivery ? formatMoney(pricing.delivery) : 'FREE'}</span></div>` +
         `<div class="order-line"><span>Total</span><span>${formatMoney(pricing.total)}</span></div>`;
 }
 
@@ -702,11 +883,16 @@ function selectPay(btn, type) {
     selectedPayment = type;
     document.querySelectorAll('.pay-opt').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const note = document.getElementById('checkoutNote');
+    const note = document.getElementById('paymentStatusNote');
     if (note) {
-        note.textContent = type === 'COD'
-            ? 'Cash on Delivery orders are confirmed instantly and shared to WhatsApp for manual processing.'
-            : 'Razorpay supports UPI, cards, netbanking, and wallets. Replace the demo key in `app.js` before taking live payments.';
+        note.className = 'payment-status-note';
+        if (type === 'COD') {
+            note.textContent = 'Cash on Delivery orders are confirmed on WhatsApp after checkout.';
+        } else if (type === 'Partial COD') {
+            note.textContent = 'Partial COD collects a small prepaid confirmation amount, then the balance on delivery.';
+        } else {
+            note.textContent = 'Razorpay supports UPI, cards, netbanking, and wallets. Add live keys before taking payments.';
+        }
     }
 }
 
@@ -740,6 +926,7 @@ function buildOrderMessage(details, paymentLabel, paymentId = '') {
     msg += `\n*Order Details:*\n`;
     cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ${formatMoney(item.price * item.qty)}\n`; });
     if (appliedCoupon) msg += `\n*Coupon:* ${appliedCoupon.code} (-${formatMoney(pricing.discount)})\n`;
+    if (pricing.delivery) msg += `*Delivery:* ${formatMoney(pricing.delivery)}\n`;
     msg += `\n*Total: ${formatMoney(pricing.total)}*`;
     return msg;
 }
@@ -776,16 +963,17 @@ function processRazorpayOrder(details) {
         return;
     }
     const pricing = getOrderPricing();
+    const payableNow = selectedPayment === 'Partial COD' ? Math.max(1, Math.round(pricing.total * 0.2)) : pricing.total;
     const options = {
         key: RAZORPAY_KEY_ID,
-        amount: pricing.total * 100,
+        amount: payableNow * 100,
         currency: 'INR',
         name: 'Ruh Imperium',
-        description: `Order for ${details.name}`,
+        description: selectedPayment === 'Partial COD' ? `20% confirmation for ${details.name}` : `Order for ${details.name}`,
         image: 'gulabattar.png',
         handler(response) {
-            launchWhatsAppOrder(details, 'Razorpay', response.razorpay_payment_id);
-            finalizeOrder('Payment received successfully via Razorpay.');
+            launchWhatsAppOrder(details, selectedPayment === 'Partial COD' ? 'Partial COD deposit via Razorpay' : 'Razorpay', response.razorpay_payment_id);
+            finalizeOrder(selectedPayment === 'Partial COD' ? 'Partial COD deposit received successfully.' : 'Payment received successfully via Razorpay.');
         },
         prefill: {
             name: details.name,
@@ -794,7 +982,9 @@ function processRazorpayOrder(details) {
         },
         notes: {
             address: `${details.address}, ${details.city}, ${details.state} - ${details.pin}`,
-            coupon: appliedCoupon ? appliedCoupon.code : 'None'
+            coupon: appliedCoupon ? appliedCoupon.code : 'None',
+            payableNow,
+            orderTotal: pricing.total
         },
         theme: {
             color: '#c9a84c'
@@ -861,25 +1051,66 @@ function doSearch(query) {
 
 function searchSelect(id) { closeSearch(); openProductModal(id); }
 
-function subscribe() {
-    const email = document.getElementById('nlEmail').value;
-    if (!email || !email.includes('@')) { showToast('Please enter a valid email!'); return; }
-    document.getElementById('nlEmail').value = '';
-    showToast('🌸 Subscribed! Welcome to the Ruh Imperium family.');
+async function subscribe() {
+    const emailInput = document.getElementById('nlEmail');
+    const status = document.getElementById('nlStatus');
+    const btn = document.getElementById('nlSubmitBtn');
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email || !email.includes('@')) {
+        showToast('Please enter a valid email.');
+        return;
+    }
+    if (btn) btn.disabled = true;
+    if (status) {
+        status.className = 'nl-status';
+        status.textContent = 'Saving your subscription...';
+    }
+    try {
+        const response = await fetch('/api/newsletter/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Unable to subscribe right now.');
+        emailInput.value = '';
+        if (status) {
+            status.className = 'nl-status success';
+            status.textContent = data.alreadySubscribed ? 'You are already on the list.' : 'Subscribed. Welcome to Ruh Imperium.';
+        }
+        showToast('Subscribed successfully.');
+    } catch (error) {
+        if (status) {
+            status.className = 'nl-status error';
+            status.textContent = error.message || 'Subscription failed. Please try WhatsApp.';
+        }
+        showToast('Subscription could not be saved.');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+function handleNewsletterKeydown(event) {
+    if (event.key === 'Enter') subscribe();
 }
 
 function setAuthMode(mode) {
     authMode = mode;
     const isSignup = mode === 'signup';
+    const isAdmin = mode === 'admin';
     document.getElementById('loginTab').classList.toggle('active', !isSignup);
     document.getElementById('signupTab').classList.toggle('active', isSignup);
-    document.getElementById('authTitle').textContent = isSignup ? 'Create Your Account' : 'Welcome Back';
-    document.getElementById('authSubtitle').textContent = isSignup
+    document.getElementById('authTitle').textContent = isAdmin ? 'Admin Login' : isSignup ? 'Create Your Account' : 'Welcome Back';
+    document.getElementById('authSubtitle').textContent = isAdmin
+        ? 'Sign in with the admin username to view order tools on this device.'
+        : isSignup
         ? 'Create a simple account on this device so checkout details and offers stay saved.'
         : 'Sign in with your email or username to access saved details, orders, and admin tools.';
     document.getElementById('authName').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authPhone').parentElement.style.display = isSignup ? 'block' : 'none';
-    document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
+    document.getElementById('authSubmitBtn').textContent = isAdmin ? 'Sign In as Admin' : isSignup ? 'Create Account' : 'Sign In';
+    document.getElementById('authEmail').placeholder = isAdmin ? 'Admin username' : 'your@email.com or adi24';
+    if (isAdmin) document.getElementById('authEmail').value = ADMIN_USERNAME;
     document.getElementById('authAltCopy').innerHTML = isSignup
         ? 'Already have an account? <a class="auth-link" onclick="setAuthMode(\'login\')">Sign in</a>'
         : 'New here? <a class="auth-link" onclick="setAuthMode(\'signup\')">Create an account</a>';
@@ -1037,6 +1268,16 @@ function openOrdersModal() {
         if (adminOrdersList) {
             adminOrdersList.innerHTML = `<div class="order-card"><div class="order-card-head"><strong>Admin Panel Ready</strong><span>No order records available yet in this local session.</span></div></div>`;
         }
+        const stockAlertsList = document.getElementById('stockAlertsList');
+        if (stockAlertsList) {
+            stockAlertsList.innerHTML = stockAlerts.length
+                ? stockAlerts.map(alert => `<div class="subscriber-card"><div><strong>${escapeHTML(alert.productName)}</strong><span>${escapeHTML(alert.email)} · ${new Date(alert.createdAt).toLocaleDateString('en-IN')}</span></div></div>`).join('')
+                : `<div class="order-card"><div class="order-card-head"><strong>No stock alerts yet</strong><span>Customer product alerts will appear here.</span></div></div>`;
+        }
+        ['sellerApplicationsList', 'sellerProductsList', 'viewSignalsList', 'abandonedCartsList'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = `<div class="order-card"><div class="order-card-head"><strong>Local mode ready</strong><span>Deploy backend storage to collect this data across devices.</span></div></div>`;
+        });
     }
     document.getElementById('ordersModal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -1045,6 +1286,319 @@ function openOrdersModal() {
 function closeOrdersModal() {
     document.getElementById('ordersModal').classList.remove('open');
     document.body.style.overflow = '';
+}
+
+function getProductToneScore(product, prompt) {
+    const text = String(prompt || '').toLowerCase();
+    const blob = [product.name, product.cat, product.notes, product.desc, ...(product.tags || [])].join(' ').toLowerCase();
+    let score = 0;
+    text.split(/[^a-z0-9]+/i).filter(term => term.length > 2).forEach(term => {
+        if (blob.includes(term)) score += 2;
+    });
+    [
+        { terms: ['fresh', 'cool', 'clean', 'summer', 'office', 'light'], matches: ['fresh', 'summer', 'office', 'green apple', 'tommy girl', 'hawas', 'khus'] },
+        { terms: ['floral', 'flower', 'romantic', 'rose', 'jasmine', 'mogra', 'soft'], matches: ['floral', 'rose', 'jasmine', 'mogra', 'gulab'] },
+        { terms: ['woody', 'earthy', 'deep', 'mitti', 'rain', 'sandal', 'oud'], matches: ['woody', 'earthy', 'mitti', 'sandal', 'oud', 'khus'] },
+        { terms: ['sweet', 'vanilla', 'caramel', 'gourmand', 'warm', 'cozy'], matches: ['vanilla', 'caramel', 'gourmand', 'eclair', 'apple'] },
+        { terms: ['gift', 'gifting', 'birthday', 'wedding', 'set', 'festival'], matches: ['gifting', 'festival', 'discovery', 'set'] },
+        { terms: ['party', 'bold', 'strong', 'night', 'date', 'winter'], matches: ['party', 'winter', 'musk', 'oud', 'oriental', 'amber'] }
+    ].forEach(group => {
+        if (group.terms.some(term => text.includes(term))) {
+            group.matches.forEach(match => {
+                if (blob.includes(match)) score += 4;
+            });
+        }
+    });
+    if (product.bestseller) score += 1;
+    return score;
+}
+
+function getLocalToneMatches(prompt, limit = 4) {
+    return products
+        .map(product => ({ product, score: getProductToneScore(product, prompt) }))
+        .sort((a, b) => b.score - a.score || b.product.stars - a.product.stars || a.product.price - b.product.price)
+        .slice(0, limit)
+        .map(entry => entry.product);
+}
+
+function buildLocalAssistantReply(prompt, matches) {
+    if (!matches.length) return 'Tell me if you want fresh, floral, woody, sweet, office, party, summer, winter, or gifting and I will narrow it down.';
+    return `For ${prompt}, start with ${matches.slice(0, 3).map(item => item.name).join(', ')}. These match your tone by note family, use-case, and price.`;
+}
+
+function normalizeSuggestion(product) {
+    return {
+        id: product.id,
+        name: product.name,
+        img: product.img,
+        cat: product.cat,
+        notes: product.notes,
+        price: product.price,
+        stars: product.stars,
+        desc: product.desc
+    };
+}
+
+function openScentAssistant(seedText = '') {
+    const panel = document.getElementById('scentAssistantPanel');
+    if (!panel) return;
+    panel.classList.add('open');
+    document.getElementById('aiScentBtn')?.classList.add('active');
+    if (!document.querySelector('.scent-message')) {
+        appendScentMessage('assistant', 'Tell me your tone: fresh, floral, woody, sweet, office, party, gifting, summer, or winter. I will match products from Ruh Imperium.');
+    }
+    const input = document.getElementById('scentInput');
+    if (seedText && input) input.value = seedText;
+    setTimeout(() => input?.focus(), 120);
+}
+
+function closeScentAssistant() {
+    document.getElementById('scentAssistantPanel')?.classList.remove('open');
+    document.getElementById('aiScentBtn')?.classList.remove('active');
+}
+
+function toggleScentAssistant() {
+    const panel = document.getElementById('scentAssistantPanel');
+    if (panel?.classList.contains('open')) closeScentAssistant();
+    else openScentAssistant();
+}
+
+function appendScentMessage(role, text, suggestions = [], isLoading = false) {
+    const messages = document.getElementById('scentMessages');
+    if (!messages) return null;
+    const bubble = document.createElement('div');
+    bubble.className = `scent-message ${role}${isLoading ? ' loading' : ''}`;
+    const copy = document.createElement('p');
+    copy.textContent = text;
+    bubble.appendChild(copy);
+    if (suggestions.length) {
+        const list = document.createElement('div');
+        list.className = 'scent-suggestions';
+        suggestions.forEach(product => {
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'scent-suggestion-card';
+            card.onclick = () => {
+                closeScentAssistant();
+                openProductModal(product.id);
+            };
+            card.innerHTML = `
+                <img src="${escapeHTML(product.img)}" alt="${escapeHTML(product.name)}" onerror="this.style.display='none'">
+                <span><strong>${escapeHTML(product.name)}</strong><small>${escapeHTML(product.notes)} · ${formatMoney(product.price)}</small></span>
+            `;
+            list.appendChild(card);
+        });
+        bubble.appendChild(list);
+    }
+    messages.appendChild(bubble);
+    messages.scrollTop = messages.scrollHeight;
+    return bubble;
+}
+
+async function sendScentMessage(event, presetText = '') {
+    if (event) event.preventDefault();
+    const input = document.getElementById('scentInput');
+    const message = (presetText || input?.value || '').trim();
+    if (!message) return;
+    openScentAssistant();
+    appendScentMessage('user', message);
+    if (input) input.value = '';
+    const loading = appendScentMessage('assistant', 'Matching your tone with the catalog...', [], true);
+    try {
+        const response = await fetch('/api/ai-scent-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Assistant unavailable.');
+        loading?.remove();
+        appendScentMessage('assistant', data.reply || 'Here are a few matches from the catalog.', data.suggestions || []);
+    } catch (error) {
+        loading?.remove();
+        const matches = getLocalToneMatches(message, 4);
+        appendScentMessage('assistant', buildLocalAssistantReply(message, matches), matches.map(normalizeSuggestion));
+    }
+}
+
+function askScentAssistantPreset(text) {
+    openScentAssistant(text);
+    sendScentMessage(null, text);
+}
+
+function updatePinServiceability() {
+    const status = document.getElementById('pinServiceabilityStatus');
+    if (!status) return;
+    const { state, pin } = getCheckoutCustomerSnapshot();
+    const subtotalAfterDiscount = Math.max(getCartTotal() - getDiscountAmount(), 0);
+    const delivery = getDeliveryCharge(subtotalAfterDiscount);
+    if (!pin) {
+        status.textContent = 'Enter PIN code to check delivery availability and shipping.';
+    } else if (!/^\d{6}$/.test(pin)) {
+        status.textContent = 'Use a 6-digit Indian PIN code for the best delivery estimate.';
+    } else if (delivery) {
+        status.textContent = `${state || 'Selected state'} is serviceable. Estimated shipping: ${formatMoney(delivery)}.`;
+    } else {
+        status.textContent = 'Great, this PIN is serviceable with free delivery estimate.';
+    }
+    updateOrderSummary();
+    renderCartItems();
+}
+
+function initCheckoutHelpers() {
+    const refresh = debounce(updatePinServiceability, 180);
+    document.getElementById('cPin')?.addEventListener('input', refresh);
+    document.getElementById('cState')?.addEventListener('change', updatePinServiceability);
+    selectPay(document.getElementById('payRazorpayBtn') || { classList: { add() {} } }, selectedPayment);
+}
+
+function renderReviewProducts() {
+    const select = document.getElementById('reviewProduct');
+    if (!select) return;
+    select.innerHTML = products.map(product => `<option value="${escapeHTML(product.name)}">${escapeHTML(product.name)}</option>`).join('');
+}
+
+function renderCustomerReviews() {
+    const list = document.getElementById('customerReviewList');
+    if (!list) return;
+    const allReviews = [...customerReviews, ...baseReviews].slice(0, 6);
+    list.innerHTML = allReviews.map((review, index) => `
+        <div class="review-card reveal ${index % 3 === 1 ? 'reveal-delay-1' : index % 3 === 2 ? 'reveal-delay-2' : ''}">
+            <div class="review-stars">${'★'.repeat(Number(review.rating || 5))}${'☆'.repeat(5 - Number(review.rating || 5))}</div>
+            <p class="review-text">"${escapeHTML(review.comment)}"</p>
+            <div class="reviewer"><div class="reviewer-avatar">${escapeHTML((review.name || 'R').charAt(0).toUpperCase())}</div><div><span class="reviewer-name">${escapeHTML(review.name)}</span><span class="reviewer-date">${escapeHTML(review.date || new Date(review.createdAt || Date.now()).toLocaleDateString('en-IN'))}</span><span class="reviewer-product">${escapeHTML(review.product)}</span></div></div>
+        </div>
+    `).join('');
+    const totalRating = allReviews.reduce((sum, review) => sum + Number(review.rating || 5), 0);
+    const average = allReviews.length ? (totalRating / allReviews.length).toFixed(1) : '4.8';
+    document.getElementById('liveReviewAverage').textContent = average;
+    document.getElementById('liveReviewCount').textContent = `Based on ${allReviews.length.toLocaleString('en-IN')} featured reviews`;
+}
+
+function submitReview() {
+    const name = document.getElementById('reviewName').value.trim();
+    const product = document.getElementById('reviewProduct').value;
+    const rating = Number(document.getElementById('reviewRating').value || 5);
+    const comment = document.getElementById('reviewComment').value.trim();
+    if (!name || !comment) {
+        showToast('Name and review are required.');
+        return;
+    }
+    customerReviews.unshift({
+        id: Date.now().toString(36),
+        name,
+        product,
+        rating,
+        comment,
+        createdAt: new Date().toISOString(),
+        date: new Date().toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })
+    });
+    persistState();
+    document.getElementById('reviewName').value = '';
+    document.getElementById('reviewComment').value = '';
+    renderCustomerReviews();
+    initReveals();
+    showToast('Review added. Thank you.');
+}
+
+function getAdminBackupData() {
+    return {
+        version: BACKUP_VERSION,
+        exportedAt: new Date().toISOString(),
+        cart,
+        wishlist,
+        currentUser,
+        compareProducts,
+        recentlyViewed,
+        customerReviews,
+        stockAlerts
+    };
+}
+
+function downloadTextFile(filename, content, type = 'application/json') {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function exportAdminBackup() {
+    downloadTextFile(`ruh-imperium-backup-${Date.now()}.json`, JSON.stringify(getAdminBackupData(), null, 2));
+    showToast('Backup exported.');
+}
+
+function triggerBackupImport() {
+    document.getElementById('backupImportInput')?.click();
+}
+
+function restoreAdminBackup(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const data = JSON.parse(reader.result);
+            if (Array.isArray(data.cart)) cart = data.cart;
+            if (Array.isArray(data.wishlist)) wishlist = data.wishlist;
+            if (Array.isArray(data.compareProducts)) compareProducts = data.compareProducts;
+            if (Array.isArray(data.recentlyViewed)) recentlyViewed = data.recentlyViewed;
+            if (Array.isArray(data.customerReviews)) customerReviews = data.customerReviews;
+            if (Array.isArray(data.stockAlerts)) stockAlerts = data.stockAlerts;
+            if (data.currentUser) currentUser = data.currentUser;
+            persistState();
+            persistUser();
+            updateCartBadge();
+            updateWishBadge();
+            updateAccountUI();
+            renderHomeSections();
+            renderCustomerReviews();
+            showToast('Backup restored.');
+        } catch (error) {
+            showToast('Backup file could not be restored.');
+        }
+    };
+    reader.readAsText(file);
+}
+
+function setAdminFilterPreset(preset) {
+    currentAdminPreset = preset;
+    document.querySelectorAll('[data-admin-preset]').forEach(btn => btn.classList.toggle('active', btn.dataset.adminPreset === preset));
+    filterAdminOrders();
+}
+
+function filterAdminOrders() {
+    const count = document.getElementById('adminOrderCount');
+    if (count) count.textContent = currentAdminPreset === 'all' ? '0 orders shown' : `0 ${currentAdminPreset.replace('-', ' ')} orders shown`;
+}
+
+function exportAdminOrdersCsv() {
+    downloadTextFile('ruh-imperium-orders.csv', 'Order ID,Customer,Total,Status\n', 'text/csv;charset=utf-8');
+    showToast('Orders CSV exported.');
+}
+
+function filterAdminSubscribers() {
+    const count = document.getElementById('adminSubscriberCount');
+    if (count) count.textContent = '0 subscribers shown';
+}
+
+function copyAllSubscriberEmails() {
+    const emails = [];
+    navigator.clipboard?.writeText(emails.join(', '));
+    showToast('No subscriber emails available in local mode yet.');
+}
+
+function exportAdminSubscribersCsv() {
+    downloadTextFile('ruh-imperium-subscribers.csv', 'Email,Created At\n', 'text/csv;charset=utf-8');
+    showToast('Subscribers CSV exported.');
+}
+
+function initMobileDeepLinks() {
+    const productId = Number(new URLSearchParams(window.location.search).get('product'));
+    if (productId) setTimeout(() => openProductModal(productId), 300);
 }
 
 function initReveals() {
@@ -1056,7 +1610,7 @@ function initReveals() {
 }
 
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCheckout(); closeAuthModal(); closeMobileMenu(); closeCompareModal(); }
+    if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCheckout(); closeAuthModal(); closeMobileMenu(); closeCompareModal(); closeScentAssistant(); }
 });
 
 window.addEventListener('beforeinstallprompt', event => {
@@ -1082,5 +1636,10 @@ updateOrderSummary();
 prefillCheckout();
 renderCartItems();
 renderCompareBar();
+renderReviewProducts();
+renderCustomerReviews();
+initCheckoutHelpers();
 initReveals();
+initMobileDeepLinks();
+document.getElementById('backupImportInput')?.addEventListener('change', event => restoreAdminBackup(event.target.files?.[0]));
 setInstallButtonVisibility(false);

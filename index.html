@@ -91,7 +91,7 @@
             animation:waPulse 2s infinite; transition:transform 0.3s;
         }
         .install-btn {
-            position:fixed; bottom:102px; right:30px; z-index:9001;
+            position:fixed; bottom:174px; right:30px; z-index:9001;
             min-width:60px; height:60px; padding:0 18px;
             border:none; border-radius:999px; cursor:pointer;
             display:none; align-items:center; justify-content:center;
@@ -114,6 +114,54 @@
             white-space:nowrap; pointer-events:none; opacity:0; transition:opacity 0.3s;
         }
         .wa-float:hover + .wa-tooltip { opacity:1; }
+        .ai-float {
+            position:fixed; bottom:102px; right:30px; z-index:9002;
+            width:60px; height:60px; border:none; border-radius:50%; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            background:linear-gradient(135deg,#14243b 0%,#284568 100%);
+            color:var(--gold-light); font-size:12px; letter-spacing:1px; font-weight:800;
+            box-shadow:0 14px 34px rgba(18,36,62,0.3); transition:transform 0.25s, box-shadow 0.25s;
+        }
+        .ai-float:hover,.ai-float.active { transform:translateY(-2px); box-shadow:0 18px 42px rgba(18,36,62,0.4); }
+        .scent-assistant-panel {
+            position:fixed; right:28px; bottom:178px; width:min(92vw,390px); max-height:min(72vh,640px);
+            background:rgba(255,255,255,0.98); border:1px solid rgba(31,42,56,0.1);
+            border-radius:22px; box-shadow:0 30px 80px rgba(7,17,31,0.24); z-index:9100;
+            display:flex; flex-direction:column; overflow:hidden; opacity:0; pointer-events:none;
+            transform:translateY(18px) scale(0.98); transition:opacity 0.25s, transform 0.25s;
+        }
+        .scent-assistant-panel.open { opacity:1; pointer-events:auto; transform:translateY(0) scale(1); }
+        .scent-head {
+            padding:16px; background:linear-gradient(135deg,#13233a,#1f3754); color:var(--cream);
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+        }
+        .scent-head strong { font-family:'Playfair Display',serif; font-size:18px; display:block; }
+        .scent-head span { font-size:11px; color:rgba(253,246,232,0.62); letter-spacing:1px; }
+        .scent-head button { width:34px; height:34px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.08); color:var(--cream); border-radius:50%; cursor:pointer; }
+        .scent-messages { padding:14px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; min-height:230px; }
+        .scent-message { max-width:88%; padding:12px 14px; border-radius:16px; font-size:13px; line-height:1.55; white-space:pre-line; }
+        .scent-message p { margin:0; }
+        .scent-message.user { align-self:flex-end; background:#172844; color:var(--cream); border-bottom-right-radius:6px; }
+        .scent-message.assistant { align-self:flex-start; background:#f3f6fa; color:var(--text); border:1px solid rgba(31,42,56,0.08); border-bottom-left-radius:6px; }
+        .scent-message.loading { color:var(--text-light); font-style:italic; }
+        .scent-suggestions { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+        .scent-suggestion-card {
+            width:100%; border:1px solid rgba(31,42,56,0.1); background:#fff; color:var(--text);
+            display:grid; grid-template-columns:48px 1fr; gap:10px; align-items:center; padding:8px;
+            border-radius:14px; text-align:left; cursor:pointer;
+        }
+        .scent-suggestion-card img { width:48px; height:48px; object-fit:cover; border-radius:10px; background:var(--cream-2); }
+        .scent-suggestion-card strong { display:block; font-size:13px; color:var(--text); }
+        .scent-suggestion-card small { display:block; margin-top:3px; color:var(--text-light); font-size:11px; }
+        .scent-quick { padding:0 14px 12px; display:flex; gap:8px; overflow-x:auto; }
+        .scent-quick button {
+            flex:0 0 auto; border:1px solid rgba(185,144,75,0.22); background:#fff7e8; color:#7a5b25;
+            border-radius:999px; padding:8px 11px; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer;
+        }
+        .scent-form { display:grid; grid-template-columns:1fr auto; gap:8px; padding:12px 14px 14px; border-top:1px solid rgba(31,42,56,0.08); background:#fff; }
+        .scent-form input { min-width:0; border:1px solid rgba(31,42,56,0.12); border-radius:999px; padding:12px 14px; font-family:'Jost',sans-serif; color:var(--text); outline:none; }
+        .scent-form button { border:none; border-radius:999px; background:linear-gradient(135deg,var(--gold),var(--gold-light)); color:var(--dark); padding:0 16px; font-weight:800; cursor:pointer; }
+        .mobile-bottom-nav { display:none; }
         .announcement {
             background:#172130;
             color:var(--gold-pale); text-align:center;
@@ -494,7 +542,7 @@
         }
         .recently-viewed-section .products-grid { max-width:none; }
         .recently-viewed-empty {
-            text-align:center; padding:36px 24px; color:var(--text-light);
+            grid-column:1/-1; text-align:center; padding:36px 24px; color:var(--text-light);
             font-family:'Cormorant Garamond',serif; font-size:20px; font-style:italic;
             border:1px dashed rgba(118,247,255,0.18); border-radius:24px;
             background:rgba(255,255,255,0.28);
@@ -550,6 +598,26 @@
         .action-card p { font-size:14px; line-height:1.7; color:var(--text-light); margin-bottom:6px; }
         .action-card.dark p { color:rgba(253,246,232,0.58); }
         .action-card .btn-primary, .action-card .btn-outline { width:100%; text-align:center; padding-left:20px; padding-right:20px; }
+
+        .scent-finder-band {
+            padding:46px 40px; background:linear-gradient(180deg,#ffffff 0%,#f2f6fb 100%);
+            border-top:1px solid rgba(31,42,56,0.06); border-bottom:1px solid rgba(31,42,56,0.06);
+        }
+        .scent-finder-inner {
+            max-width:1200px; margin:0 auto; display:grid; grid-template-columns:0.9fr 1.4fr; gap:28px; align-items:center;
+        }
+        .scent-finder-copy span { color:var(--gold); font-size:11px; letter-spacing:2.6px; text-transform:uppercase; font-weight:700; }
+        .scent-finder-copy h2 { font-family:'Playfair Display',serif; color:var(--text); font-size:34px; line-height:1.15; margin:8px 0 10px; }
+        .scent-finder-copy p { color:var(--text-light); font-size:15px; line-height:1.7; max-width:420px; }
+        .tone-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+        .tone-card {
+            border:1px solid rgba(31,42,56,0.08); background:#fff; border-radius:18px; padding:16px; cursor:pointer;
+            text-align:left; display:flex; flex-direction:column; gap:8px; box-shadow:var(--shadow-card);
+            transition:transform 0.25s,border-color 0.25s,box-shadow 0.25s;
+        }
+        .tone-card:hover { transform:translateY(-3px); border-color:rgba(185,144,75,0.26); box-shadow:0 18px 38px rgba(18,28,44,0.1); }
+        .tone-card strong { font-family:'Playfair Display',serif; color:var(--text); font-size:17px; }
+        .tone-card span { color:var(--text-light); font-size:12px; line-height:1.5; }
 
         .use-section { padding:80px 40px; background:linear-gradient(180deg,#08111f 0%,#11223a 100%); overflow:hidden; }
         .use-section .section-title { color:var(--cream); }
@@ -1002,6 +1070,57 @@
             .orders-tools input, .orders-tools select{width:100%;}
             .admin-stats{grid-template-columns:1fr 1fr;}
             .setup-grid{grid-template-columns:1fr;}
+            body{padding-bottom:72px;}
+            .scent-finder-band{padding:34px 14px;}
+            .scent-finder-inner{grid-template-columns:1fr; gap:18px;}
+            .scent-finder-copy h2{font-size:28px;}
+            .tone-grid{grid-template-columns:repeat(2,1fr); gap:10px;}
+            .tone-card{border-radius:14px; padding:14px; min-height:118px;}
+            .shop-controls{flex-direction:column; align-items:stretch; gap:14px; margin-bottom:24px;}
+            .filter-bar{flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
+            .filter-btn{flex:0 0 auto; min-height:42px; border-radius:999px; white-space:nowrap;}
+            .sort-select{width:100%; min-height:44px; border-radius:999px; background:#fff;}
+            .price-range{width:100%; justify-content:space-between; background:#fff; border:1px solid rgba(31,42,56,0.08); border-radius:999px; padding:10px 12px;}
+            .price-range input{flex:1; min-width:80px;}
+            .product-card{border-radius:18px;}
+            .product-info{padding:16px;}
+            .product-actions{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+            .product-actions .compare-btn{grid-column:1/-1;}
+            .product-actions button{min-height:42px;}
+            .product-name,.product-desc,.tone-card strong,.tone-card span,.section-title,.hero-title,.hero-subtitle{overflow-wrap:anywhere;}
+            .product-stars{align-items:flex-start; flex-direction:column; gap:2px;}
+            .search-box{padding:0 16px;}
+            .search-box input{font-size:24px;}
+            .search-results{max-height:62vh; overflow-y:auto;}
+            .modal-overlay,.checkout-modal,.auth-modal,.orders-modal,.compare-modal{align-items:flex-end; padding:0;}
+            .modal-box,.checkout-box,.auth-box,.orders-box,.compare-box{max-height:92vh; border-radius:24px 24px 0 0;}
+            .modal-img{max-height:42vh;}
+            .modal-info{padding:28px 18px;}
+            .modal-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+            .modal-add-btn{grid-column:1/-1;}
+            .modal-wa-btn,.modal-share-btn{min-height:44px; border-radius:999px;}
+            .customization-box{border-radius:16px;}
+            .review-form{grid-template-columns:1fr; padding:0 14px;}
+            .review-form textarea{grid-column:auto;}
+            .review-form button{width:100%;}
+            .ai-float{right:16px; bottom:146px; width:54px; height:54px;}
+            .scent-assistant-panel{right:10px; left:10px; bottom:74px; width:auto; max-height:76vh; border-radius:22px 22px 0 0;}
+            .install-btn{bottom:210px;}
+            .mobile-bottom-nav{
+                position:fixed; left:0; right:0; bottom:0; z-index:8900; display:grid; grid-template-columns:repeat(5,1fr);
+                padding:7px 8px calc(7px + env(safe-area-inset-bottom)); background:rgba(255,255,255,0.98);
+                border-top:1px solid rgba(31,42,56,0.1); box-shadow:0 -12px 32px rgba(18,28,44,0.12); backdrop-filter:blur(16px);
+            }
+            .mobile-bottom-nav button{
+                border:none; background:transparent; color:var(--text); font-size:10px; letter-spacing:0.6px;
+                display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-height:48px; font-family:'Jost',sans-serif;
+            }
+            .mobile-bottom-nav strong{font-size:18px; line-height:1; font-weight:500;}
+            .mobile-bottom-nav .mobile-cart-tab{position:relative;}
+            .mobile-bottom-nav .mobile-cart-count{
+                position:absolute; top:4px; right:22%; min-width:16px; height:16px; padding:0 4px; border-radius:999px;
+                background:var(--red-accent); color:#fff; font-size:9px; display:flex; align-items:center; justify-content:center;
+            }
         }
         @media(max-width:480px){
             html,body{overflow-x:hidden;}
@@ -1039,6 +1158,8 @@
             .products-grid,.shop-products-grid{grid-template-columns:1fr; gap:14px;}
             .cat-grid,.notes-grid,.trust-grid,.use-grid{grid-template-columns:1fr;}
             .use-card.large{grid-column:span 1;}
+            .tone-grid{grid-template-columns:1fr;}
+            .scent-finder-copy h2{font-size:25px;}
             .story-text{padding:32px 16px;}
             .process-step,.review-card,.action-card,.action-card.dark,.order-card,.subscriber-card{padding-left:16px; padding-right:16px;}
             .compare-bar{
@@ -1054,6 +1175,11 @@
             .compare-items,.compare-actions{width:100%;}
             .compare-actions button{flex:1;}
             .compare-grid{grid-template-columns:1fr;}
+            .ai-float{right:16px; bottom:140px; width:52px; height:52px;}
+            .wa-float{bottom:78px;}
+            .wa-tooltip{display:none;}
+            .install-btn{bottom:196px;}
+            .scent-message{max-width:94%;}
         }
         @media (hover:none) and (pointer:coarse){
             html,body{
@@ -1246,6 +1372,35 @@
 <button class="install-btn" id="installAppBtn" onclick="installPWA()">Install App</button>
 <a class="wa-float" href="https://wa.me/919785854770?text=Hello!%20I%20am%20interested%20in%20your%20attars.%20Please%20help%20me." target="_blank" title="Chat on WhatsApp">💬</a>
 <div class="wa-tooltip">💬 Chat with us on WhatsApp</div>
+<button class="ai-float" id="aiScentBtn" type="button" onclick="toggleScentAssistant()" title="AI scent assistant">AI</button>
+<section class="scent-assistant-panel" id="scentAssistantPanel" aria-label="AI scent assistant">
+    <div class="scent-head">
+        <div>
+            <strong>Scent Assistant</strong>
+            <span>OpenAI powered product matching</span>
+        </div>
+        <button type="button" onclick="closeScentAssistant()">✕</button>
+    </div>
+    <div class="scent-messages" id="scentMessages"></div>
+    <div class="scent-quick">
+        <button type="button" onclick="askScentAssistantPreset('fresh and clean for office')">Fresh</button>
+        <button type="button" onclick="askScentAssistantPreset('romantic floral tone')">Floral</button>
+        <button type="button" onclick="askScentAssistantPreset('woody earthy long lasting')">Woody</button>
+        <button type="button" onclick="askScentAssistantPreset('sweet vanilla gourmand')">Sweet</button>
+        <button type="button" onclick="askScentAssistantPreset('gift under 2000 rupees')">Gift</button>
+    </div>
+    <form class="scent-form" onsubmit="sendScentMessage(event)">
+        <input id="scentInput" type="text" placeholder="Describe your tone or occasion">
+        <button type="submit">Send</button>
+    </form>
+</section>
+<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <button type="button" onclick="showHome()"><strong>⌂</strong><span>Home</span></button>
+    <button type="button" onclick="filterShop('all')"><strong>◫</strong><span>Shop</span></button>
+    <button type="button" onclick="openSearch()"><strong>⌕</strong><span>Search</span></button>
+    <button type="button" onclick="openScentAssistant()"><strong>AI</strong><span>Find</span></button>
+    <button class="mobile-cart-tab" type="button" onclick="openCart()"><strong>🛒</strong><span>Cart</span><span class="mobile-cart-count" id="mobileCartBadge">0</span></button>
+</nav>
 <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" onclick="closeMobileMenu()"></div>
 <aside class="mobile-menu" id="mobileMenu">
     <div class="mobile-menu-head">
@@ -1255,6 +1410,7 @@
     <div class="mobile-menu-links">
         <a onclick="closeMobileMenu();showHome()">Home</a>
         <a onclick="closeMobileMenu();filterShop('all')">Shop</a>
+        <a onclick="closeMobileMenu();openScentAssistant()">AI Scent Finder</a>
         <a onclick="closeMobileMenu();goSection('wellness')">Wellness</a>
         <a onclick="closeMobileMenu();goSection('gifting')">Gifting</a>
         <a onclick="closeMobileMenu();goSection('story')">Our Story</a>
@@ -1573,6 +1729,7 @@
             <button class="icon-btn" id="ordersBtn" title="Orders" onclick="openOrdersModal()" style="display:none">📦</button>
             <span id="topAdminBadge" class="top-admin-badge">Admin</span>
             <button class="icon-btn account-pill" title="Account" onclick="openAuthModal()"><strong id="accountInitial">A</strong><span class="account-pill-text"><span id="accountLabel">Account</span><span id="accountAdminBadge" class="admin-badge">Admin</span></span></button>
+            <button class="icon-btn" title="AI Scent Finder" onclick="openScentAssistant()">AI</button>
             <button class="icon-btn" title="Search" onclick="openSearch()">🔍</button>
             <button class="currency-chip-btn" id="currencyChipBtn" type="button" onclick="cycleCurrency()">INR</button>
             <select class="currency-selector" id="currencySelector" onchange="updateCurrency(this.value)">
@@ -1609,6 +1766,25 @@
             <div class="hero-btns">
                 <button class="btn-outline" onclick="filterShop('all')">Explore Collection</button>
                 <button class="btn-outline" onclick="goSection('story')">Enter the Story</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI SCENT FINDER SETUP -->
+    <section class="scent-finder-band" id="scent-finder">
+        <div class="scent-finder-inner">
+            <div class="scent-finder-copy reveal">
+                <span>Find Your Tone</span>
+                <h2>Match your mood to the right fragrance</h2>
+                <p>Choose a tone and the assistant will recommend products from the Ruh Imperium catalog.</p>
+            </div>
+            <div class="tone-grid reveal">
+                <button class="tone-card" type="button" onclick="askScentAssistantPreset('fresh clean daily office fragrance')"><strong>Fresh Daily</strong><span>Clean, cooling, easy for work and hot days</span></button>
+                <button class="tone-card" type="button" onclick="askScentAssistantPreset('romantic floral soft long lasting')"><strong>Romantic Floral</strong><span>Rose, mogra, jasmine and soft celebration notes</span></button>
+                <button class="tone-card" type="button" onclick="askScentAssistantPreset('woody earthy deep attar')"><strong>Woody Earthy</strong><span>Mitti, sandalwood, oud and grounding attars</span></button>
+                <button class="tone-card" type="button" onclick="askScentAssistantPreset('sweet vanilla gourmand perfume')"><strong>Sweet Warm</strong><span>Vanilla, caramel, amber and cozy gourmand profiles</span></button>
+                <button class="tone-card" type="button" onclick="askScentAssistantPreset('bold party night fragrance')"><strong>Party Bold</strong><span>Strong trail, musky depth and evening confidence</span></button>
+                <button class="tone-card" type="button" onclick="askScentAssistantPreset('gift perfume under 2000 rupees')"><strong>Gift Ready</strong><span>Safe picks for birthdays, festivals and first-time buyers</span></button>
             </div>
         </div>
     </section>

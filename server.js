@@ -26,6 +26,8 @@ const GOOGLE_ANALYTICS_ID = String(process.env.GOOGLE_ANALYTICS_ID || '').trim()
 const GOOGLE_SITE_VERIFICATION = String(process.env.GOOGLE_SITE_VERIFICATION || '').trim();
 const RECAPTCHA_SITE_KEY = String(process.env.RECAPTCHA_SITE_KEY || '').trim();
 const RECAPTCHA_SECRET_KEY = String(process.env.RECAPTCHA_SECRET_KEY || '').trim();
+const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').trim();
+const OPENAI_MODEL = String(process.env.OPENAI_MODEL || 'gpt-5-mini').trim();
 const SMTP_HOST = String(process.env.SMTP_HOST || '').trim();
 const SMTP_PORT = String(process.env.SMTP_PORT || '').trim();
 const SMTP_USER = String(process.env.SMTP_USER || '').trim();
@@ -722,6 +724,92 @@ function buildSubscribersCsv(subscribers) {
     return [header.map(csvEscape).join(','), ...lines].join('\n');
 }
 
+function normalizeCatalogProduct(product) {
+    return {
+        id: product.id,
+        name: product.name,
+        img: product.img,
+        cat: product.cat,
+        notes: product.notes,
+        price: product.price,
+        oldPrice: product.oldPrice || null,
+        stars: product.stars,
+        reviews: product.reviews,
+        badge: product.badge || '',
+        sizes: product.sizes || [],
+        desc: product.desc,
+        tags: product.tags || []
+    };
+}
+
+function productSearchBlob(product) {
+    return [
+        product.name,
+        product.cat,
+        product.notes,
+        product.desc,
+        ...(product.tags || [])
+    ].join(' ').toLowerCase();
+}
+
+function scoreProductForPrompt(product, prompt) {
+    const text = String(prompt || '').toLowerCase();
+    const blob = productSearchBlob(product);
+    let score = 0;
+    const directTerms = text.split(/[^a-z0-9]+/i).filter(term => term.length > 2);
+    directTerms.forEach(term => {
+        if (blob.includes(term)) score += 2;
+    });
+    const toneGroups = [
+        { terms: ['fresh', 'cool', 'clean', 'summer', 'office', 'light', 'aqua'], matches: ['fresh', 'summer', 'office', 'green apple', 'tommy girl', 'hawas', 'khus'] },
+        { terms: ['floral', 'flower', 'romantic', 'rose', 'jasmine', 'mogra', 'soft'], matches: ['floral', 'rose', 'jasmine', 'mogra', 'gulab'] },
+        { terms: ['woody', 'earthy', 'deep', 'mitti', 'rain', 'sandal', 'oud'], matches: ['woody', 'earthy', 'mitti', 'sandal', 'oud', 'khus'] },
+        { terms: ['sweet', 'vanilla', 'caramel', 'gourmand', 'warm', 'cozy'], matches: ['vanilla', 'caramel', 'gourmand', 'eclair', 'apple'] },
+        { terms: ['gift', 'gifting', 'birthday', 'wedding', 'set', 'festival'], matches: ['gifting', 'festival', 'discovery', 'set'] },
+        { terms: ['party', 'bold', 'strong', 'night', 'date', 'winter'], matches: ['party', 'winter', 'musk', 'oud', 'oriental', 'amber'] }
+    ];
+    toneGroups.forEach(group => {
+        if (group.terms.some(term => text.includes(term))) {
+            group.matches.forEach(match => {
+                if (blob.includes(match)) score += 4;
+            });
+        }
+    });
+    if (product.bestseller) score += 1;
+    if (product.badge === 'NEW') score += 0.5;
+    return score;
+}
+
+function getLocalScentMatches(prompt, limit = 4) {
+    return productCatalog
+        .map(product => ({ product, score: scoreProductForPrompt(product, prompt) }))
+        .sort((a, b) => b.score - a.score || b.product.stars - a.product.stars || a.product.price - b.product.price)
+        .slice(0, limit)
+        .map(entry => normalizeCatalogProduct(entry.product));
+}
+
+function buildLocalScentReply(message, suggestions) {
+    if (!suggestions.length) {
+        return 'I could not find a perfect match yet. Try fresh, floral, woody, sweet, office, party, gifting, summer, or winter.';
+    }
+    const tone = String(message || '').trim() || 'your scent tone';
+    const lines = suggestions.slice(0, 3).map(product =>
+        `${product.name}: ${product.notes} profile, ${product.cat}, ${currency(product.price)}.`
+    );
+    return `For ${tone}, I would start with these Ruh Imperium picks:\n${lines.join('\n')}\nOpen any recommendation to compare notes, size, and price.`;
+}
+
+function extractResponseText(data) {
+    if (typeof data?.output_text === 'string' && data.output_text.trim()) return data.output_text.trim();
+    const parts = [];
+    (data?.output || []).forEach(item => {
+        (item.content || []).forEach(content => {
+            if (typeof content.text === 'string') parts.push(content.text);
+        });
+    });
+    return parts.join('\n').trim();
+}
+
 function buildOrderDocumentHtml(order, type) {
     const documentTitle = type === 'packing-slip' ? 'Packing Slip' : 'Invoice';
     const address = order.shippingAddress || {};
@@ -980,6 +1068,78 @@ async function handleApi(req, res, pathname, url) {
                 paymentReason
             }
         });
+        return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/ai-scent-chat') {
+        const body = await readBody(req);
+        const message = String(body.message || '').trim().slice(0, 800);
+        const tone = String(body.tone || '').trim().slice(0, 120);
+        const budget = String(body.budget || '').trim().slice(0, 80);
+        const promptText = [message, tone, budget].filter(Boolean).join(' ');
+        if (!promptText) {
+            sendJson(res, 400, { error: 'Tell the scent assistant what tone, mood, or occasion you want.' });
+            return;
+        }
+
+        const suggestions = getLocalScentMatches(promptText, 4);
+        if (!OPENAI_API_KEY) {
+            sendJson(res, 200, {
+                reply: buildLocalScentReply(promptText, suggestions),
+                suggestions,
+                source: 'local'
+            });
+            return;
+        }
+
+        const catalogLines = productCatalog.map(product => (
+            `${product.id}. ${product.name} | ${product.cat} | notes: ${product.notes} | tags: ${(product.tags || []).join(', ')} | price: ₹${product.price} | ${product.desc}`
+        )).join('\n');
+
+        try {
+            const aiResponse = await fetch('https://api.openai.com/v1/responses', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${OPENAI_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: OPENAI_MODEL,
+                    instructions: [
+                        'You are Ruh Imperium Scent Assistant for an Indian attar and perfume store.',
+                        'Recommend products only from the provided catalog. Match the customer by tone, mood, season, occasion, budget, and note family.',
+                        'Be concise, warm, and practical. Give 2-3 product picks with a short reason and one buying tip.',
+                        'Do not make medical claims. Do not invent stock, discounts, or product details.'
+                    ].join(' '),
+                    input: `Customer request: ${promptText}\n\nCatalog:\n${catalogLines}`,
+                    max_output_tokens: 420
+                })
+            });
+
+            const data = await aiResponse.json().catch(() => ({}));
+            if (!aiResponse.ok) {
+                sendJson(res, 200, {
+                    reply: buildLocalScentReply(promptText, suggestions),
+                    suggestions,
+                    source: 'local',
+                    fallbackReason: data.error?.message || 'OpenAI response was unavailable.'
+                });
+                return;
+            }
+
+            sendJson(res, 200, {
+                reply: extractResponseText(data) || buildLocalScentReply(promptText, suggestions),
+                suggestions,
+                source: 'openai'
+            });
+        } catch (error) {
+            sendJson(res, 200, {
+                reply: buildLocalScentReply(promptText, suggestions),
+                suggestions,
+                source: 'local',
+                fallbackReason: error.message || 'OpenAI response was unavailable.'
+            });
+        }
         return;
     }
 
