@@ -34,11 +34,17 @@
         gtag('config', window.RUH_CONFIG.analyticsId);
       }
     </script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
     <script>
       window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+      if (!['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+        ['/_vercel/speed-insights/script.js', '/_vercel/insights/script.js'].forEach(src => {
+          const script = document.createElement('script');
+          script.defer = true;
+          script.src = src;
+          document.head.appendChild(script);
+        });
+      }
     </script>
-    <script defer src="/_vercel/insights/script.js"></script>
     <style>
         :root {
             --gold: #b9904b;
