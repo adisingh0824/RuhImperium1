@@ -1670,7 +1670,19 @@
                     </div>
                     <p style="font-size:12px;color:rgba(31,42,56,0.62);text-align:center;">OTP sent to your phone number</p>
                 </div>
+                <div id="authRecaptchaWrapper" style="display:none;margin-top:8px;text-align:center;">
+                    <div id="authRecaptcha"></div>
+                </div>
                 <div class="security-note">reCAPTCHA and OTP verification are ready. Add your live keys in deployment env vars.</div>
+                <div id="authDebug" style="display:none;margin-top:10px;background:#0f1720;color:#fff;padding:8px;border-radius:6px;font-size:12px;white-space:pre-wrap;"></div>
+                <div id="authSetPasswordSection" style="display:none;margin-top:12px;">
+                    <div class="form-group">
+                        <label>Set a password</label>
+                        <input type="password" id="authSetPassword" placeholder="Choose a secure password" minlength="6">
+                    </div>
+                    <button class="place-order-btn" type="button" id="authSetPasswordBtn" style="margin-top:6px;">Set Password</button>
+                    <p style="font-size:12px;color:rgba(31,42,56,0.62);text-align:center;margin-top:8px;">You can sign in with this password next time.</p>
+                </div>
                 <div style="display:flex;gap:8px;">
                     <button class="place-order-btn" type="button" id="authSubmitBtn" onclick="handleAuth()" style="position:relative;z-index:2;flex:1;">Sign In</button>
                     <button class="place-order-btn" type="button" id="authSendOtpBtn" onclick="requestAuthOtp()" style="position:relative;z-index:2;flex:1;display:none;">Send OTP</button>

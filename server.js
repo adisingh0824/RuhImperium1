@@ -1048,6 +1048,7 @@ async function handleApi(req, res, pathname, url) {
         sendJson(res, 200, {
             backendReady: true,
             razorpayKeyId: RAZORPAY_KEY_ID,
+            recaptchaSiteKey: RECAPTCHA_SITE_KEY,
             adminEnabled: Boolean(ADMIN_EMAIL),
             adminEmail: ADMIN_EMAIL,
             otpDelivery: getOtpDeliveryMode(),
@@ -1069,6 +1070,22 @@ async function handleApi(req, res, pathname, url) {
             }
         });
         return;
+    }
+
+    // reCAPTCHA verification helper (server-side)
+    async function verifyRecaptchaToken(token, remoteIp) {
+        if (!RECAPTCHA_SECRET_KEY) return { ok: true, reason: 'no-secret' };
+        try {
+            const res = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `secret=${encodeURIComponent(RECAPTCHA_SECRET_KEY)}&response=${encodeURIComponent(token)}&remoteip=${encodeURIComponent(remoteIp || '')}`
+            });
+            const data = await res.json();
+            return data;
+        } catch (err) {
+            return { success: false, error: err.message || 'recaptcha-failed' };
+        }
     }
 
     if (req.method === 'POST' && pathname === '/api/ai-scent-chat') {
@@ -1202,31 +1219,62 @@ async function handleApi(req, res, pathname, url) {
         const body = await readBody(req);
         const email = String(body.email || '').trim().toLowerCase();
         const phone = String(body.phone || '').trim();
+        const createIfMissing = Boolean(body.createIfMissing);
         if (!email && !phone) {
             sendJson(res, 400, { error: 'Email or phone is required.' });
             return;
         }
         const users = await readUsers();
         const user = users.find(entry => (email && entry.email === email) || (phone && entry.phone === phone));
-        if (!user) {
-            sendJson(res, 404, { error: 'No account found for that email or phone.' });
-            return;
+        // If recaptcha configured, validate token
+        if (RECAPTCHA_SITE_KEY && RECAPTCHA_SECRET_KEY) {
+            const token = String(body.recaptcha || '').trim();
+            if (!token) {
+                sendJson(res, 400, { error: 'Please complete the captcha challenge.' });
+                return;
+            }
+            const verification = await verifyRecaptchaToken(token, req.socket.remoteAddress || '');
+            if (!verification || !verification.success) {
+                sendJson(res, 400, { error: 'Captcha verification failed.' });
+                return;
+            }
+        }
+        let targetUser = user;
+        if (!targetUser) {
+            if (createIfMissing) {
+                // create a lightweight user record for OTP signup
+                const newUser = {
+                    id: crypto.randomUUID(),
+                    name: email ? (email.split('@')[0] || 'Guest') : (phone || 'Guest'),
+                    email: email || '',
+                    phone: phone || '',
+                    passwordSalt: '',
+                    passwordHash: '',
+                    createdAt: new Date().toISOString()
+                };
+                users.push(newUser);
+                await writeUsers(users);
+                targetUser = newUser;
+            } else {
+                sendJson(res, 404, { error: 'No account found for that email or phone.' });
+                return;
+            }
         }
         const code = String(Math.floor(1000 + Math.random() * 9000));
         const otps = (await readOtps()).filter(entry => entry.userId !== user.id && entry.expiresAt > Date.now());
         otps.push({
-            userId: user.id,
+            userId: targetUser.id,
             purpose: 'login',
-            email: user.email,
-            phone: user.phone,
+            email: targetUser.email,
+            phone: targetUser.phone,
             codeHash: crypto.createHash('sha256').update(code).digest('hex'),
             expiresAt: Date.now() + 5 * 60 * 1000
         });
         await writeOtps(otps);
-        const delivery = await sendOtpMessage({ phone: user.phone || phone, otp: code });
+        const delivery = await sendOtpMessage({ phone: targetUser.phone || phone, otp: code });
         sendJson(res, 200, {
             message: delivery.mode === 'sms'
-                ? `OTP sent to ${user.phone || phone}.`
+                ? `OTP sent to ${targetUser.phone || phone}.`
                 : `OTP generated for ${email || phone}. SMS is not configured yet.`,
             identifier: email || phone,
             delivery: delivery.mode,
@@ -1264,8 +1312,35 @@ async function handleApi(req, res, pathname, url) {
         await writeOtps(otps.filter(entry => entry.userId !== user.id));
         sendJson(res, 200, {
             user: sanitizeUser(user),
-            token: createToken(user)
+            token: createToken(user),
+            needsPassword: !(user.passwordHash && String(user.passwordHash).length)
         });
+        return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/auth/set-password') {
+        const authUser = await getAuthUser(req);
+        if (!authUser) {
+            sendJson(res, 401, { error: 'Authentication required.' });
+            return;
+        }
+        const body = await readBody(req);
+        const password = String(body.password || '');
+        if (password.length < 6) {
+            sendJson(res, 400, { error: 'Password must be at least 6 characters.' });
+            return;
+        }
+        const users = await readUsers();
+        const user = users.find(u => u.id === authUser.id);
+        if (!user) {
+            sendJson(res, 404, { error: 'User not found.' });
+            return;
+        }
+        const pwd = hashPassword(password);
+        user.passwordSalt = pwd.salt;
+        user.passwordHash = pwd.hash;
+        await writeUsers(users);
+        sendJson(res, 200, { success: true });
         return;
     }
 

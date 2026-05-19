@@ -39,6 +39,7 @@ let shippingProviders = [];
 let selectedShippingProvider = '';
 let authMode = 'login';
 let authOtpState = null;
+let authRecaptchaWidgetId = null;
 
 function loadStoredState() {
     try {
@@ -175,6 +176,21 @@ function showDetailedError(response, intent) {
     } catch (e) {}
     const short = response && response.error ? String(response.error).split('\n')[0] : 'Request failed';
     showToast(`${short} — open console for details`);
+    try { populateAuthDebug(response, intent); } catch (e) {}
+}
+
+function populateAuthDebug(response, intent) {
+    const panel = document.getElementById('authDebug');
+    if (!panel) return;
+    const details = Object.assign({}, response || {});
+    if (!details.__tried && details.__failed) details.__tried = [details.__failed];
+    const payload = {
+        intent: intent || '',
+        time: new Date().toISOString(),
+        details
+    };
+    panel.textContent = JSON.stringify(payload, null, 2);
+    panel.style.display = 'block';
 }
 
 async function loadServerConfig() {
@@ -185,11 +201,43 @@ async function loadServerConfig() {
             if (config.razorpayKeyId) {
                 document.getElementById('payRazorpayBtn')?.classList.remove('disabled');
             }
+            // initialize reCAPTCHA if provided by server
+            if (config.recaptchaSiteKey) {
+                window.RUH_CONFIG = window.RUH_CONFIG || {};
+                window.RUH_CONFIG.recaptchaSiteKey = config.recaptchaSiteKey;
+                initRecaptcha(config.recaptchaSiteKey);
+            }
             updateCheckoutPaymentUI();
         }
     } catch (error) {
         console.warn('Server config unavailable:', error.message || error);
     }
+}
+
+function initRecaptcha(siteKey) {
+    if (!siteKey) return;
+    // load grecaptcha script if not present
+    if (!window.grecaptcha) {
+        const s = document.createElement('script');
+        s.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
+        s.async = true;
+        s.defer = true;
+        s.onload = () => { renderAuthRecaptcha(siteKey); };
+        document.head.appendChild(s);
+        return;
+    }
+    renderAuthRecaptcha(siteKey);
+}
+
+function renderAuthRecaptcha(siteKey) {
+    try {
+        const container = document.getElementById('authRecaptcha');
+        if (!container || !window.grecaptcha) return;
+        container.innerHTML = '';
+        authRecaptchaWidgetId = window.grecaptcha.render(container, { 'sitekey': siteKey });
+        const wrapper = document.getElementById('authRecaptchaWrapper');
+        if (wrapper) wrapper.style.display = 'block';
+    } catch (e) { console.warn('recaptcha render failed', e); }
 }
 
 async function loadShippingProviders() {
@@ -947,7 +995,7 @@ async function processBackendCodOrder(details) {
 }
 
 async function processBackendRazorpayOrder(details) {
-    const response = await fetchJson('/api/payments/razorpay/order', { method: 'POST', body: buildApiOrderPayload(details) });
+    const response = await fetchJsonWithFallback('/api/payments/razorpay/order', { method: 'POST', body: buildApiOrderPayload(details) });
     if (response.error) {
         showToast(response.error || 'Unable to initialize the payment.');
         return;
@@ -965,7 +1013,7 @@ async function processBackendRazorpayOrder(details) {
         order_id: response.orderId,
         image: 'gulabattar.png',
         handler: async (paymentResponse) => {
-            const verifyResponse = await fetchJson('/api/payments/razorpay/verify', {
+            const verifyResponse = await fetchJsonWithFallback('/api/payments/razorpay/verify', {
                 method: 'POST',
                 body: {
                     orderId: paymentResponse.razorpay_order_id,
@@ -1028,14 +1076,15 @@ function processRazorpayOrder(details) {
         showToast('Razorpay failed to load. Please try again.');
         return;
     }
-    if (!RAZORPAY_KEY_ID || RAZORPAY_KEY_ID.includes('replace_with_your_key')) {
-        showToast('Add your Razorpay key in app.js before using online payments.');
+    const clientKey = (serverConfig.razorpayKeyId && serverConfig.razorpayKeyId.length) ? serverConfig.razorpayKeyId : RAZORPAY_KEY_ID;
+    if (!clientKey || clientKey.includes('replace_with_your_key')) {
+        showToast('Razorpay is not configured. Add your key to the server env or client app.');
         return;
     }
     const pricing = getOrderPricing();
     const order = createOrder(details, 'Razorpay');
     const options = {
-        key: RAZORPAY_KEY_ID,
+        key: clientKey,
         amount: pricing.total * 100,
         currency: 'INR',
         name: 'Ruh Imperium',
@@ -1264,6 +1313,14 @@ async function verifyAuthOtp() {
         persistAuthToken();
         updateAccountUI();
         prefillCheckout();
+        // if server indicates user needs a password (OTP signup), show set-password UI
+        if (response.needsPassword) {
+            document.getElementById('authOtpSection').style.display = 'none';
+            document.getElementById('authVerifyOtpBtn').style.display = 'none';
+            document.getElementById('authSetPasswordSection').style.display = 'block';
+            document.getElementById('authSetPassword').focus();
+            return;
+        }
         closeAuthModal();
         showToast('Verified successfully!');
         // clear UI
@@ -1370,8 +1427,17 @@ async function requestAuthOtp() {
         showToast('Enter email or phone to receive OTP.');
         return;
     }
+    // collect recaptcha token if available
+    let recaptchaToken = '';
+    if (authRecaptchaWidgetId !== null && window.grecaptcha) {
+        try { recaptchaToken = window.grecaptcha.getResponse(authRecaptchaWidgetId) || ''; } catch (e) { recaptchaToken = ''; }
+    }
     if (serverConfig.backendReady) {
-        const response = await fetchJsonWithFallback('/api/auth/request-otp', { method: 'POST', body: { email, phone } });
+        if (serverConfig.health?.recaptchaConfigured && !recaptchaToken) {
+            showToast('Please complete the captcha challenge before requesting OTP.');
+            return;
+        }
+        const response = await fetchJsonWithFallback('/api/auth/request-otp', { method: 'POST', body: { email, phone, createIfMissing: authMode === 'signup', recaptcha: recaptchaToken } });
         if (response.error) {
             showToast(response.error || 'Unable to send OTP.');
             return;
@@ -1409,6 +1475,11 @@ function initAuthBindings() {
         try { verifyBtn.removeAttribute('onclick'); } catch (e) {}
         verifyBtn.addEventListener('click', verifyAuthOtp);
     }
+    const setPwdBtn = document.getElementById('authSetPasswordBtn');
+    if (setPwdBtn) {
+        try { setPwdBtn.removeAttribute('onclick'); } catch (e) {}
+        setPwdBtn.addEventListener('click', setAuthPassword);
+    }
     if (authForm) {
         authForm.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -1423,15 +1494,44 @@ function initAuthBindings() {
     }
 }
 
+async function setAuthPassword() {
+    const pwd = (document.getElementById('authSetPassword').value || '').trim();
+    if (!pwd || pwd.length < 6) { showToast('Password must be at least 6 characters.'); return; }
+    if (!serverConfig.backendReady) {
+        showToast('Server not available to set password.');
+        return;
+    }
+    const response = await fetchJsonWithFallback('/api/auth/set-password', { method: 'POST', body: { password: pwd } });
+    if (response.error) {
+        showDetailedError(response, '/api/auth/set-password');
+        return;
+    }
+    showToast('Password saved. You can now sign in with email and password.');
+    document.getElementById('authSetPasswordSection').style.display = 'none';
+    closeAuthModal();
+}
+
 function openAuthModal() {
     renderAuthView();
     document.getElementById('authModal').classList.add('open');
     document.body.style.overflow = 'hidden';
+    try {
+        const panel = document.getElementById('authDebug');
+        if (panel) {
+            if (panel.textContent && panel.textContent.trim()) {
+                panel.style.display = 'block';
+                panel.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+    } catch (e) {}
 }
 
 function closeAuthModal() {
     document.getElementById('authModal').classList.remove('open');
     document.body.style.overflow = '';
+    try { const panel = document.getElementById('authDebug'); if (panel) panel.style.display = 'none'; } catch (e) {}
 }
 
 function renderAuthView() {
