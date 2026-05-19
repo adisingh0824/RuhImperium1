@@ -1413,14 +1413,14 @@ async function handleApi(req, res, pathname, url) {
             : total;
         const balanceDue = Math.max(total - depositAmount, 0);
         const receipt = `ruh_${Date.now()}`;
-        const order = await createRazorpayOrder(depositAmount * 100, receipt, {
+        const razorpayOrder = await createRazorpayOrder(depositAmount * 100, receipt, {
             customerEmail: authUser.email,
             customerPhone: authUser.phone,
             coupon: coupon ? coupon.code : 'None',
             paymentPlan
         });
         const orders = await readOrders();
-        orders.push(buildOrderRecord({
+        const internalOrder = buildOrderRecord({
             user: authUser,
             customer: body.customer || {},
             pricedCart,
@@ -1435,14 +1435,17 @@ async function handleApi(req, res, pathname, url) {
             paymentMethod: paymentPlan === 'partial-cod' ? 'Partial COD' : 'Razorpay',
             paymentStatus: 'created',
             orderStatus: 'pending',
-            razorpayOrderId: order.id
-        }));
+            razorpayOrderId: razorpayOrder.id
+        });
+        orders.push(internalOrder);
         await writeOrders(orders);
         sendJson(res, 200, {
             keyId: RAZORPAY_KEY_ID,
-            orderId: order.id,
-            amount: order.amount,
-            currency: order.currency
+            orderId: razorpayOrder.id,
+            razorpayOrderId: razorpayOrder.id,
+            backendOrderId: internalOrder.id,
+            amount: razorpayOrder.amount,
+            currency: razorpayOrder.currency
         });
         return;
     }
