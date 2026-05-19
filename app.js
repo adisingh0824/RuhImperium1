@@ -126,6 +126,57 @@ async function fetchJson(path, options = {}) {
     }
 }
 
+// Try the given path and fallback to common alternatives when a 404 is returned.
+async function fetchJsonWithFallback(path, options = {}) {
+    const tried = [];
+    const makeAlternatives = (p) => {
+        const alts = [p];
+        try {
+            const last = p.split('/').pop();
+            if (p.includes('/api/auth/')) {
+                alts.push(p.replace('/api/auth/', '/api/'));
+                alts.push('/' + last);
+            } else if (p.includes('/api/')) {
+                alts.push(p.replace('/api/', '/api/auth/'));
+                alts.push('/' + last);
+            } else {
+                alts.push(`/api/${last}`);
+                alts.push(`/api/auth/${last}`);
+            }
+        } catch (e) {}
+        // ensure unique and keep original order
+        return Array.from(new Set(alts));
+    };
+
+    const alternatives = makeAlternatives(path);
+    for (const p of alternatives) {
+        tried.push(p);
+        try {
+            const config = { headers: getAuthHeaders(), ...options };
+            if (config.body && typeof config.body !== 'string') config.body = JSON.stringify(config.body);
+            const res = await fetch(p, config);
+            const text = await res.text();
+            if (res.status === 404) {
+                // try next
+                continue;
+            }
+            try { return { ...(JSON.parse(text || '{}')), __status: res.status }; } catch (e) { return { error: text || 'Unexpected response', __status: res.status }; }
+        } catch (err) {
+            // network error — stop and return helpful message
+            return { error: `Network error calling ${p}: ${err.message || err}`, __failed: p };
+        }
+    }
+    return { error: `NOT_FOUND: tried ${tried.join(', ')}`, __tried: tried };
+}
+
+function showDetailedError(response, intent) {
+    try {
+        console.error('API failure:', intent || '', response);
+    } catch (e) {}
+    const short = response && response.error ? String(response.error).split('\n')[0] : 'Request failed';
+    showToast(`${short} — open console for details`);
+}
+
 async function loadServerConfig() {
     try {
         const config = await fetchJson('/api/config', { method: 'GET' });
@@ -1202,9 +1253,9 @@ async function verifyAuthOtp() {
     if (serverConfig.backendReady) {
         const email = (document.getElementById('authEmail').value || '').trim().toLowerCase();
         const phone = (document.getElementById('authPhone').value || '').trim();
-        const response = await fetchJson('/api/auth/verify-otp', { method: 'POST', body: { email, phone, otp: otpCode } });
+        const response = await fetchJsonWithFallback('/api/auth/verify-otp', { method: 'POST', body: { email, phone, otp: otpCode } });
         if (response.error) {
-            showToast(response.error || 'OTP verification failed.');
+            showDetailedError(response, '/api/auth/verify-otp');
             return;
         }
         currentUser = response.user;
@@ -1253,9 +1304,9 @@ async function handleAuth() {
         }
         // Signup flow
         if (serverConfig.backendReady) {
-            const response = await fetchJson('/api/auth/signup', { method: 'POST', body: { name, email, phone, password } });
+            const response = await fetchJsonWithFallback('/api/auth/signup', { method: 'POST', body: { name, email, phone, password } });
             if (response.error) {
-                showToast(response.error || 'Unable to create account.');
+                showDetailedError(response, '/api/auth/signup');
                 return;
             }
             currentUser = response.user;
@@ -1281,9 +1332,9 @@ async function handleAuth() {
     }
     // Login flow (password)
     if (serverConfig.backendReady) {
-        const response = await fetchJson('/api/auth/login', { method: 'POST', body: { email, password } });
+        const response = await fetchJsonWithFallback('/api/auth/login', { method: 'POST', body: { email, password } });
         if (response.error) {
-            showToast(response.error || 'Unable to sign in.');
+            showDetailedError(response, '/api/auth/login');
             return;
         }
         currentUser = response.user;
@@ -1320,7 +1371,7 @@ async function requestAuthOtp() {
         return;
     }
     if (serverConfig.backendReady) {
-        const response = await fetchJson('/api/auth/request-otp', { method: 'POST', body: { email, phone } });
+        const response = await fetchJsonWithFallback('/api/auth/request-otp', { method: 'POST', body: { email, phone } });
         if (response.error) {
             showToast(response.error || 'Unable to send OTP.');
             return;
