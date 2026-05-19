@@ -1185,6 +1185,8 @@ function setAuthMode(mode) {
     document.getElementById('authOtpSection').style.display = 'none';
     document.getElementById('authSubmitBtn').style.display = 'block';
     document.getElementById('authVerifyOtpBtn').style.display = 'none';
+    const sendOtpBtn = document.getElementById('authSendOtpBtn');
+    if (sendOtpBtn) sendOtpBtn.style.display = isSignup ? 'none' : 'block';
     document.getElementById('authAltCopy').innerHTML = isSignup
         ? 'Already have an account? <a class="auth-link" onclick="setAuthMode(\'login\')">Sign in</a>'
         : 'New here? <a class="auth-link" onclick="setAuthMode(\'signup\')">Create an account</a>';
@@ -1339,6 +1341,37 @@ async function requestAuthOtp() {
     showToast(`OTP: ${otp} (for testing)`);
 }
 
+function initAuthBindings() {
+    const submitBtn = document.getElementById('authSubmitBtn');
+    const sendBtn = document.getElementById('authSendOtpBtn');
+    const verifyBtn = document.getElementById('authVerifyOtpBtn');
+    const authForm = document.querySelector('.auth-form');
+    if (submitBtn) {
+        try { submitBtn.removeAttribute('onclick'); } catch (e) {}
+        submitBtn.addEventListener('click', handleAuth);
+    }
+    if (sendBtn) {
+        try { sendBtn.removeAttribute('onclick'); } catch (e) {}
+        sendBtn.addEventListener('click', requestAuthOtp);
+    }
+    if (verifyBtn) {
+        try { verifyBtn.removeAttribute('onclick'); } catch (e) {}
+        verifyBtn.addEventListener('click', verifyAuthOtp);
+    }
+    if (authForm) {
+        authForm.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const otpSection = document.getElementById('authOtpSection');
+                const otpVisible = otpSection && otpSection.style.display !== 'none';
+                if (otpVisible) return verifyAuthOtp();
+                if (authMode === 'login' && sendBtn && sendBtn.style.display !== 'none') return requestAuthOtp();
+                return handleAuth();
+            }
+        });
+    }
+}
+
 function openAuthModal() {
     renderAuthView();
     document.getElementById('authModal').classList.add('open');
@@ -1366,68 +1399,7 @@ function renderAuthView() {
     }
 }
 
-async function handleAuth() {
-    const name = document.getElementById('authName').value.trim();
-    const email = document.getElementById('authEmail').value.trim().toLowerCase();
-    const phone = document.getElementById('authPhone').value.trim();
-    const password = document.getElementById('authPassword').value.trim();
-    if (!email || !password) {
-        showToast('Email and password are required.');
-        return;
-    }
-    if (authMode === 'signup') {
-        if (!name || !phone) {
-            showToast('Please complete all signup fields.');
-            return;
-        }
-    }
-    if (serverConfig.backendReady) {
-        const endpoint = authMode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
-        const body = { email, password, name: authMode === 'signup' ? name : undefined, phone: authMode === 'signup' ? phone : undefined };
-        const response = await fetchJson(endpoint, { method: 'POST', body });
-        if (response.error) {
-            showToast(response.error || 'Unable to sign in.');
-            return;
-        }
-        currentUser = response.user;
-        authToken = response.token || null;
-        persistUser();
-        persistAuthToken();
-        updateAccountUI();
-        prefillCheckout();
-        await refreshOrders();
-        closeAuthModal();
-        showToast(authMode === 'signup' ? 'Account created successfully.' : 'Signed in successfully.');
-        return;
-    }
-    if (authMode === 'signup') {
-        if (!name || !phone) {
-            showToast('Please complete all signup fields.');
-            return;
-        }
-        currentUser = { name, email, phone, password };
-        authToken = null;
-        persistUser();
-        persistAuthToken();
-        updateAccountUI();
-        prefillCheckout();
-        closeAuthModal();
-        showToast('Account created locally on this device.');
-        return;
-    }
-    const savedUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
-    if (!savedUser || savedUser.email !== email || savedUser.password !== password) {
-        showToast('No matching account found on this device.');
-        return;
-    }
-    currentUser = savedUser;
-    authToken = null;
-    persistAuthToken();
-    updateAccountUI();
-    prefillCheckout();
-    closeAuthModal();
-    showToast('Signed in successfully.');
-}
+// NOTE: handleAuth is implemented earlier (single source of truth).
 
 function logout() {
     currentUser = null;
@@ -1752,3 +1724,4 @@ updateOrderSummary();
 prefillCheckout();
 renderCartItems();
 initReveals();
+initAuthBindings();
