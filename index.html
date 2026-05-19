@@ -231,6 +231,9 @@
             font-weight:600; padding:12px 14px; border-radius:16px; border:1px solid rgba(31,42,56,0.08);
             background:rgba(255,255,255,0.8); cursor:pointer;
         }
+        .mobile-menu-links a.active {
+            background:var(--gold); color:var(--dark); border-color:var(--gold);
+        }
         .mobile-menu-currency {
             border:1px solid rgba(31,42,56,0.1); background:rgba(255,255,255,0.9); color:var(--text);
             border-radius:14px; padding:12px 14px; font-size:12px; letter-spacing:1px;
@@ -730,7 +733,7 @@
         .coupon-chip.show { display:flex; align-items:center; justify-content:space-between; gap:12px; }
         .coupon-chip button { background:none; border:none; color:#b8f2c9; cursor:pointer; font-size:18px; }
         .coupon-hint { font-size:12px; color:rgba(253,246,232,0.45); margin-top:8px; }
-        .place-order-btn { width:100%; background:linear-gradient(135deg,var(--gold),var(--gold-light)); border:none; padding:16px; font-family:'Jost',sans-serif; font-size:13px; letter-spacing:3px; text-transform:uppercase; font-weight:600; color:var(--dark); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; margin-top:20px; border-radius:999px; box-shadow:0 16px 34px rgba(211,176,102,0.26); }
+        .place-order-btn { width:100%; background:linear-gradient(135deg,var(--gold),var(--gold-light)); border:none; padding:16px; font-family:'Jost',sans-serif; font-size:13px; letter-spacing:3px; text-transform:uppercase; font-weight:600; color:var(--dark); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; margin-top:20px; border-radius:999px; box-shadow:0 16px 34px rgba(211,176,102,0.26); z-index:2; }
         .place-order-btn:hover { transform:translateY(-2px); }
         .place-order-btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
         .auth-modal { position:fixed; inset:0; background:rgba(245,248,252,0.88); z-index:5500; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; padding:20px; backdrop-filter:blur(8px); }
@@ -882,9 +885,9 @@
         .admin-tracking-row button:hover { background:rgba(201,168,76,0.1); border-color:var(--gold); }
         .auth-box {
             width:100%; max-width:520px; background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(243,247,252,0.98)); border:1px solid rgba(118,247,255,0.16);
-            padding:34px; position:relative; box-shadow:0 30px 90px rgba(7,17,31,0.28); backdrop-filter:blur(18px); border-radius:28px;
+            padding:34px; position:relative; box-shadow:0 30px 90px rgba(7,17,31,0.28); backdrop-filter:blur(18px); border-radius:28px; z-index:5501;
         }
-        .auth-close { position:absolute; top:18px; right:18px; background:none; border:none; color:#162742; font-size:24px; cursor:pointer; }
+        .auth-close { position:absolute; top:18px; right:18px; background:none; border:none; color:#162742; font-size:24px; cursor:pointer; z-index:5502; }
         .orders-box .auth-close { color:#162742; opacity:1; }
         .orders-box .auth-close:hover { color:#0b1a2e; }
         .auth-box h2 { font-family:'Playfair Display',serif; color:var(--text); font-size:28px; margin-bottom:10px; }
@@ -1393,7 +1396,7 @@
 <!-- GLOBAL TOAST AND QUICK CONTACT SETUP -->
 <div id="toast"></div>
 
-<button class="install-btn" id="installAppBtn" onclick="installPWA()">Install App</button>
+<button class="install-btn" id="installAppBtn" type="button" aria-label="Install Ruh Imperium app" onclick="installPWA()">Install App</button>
 <a class="wa-float" href="https://wa.me/919785854770?text=Hello!%20I%20am%20interested%20in%20your%20attars.%20Please%20help%20me." target="_blank" title="Chat on WhatsApp">💬</a>
 <div class="wa-tooltip">💬 Chat with us on WhatsApp</div>
 <button class="ai-float" id="aiScentBtn" type="button" onclick="toggleScentAssistant()" title="AI scent assistant">AI</button>
@@ -1433,7 +1436,13 @@
     </div>
     <div class="mobile-menu-links">
         <a onclick="closeMobileMenu();showHome()">Home</a>
-        <a onclick="closeMobileMenu();filterShop('all')">Shop</a>
+        <a data-filter="all" onclick="closeMobileMenu();filterShop('all')">Shop</a>
+        <a data-filter="Authentic Indian Attars" onclick="closeMobileMenu();filterShop('Authentic Indian Attars')">Authentic Attars</a>
+        <a data-filter="Modern Attars" onclick="closeMobileMenu();filterShop('Modern Attars')">Modern Attars</a>
+        <a data-filter="Next Gen Fragrances" onclick="closeMobileMenu();filterShop('Next Gen Fragrances')">Next Gen</a>
+        <a data-filter="Discovery Set" onclick="closeMobileMenu();filterShop('Discovery Set')">Discovery Sets</a>
+        <a data-filter="Ruh / Absolute Oil" onclick="closeMobileMenu();filterShop('Ruh / Absolute Oil')">Ruh / Oil</a>
+        <a data-filter="Eau De Parfum" onclick="closeMobileMenu();filterShop('Eau De Parfum')">Eau De Parfum</a>
         <a onclick="closeMobileMenu();openScentAssistant()">AI Scent Finder</a>
         <a onclick="closeMobileMenu();goSection('wellness')">Wellness</a>
         <a onclick="closeMobileMenu();goSection('gifting')">Gifting</a>
@@ -1654,8 +1663,16 @@
                     <label>Password</label>
                     <input type="password" id="authPassword" placeholder="Enter password">
                 </div>
-                <div class="security-note">reCAPTCHA support is ready. Add your live site key and secret in deployment env vars to fully enable it.</div>
-                <button class="place-order-btn" type="button" id="authSubmitBtn" onclick="handleAuth()">Sign In</button>
+                <div id="authOtpSection" style="display:none;">
+                    <div class="form-group">
+                        <label>Verification Code</label>
+                        <input type="text" id="authOtpCode" placeholder="Enter 6-digit code" maxlength="6">
+                    </div>
+                    <p style="font-size:12px;color:rgba(31,42,56,0.62);text-align:center;">OTP sent to your phone number</p>
+                </div>
+                <div class="security-note">reCAPTCHA and OTP verification are ready. Add your live keys in deployment env vars.</div>
+                <button class="place-order-btn" type="button" id="authSubmitBtn" onclick="handleAuth()" style="position:relative;z-index:2;">Sign In</button>
+                <button class="place-order-btn" type="button" id="authVerifyOtpBtn" onclick="verifyAuthOtp()" style="display:none;position:relative;z-index:2;">Verify Code</button>
             </div>
             <div class="auth-alt" id="authAltCopy">New here? <a class="auth-link" onclick="setAuthMode('signup')">Create an account</a></div>
             <button class="admin-login-link" type="button" onclick="setAuthMode('admin')">Admin Login</button>
@@ -1815,12 +1832,13 @@
         <div class="hero-ornament"></div>
         <div class="hero-ornament"></div>
         <div class="hero-content">
-            <p class="hero-tagline">Handcrafted in the Heart of India</p>
+            <p class="hero-tagline">Handcrafted in the Heart of Kannauj</p>
             <h1 class="hero-title">The Soul of<br><em>Pure Attar</em></h1>
-            <p class="hero-subtitle">Kannauj's finest fragrances, reimagined through a luminous new ritual of heritage, precision, and presence.</p>
+            <p class="hero-subtitle">Discover authentic Indian attars, modern blends, and luxurious gifting rituals made for every mood and memory.</p>
             <div class="hero-tech-strip">
                 <span class="hero-tech-pill">1973 Heritage</span>
                 <span class="hero-tech-pill">Pure Oil Profiles</span>
+                <span class="hero-tech-pill">Crafted by Legacy Artisans</span>
                 <span class="hero-tech-pill">Direct From Kannauj</span>
             </div>
             <div class="hero-divider"><span></span><i>✿</i><span></span></div>
@@ -2118,6 +2136,7 @@
     <div style="margin-bottom:24px;">
         <h2 style="font-family:'Playfair Display',serif;font-size:32px;color:var(--dark);margin-bottom:8px;" id="shopTitle">All Products</h2>
         <p style="font-size:13px;color:var(--text-light);letter-spacing:1px;" id="shopCount"></p>
+        <p id="shopFilterSummary" style="font-size:13px;color:rgba(31,42,56,0.62);letter-spacing:0.8px;margin-top:6px;">Browse every attar, fragrance, and gifting set in the Ruh Imperium collection.</p>
     </div>
     <div class="shop-controls">
         <div class="filter-bar">

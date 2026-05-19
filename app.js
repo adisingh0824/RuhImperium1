@@ -38,6 +38,7 @@ let serverConfig = { backendReady: false, paymentEnabled: false, paymentReason: 
 let shippingProviders = [];
 let selectedShippingProvider = '';
 let authMode = 'login';
+let authOtpState = null;
 
 function loadStoredState() {
     try {
@@ -320,21 +321,35 @@ function goSection(id) {
     }, 100);
 }
 
+function updateShopFilterUI(cat) {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === cat);
+    });
+    document.querySelectorAll('.mobile-menu-links a[data-filter]').forEach(link => {
+        link.classList.toggle('active', link.dataset.filter === cat);
+    });
+    const summary = document.getElementById('shopFilterSummary');
+    if (!summary) return;
+    summary.textContent = cat === 'all'
+        ? 'Browse every attar, fragrance, and gifting set in the Ruh Imperium collection.'
+        : `Showing curated ${cat} selections for your next scent discovery.`;
+}
+
 function filterShop(cat) {
     currentFilter = cat;
     document.getElementById('home-page').style.display = 'none';
     document.getElementById('shop-page').classList.add('active');
     window.scrollTo(0, 0);
     document.getElementById('shopTitle').textContent = cat === 'all' ? 'All Products' : cat;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    updateShopFilterUI(cat);
     renderShopGrid();
 }
 
 function shopFilter(cat, btn) {
     currentFilter = cat;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     document.getElementById('shopTitle').textContent = cat === 'all' ? 'All Products' : cat;
+    updateShopFilterUI(cat);
     renderShopGrid();
 }
 
@@ -1054,15 +1069,109 @@ function doSearch(query) {
 
 function searchSelect(id) { closeSearch(); openProductModal(id); }
 
-function subscribe() {
-    const email = document.getElementById('nlEmail').value;
-    if (!email || !email.includes('@')) { showToast('Please enter a valid email!'); return; }
-    document.getElementById('nlEmail').value = '';
-    showToast('🌸 Subscribed! Welcome to the Ruh Imperium family.');
+let deferredInstallPrompt = null;
+
+async function subscribe() {
+    const emailInput = document.getElementById('nlEmail');
+    const statusEl = document.getElementById('nlStatus');
+    const submitBtn = document.getElementById('nlSubmitBtn');
+    const email = (emailInput?.value || '').trim().toLowerCase();
+
+    if (!email || !email.includes('@')) {
+        showToast('Please enter a valid email!');
+        return;
+    }
+
+    if (submitBtn) submitBtn.disabled = true;
+    if (statusEl) {
+        statusEl.textContent = 'Subscribing...';
+        statusEl.className = 'nl-status';
+        statusEl.style.opacity = '1';
+    }
+
+    try {
+        const response = await fetchJson('/api/newsletter/subscribe', {
+            method: 'POST',
+            body: { email }
+        });
+
+        if (response.error) {
+            throw new Error(response.error);
+        }
+
+        if (emailInput) emailInput.value = '';
+        const message = response.alreadySubscribed
+            ? 'You are already subscribed. Thank you for staying with us!'
+            : '🌸 Subscribed! Welcome to the Ruh Imperium family.';
+        showToast(message);
+        if (statusEl) {
+            statusEl.textContent = message;
+            statusEl.className = 'nl-status success';
+        }
+    } catch (error) {
+        const message = error?.message || 'Subscription failed. Please try again later.';
+        showToast(message);
+        if (statusEl) {
+            statusEl.textContent = message;
+            statusEl.className = 'nl-status error';
+        }
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+function handleNewsletterKeydown(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        subscribe();
+    }
+}
+
+function installPWA() {
+    const installBtn = document.getElementById('installAppBtn');
+    if (!deferredInstallPrompt) {
+        showToast('Install from the browser menu or home screen options.');
+        if (installBtn) installBtn.style.display = 'none';
+        return;
+    }
+
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(choiceResult => {
+        if (choiceResult.outcome === 'accepted') {
+            showToast('App install prompt accepted. Thank you!');
+        } else {
+            showToast('Install dismissed. You can install anytime from your browser menu.');
+        }
+        deferredInstallPrompt = null;
+        if (installBtn) installBtn.style.display = 'none';
+    }).catch(() => {
+        showToast('Unable to show install prompt. Please try again later.');
+    });
+}
+
+function initPwaInstall() {
+    const installBtn = document.getElementById('installAppBtn');
+    if (installBtn) installBtn.style.display = 'none';
+
+    window.addEventListener('beforeinstallprompt', event => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        if (installBtn) {
+            installBtn.style.display = 'flex';
+            installBtn.setAttribute('aria-hidden', 'false');
+        }
+    });
+
+    window.addEventListener('appinstalled', () => {
+        showToast('Ruh Imperium is installed. Enjoy quick access!');
+        if (installBtn) installBtn.style.display = 'none';
+        deferredInstallPrompt = null;
+    });
 }
 
 function setAuthMode(mode) {
     authMode = mode;
+    authOtpState = null;
     const isSignup = mode === 'signup';
     document.getElementById('loginTab').classList.toggle('active', !isSignup);
     document.getElementById('signupTab').classList.toggle('active', isSignup);
@@ -1073,9 +1182,73 @@ function setAuthMode(mode) {
     document.getElementById('authName').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authPhone').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
+    document.getElementById('authOtpSection').style.display = 'none';
+    document.getElementById('authSubmitBtn').style.display = 'block';
+    document.getElementById('authVerifyOtpBtn').style.display = 'none';
     document.getElementById('authAltCopy').innerHTML = isSignup
         ? 'Already have an account? <a class="auth-link" onclick="setAuthMode(\'login\')">Sign in</a>'
         : 'New here? <a class="auth-link" onclick="setAuthMode(\'signup\')">Create an account</a>';
+}
+
+function verifyAuthOtp() {
+    const otpCode = (document.getElementById('authOtpCode').value || '').trim();
+    if (!otpCode || otpCode.length !== 6 || !/^\d+$/.test(otpCode)) {
+        showToast('Please enter a valid 6-digit code.');
+        return;
+    }
+    if (!authOtpState || authOtpState.code !== otpCode) {
+        showToast('Invalid verification code. Please try again.');
+        return;
+    }
+    currentUser = authOtpState.user;
+    authToken = null;
+    persistUser();
+    persistAuthToken();
+    updateAccountUI();
+    prefillCheckout();
+    closeAuthModal();
+    showToast('Verified successfully!');
+    authOtpState = null;
+}
+
+async function handleAuth() {
+    const name = document.getElementById('authName').value.trim();
+    const email = document.getElementById('authEmail').value.trim().toLowerCase();
+    const phone = document.getElementById('authPhone').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+    if (!email || !password) {
+        showToast('Email and password are required.');
+        return;
+    }
+    if (authMode === 'signup') {
+        if (!name || !phone) {
+            showToast('Please complete all signup fields.');
+            return;
+        }
+    }
+    const otp = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+    authOtpState = {
+        user: { name: name || 'Guest', email, phone, password },
+        code: otp,
+        createdAt: Date.now()
+    };
+    document.getElementById('authOtpSection').style.display = 'block';
+    document.getElementById('authSubmitBtn').style.display = 'none';
+    document.getElementById('authVerifyOtpBtn').style.display = 'block';
+    showToast(`OTP: ${otp} (for testing)`);
+    if (serverConfig.backendReady) {
+        const endpoint = authMode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+        const body = { email, password, phone, name: authMode === 'signup' ? name : undefined };
+        const response = await fetchJson(endpoint, { method: 'POST', body });
+        if (response.error) {
+            showToast(response.error || 'Unable to process request.');
+            authOtpState = null;
+            document.getElementById('authOtpSection').style.display = 'none';
+            document.getElementById('authSubmitBtn').style.display = 'block';
+            document.getElementById('authVerifyOtpBtn').style.display = 'none';
+            return;
+        }
+    }
 }
 
 function openAuthModal() {
@@ -1481,6 +1654,7 @@ document.addEventListener('keydown', e => {
 loadStoredState();
 loadLastOrder();
 loadServerConfig();
+initPwaInstall();
 renderHomeSections();
 updateWishBadge();
 updateCartBadge();
