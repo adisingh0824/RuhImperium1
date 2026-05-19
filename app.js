@@ -1363,6 +1363,18 @@ async function handleAuth() {
         if (serverConfig.backendReady) {
             const response = await fetchJsonWithFallback('/api/auth/signup', { method: 'POST', body: { name, email, phone, password } });
             if (response.error) {
+                // If backend route is missing (deployed static site), fall back to local signup
+                if (String(response.error).startsWith('NOT_FOUND') || response.__tried) {
+                    currentUser = { name, email, phone, password };
+                    authToken = null;
+                    persistUser();
+                    persistAuthToken();
+                    updateAccountUI();
+                    prefillCheckout();
+                    closeAuthModal();
+                    showToast('Account created locally on this device (backend unavailable).');
+                    return;
+                }
                 showDetailedError(response, '/api/auth/signup');
                 return;
             }
@@ -1391,6 +1403,22 @@ async function handleAuth() {
     if (serverConfig.backendReady) {
         const response = await fetchJsonWithFallback('/api/auth/login', { method: 'POST', body: { email, password } });
         if (response.error) {
+            // If backend route missing or tried alternatives, fall back to local login
+            if (String(response.error).startsWith('NOT_FOUND') || response.__tried) {
+                const savedUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+                if (!savedUser || savedUser.email !== email || savedUser.password !== password) {
+                    showToast('No matching account found on this device.');
+                    return;
+                }
+                currentUser = savedUser;
+                authToken = null;
+                persistAuthToken();
+                updateAccountUI();
+                prefillCheckout();
+                closeAuthModal();
+                showToast('Signed in locally (backend unavailable).');
+                return;
+            }
             showDetailedError(response, '/api/auth/login');
             return;
         }
@@ -1439,7 +1467,17 @@ async function requestAuthOtp() {
         }
         const response = await fetchJsonWithFallback('/api/auth/request-otp', { method: 'POST', body: { email, phone, createIfMissing: authMode === 'signup', recaptcha: recaptchaToken } });
         if (response.error) {
-            showToast(response.error || 'Unable to send OTP.');
+            // If backend route missing, fall back to client-side OTP generation
+            if (String(response.error).startsWith('NOT_FOUND') || response.__tried) {
+                const otp = String(Math.floor(100000 + Math.random() * 900000));
+                authOtpState = { user: { name: '', email, phone, password: '' }, code: otp, createdAt: Date.now() };
+                document.getElementById('authOtpSection').style.display = 'block';
+                document.getElementById('authVerifyOtpBtn').style.display = 'block';
+                document.getElementById('authSubmitBtn').style.display = 'none';
+                showToast(`OTP: ${otp} (for testing; backend unavailable)`);
+                return;
+            }
+            showDetailedError(response, '/api/auth/request-otp');
             return;
         }
         // show otp preview when SMS not configured (previewOtp present)
