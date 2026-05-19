@@ -1190,12 +1190,36 @@ function setAuthMode(mode) {
         : 'New here? <a class="auth-link" onclick="setAuthMode(\'signup\')">Create an account</a>';
 }
 
-function verifyAuthOtp() {
+async function verifyAuthOtp() {
     const otpCode = (document.getElementById('authOtpCode').value || '').trim();
     if (!otpCode || otpCode.length !== 6 || !/^\d+$/.test(otpCode)) {
         showToast('Please enter a valid 6-digit code.');
         return;
     }
+    // If backend is available, verify via server
+    if (serverConfig.backendReady) {
+        const email = (document.getElementById('authEmail').value || '').trim().toLowerCase();
+        const phone = (document.getElementById('authPhone').value || '').trim();
+        const response = await fetchJson('/api/auth/verify-otp', { method: 'POST', body: { email, phone, otp: otpCode } });
+        if (response.error) {
+            showToast(response.error || 'OTP verification failed.');
+            return;
+        }
+        currentUser = response.user;
+        authToken = response.token || null;
+        persistUser();
+        persistAuthToken();
+        updateAccountUI();
+        prefillCheckout();
+        closeAuthModal();
+        showToast('Verified successfully!');
+        // clear UI
+        document.getElementById('authOtpSection').style.display = 'none';
+        document.getElementById('authVerifyOtpBtn').style.display = 'none';
+        document.getElementById('authSubmitBtn').style.display = 'block';
+        return;
+    }
+    // Local (testing) verification
     if (!authOtpState || authOtpState.code !== otpCode) {
         showToast('Invalid verification code. Please try again.');
         return;
@@ -1225,30 +1249,94 @@ async function handleAuth() {
             showToast('Please complete all signup fields.');
             return;
         }
-    }
-    const otp = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
-    authOtpState = {
-        user: { name: name || 'Guest', email, phone, password },
-        code: otp,
-        createdAt: Date.now()
-    };
-    document.getElementById('authOtpSection').style.display = 'block';
-    document.getElementById('authSubmitBtn').style.display = 'none';
-    document.getElementById('authVerifyOtpBtn').style.display = 'block';
-    showToast(`OTP: ${otp} (for testing)`);
-    if (serverConfig.backendReady) {
-        const endpoint = authMode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
-        const body = { email, password, phone, name: authMode === 'signup' ? name : undefined };
-        const response = await fetchJson(endpoint, { method: 'POST', body });
-        if (response.error) {
-            showToast(response.error || 'Unable to process request.');
-            authOtpState = null;
-            document.getElementById('authOtpSection').style.display = 'none';
-            document.getElementById('authSubmitBtn').style.display = 'block';
-            document.getElementById('authVerifyOtpBtn').style.display = 'none';
+        // Signup flow
+        if (serverConfig.backendReady) {
+            const response = await fetchJson('/api/auth/signup', { method: 'POST', body: { name, email, phone, password } });
+            if (response.error) {
+                showToast(response.error || 'Unable to create account.');
+                return;
+            }
+            currentUser = response.user;
+            authToken = response.token || null;
+            persistUser();
+            persistAuthToken();
+            updateAccountUI();
+            prefillCheckout();
+            closeAuthModal();
+            showToast('Account created successfully.');
             return;
         }
+        // Local signup fallback
+        currentUser = { name, email, phone, password };
+        authToken = null;
+        persistUser();
+        persistAuthToken();
+        updateAccountUI();
+        prefillCheckout();
+        closeAuthModal();
+        showToast('Account created locally on this device.');
+        return;
     }
+    // Login flow (password)
+    if (serverConfig.backendReady) {
+        const response = await fetchJson('/api/auth/login', { method: 'POST', body: { email, password } });
+        if (response.error) {
+            showToast(response.error || 'Unable to sign in.');
+            return;
+        }
+        currentUser = response.user;
+        authToken = response.token || null;
+        persistUser();
+        persistAuthToken();
+        updateAccountUI();
+        prefillCheckout();
+        closeAuthModal();
+        showToast('Signed in successfully.');
+        return;
+    }
+    // Local login fallback
+    const savedUser = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+    if (!savedUser || savedUser.email !== email || savedUser.password !== password) {
+        showToast('No matching account found on this device.');
+        return;
+    }
+    currentUser = savedUser;
+    authToken = null;
+    persistAuthToken();
+    updateAccountUI();
+    prefillCheckout();
+    closeAuthModal();
+    showToast('Signed in successfully.');
+}
+
+// Send/request OTP for login; uses backend when available, else generates local OTP for testing
+async function requestAuthOtp() {
+    const email = (document.getElementById('authEmail').value || '').trim().toLowerCase();
+    const phone = (document.getElementById('authPhone').value || '').trim();
+    if (!email && !phone) {
+        showToast('Enter email or phone to receive OTP.');
+        return;
+    }
+    if (serverConfig.backendReady) {
+        const response = await fetchJson('/api/auth/request-otp', { method: 'POST', body: { email, phone } });
+        if (response.error) {
+            showToast(response.error || 'Unable to send OTP.');
+            return;
+        }
+        // show otp preview when SMS not configured (previewOtp present)
+        if (response.previewOtp) showToast(`OTP: ${response.previewOtp} (preview)`);
+        document.getElementById('authOtpSection').style.display = 'block';
+        document.getElementById('authVerifyOtpBtn').style.display = 'block';
+        document.getElementById('authSubmitBtn').style.display = 'none';
+        return;
+    }
+    // Local OTP generation for testing
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    authOtpState = { user: null, code: otp, createdAt: Date.now() };
+    document.getElementById('authOtpSection').style.display = 'block';
+    document.getElementById('authVerifyOtpBtn').style.display = 'block';
+    document.getElementById('authSubmitBtn').style.display = 'none';
+    showToast(`OTP: ${otp} (for testing)`);
 }
 
 function openAuthModal() {

@@ -1671,8 +1671,11 @@
                     <p style="font-size:12px;color:rgba(31,42,56,0.62);text-align:center;">OTP sent to your phone number</p>
                 </div>
                 <div class="security-note">reCAPTCHA and OTP verification are ready. Add your live keys in deployment env vars.</div>
-                <button class="place-order-btn" type="button" id="authSubmitBtn" onclick="handleAuth()" style="position:relative;z-index:2;">Sign In</button>
-                <button class="place-order-btn" type="button" id="authVerifyOtpBtn" onclick="verifyAuthOtp()" style="display:none;position:relative;z-index:2;">Verify Code</button>
+                <div style="display:flex;gap:8px;">
+                    <button class="place-order-btn" type="button" id="authSubmitBtn" onclick="handleAuth()" style="position:relative;z-index:2;flex:1;">Sign In</button>
+                    <button class="place-order-btn" type="button" id="authSendOtpBtn" onclick="requestAuthOtp()" style="position:relative;z-index:2;flex:1;display:none;">Send OTP</button>
+                </div>
+                <button class="place-order-btn" type="button" id="authVerifyOtpBtn" onclick="verifyAuthOtp()" style="display:none;position:relative;z-index:2;margin-top:10px;">Verify Code</button>
             </div>
             <div class="auth-alt" id="authAltCopy">New here? <a class="auth-link" onclick="setAuthMode('signup')">Create an account</a></div>
             <button class="admin-login-link" type="button" onclick="setAuthMode('admin')">Admin Login</button>
