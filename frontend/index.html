@@ -388,7 +388,7 @@
         .modal-feature span:first-child { color:var(--gold); font-size:16px; }
 
         .hero {
-            height:90vh; min-height:600px;
+            min-height:calc(100vh - 108px); padding:28px 0 36px;
             background:
                 radial-gradient(circle at 18% 18%, rgba(185,144,75,0.12), transparent 22%),
                 linear-gradient(135deg, #f8f6f1 0%, #eef2f6 44%, #e4eaf1 100%);
@@ -432,7 +432,7 @@
         }
         @keyframes fadeUp { from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0);} }
         .hero-tagline { font-family:'Cormorant Garamond',serif; font-size:14px; letter-spacing:6px; color:var(--gold); text-transform:uppercase; margin-bottom:20px; font-style:italic; }
-        .hero-title { font-family:'Playfair Display',serif; font-size:clamp(48px,8vw,92px); color:var(--text); line-height:1.05; font-weight:700; margin-bottom:12px; }
+        .hero-title { font-family:'Playfair Display',serif; font-size:clamp(46px,6.4vw,66px); color:var(--text); line-height:1.05; font-weight:700; margin-bottom:12px; }
         .hero-title em { font-style:italic; color:var(--gold); text-shadow:none; }
         .hero-subtitle { font-family:'Cormorant Garamond',serif; font-size:clamp(18px,2.5vw,26px); color:var(--text-light); font-weight:300; letter-spacing:1.2px; margin-bottom:26px; font-style:italic; }
         .hero-divider { display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:48px; }
@@ -441,7 +441,7 @@
         .hero-divider i { color:var(--gold); font-size:16px; }
         .hero-btns { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; }
         .hero-tech-strip {
-            margin:0 auto 34px; display:inline-grid; grid-template-columns:repeat(3,auto); gap:10px;
+            margin:0 auto 20px; display:inline-grid; grid-template-columns:repeat(3,auto); gap:10px;
             padding:8px; border-radius:999px; background:rgba(255,255,255,0.82);
             border:1px solid rgba(31,42,56,0.08);
             box-shadow:var(--shadow-card);
@@ -450,6 +450,62 @@
             padding:9px 14px; border-radius:999px; font-size:11px; letter-spacing:2px; text-transform:uppercase;
             color:var(--text); background:rgba(244,234,216,0.42); border:1px solid rgba(185,144,75,0.12);
         }
+        .hero-shop-layout {
+            width:min(1220px, calc(100% - 48px)); display:grid; grid-template-columns:0.95fr 1.05fr;
+            gap:44px; align-items:start; position:relative; z-index:2;
+        }
+        .hero-content.shop-hero-copy {
+            text-align:left; padding:0; background:transparent; border:none; box-shadow:none; backdrop-filter:none;
+            border-radius:0; max-width:560px;
+        }
+        .hero-content.shop-hero-copy::before { display:none; }
+        .hero-content.shop-hero-copy .hero-divider { justify-content:flex-start; margin-bottom:20px; }
+        .hero-content.shop-hero-copy .hero-btns { justify-content:flex-start; }
+        .hero-kicker {
+            display:inline-flex; align-items:center; gap:10px; margin-bottom:18px; padding:9px 14px;
+            border:1px solid rgba(185,144,75,0.22); border-radius:999px; background:rgba(255,255,255,0.72);
+            color:var(--gold); font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:700;
+        }
+        .hero-product-board {
+            display:grid; grid-template-columns:1.08fr 0.92fr; gap:16px; align-items:stretch;
+        }
+        .hero-product-card {
+            position:relative; min-height:390px; border-radius:28px; overflow:hidden; background:#fff;
+            border:1px solid rgba(31,42,56,0.08); box-shadow:0 28px 70px rgba(18,28,44,0.14);
+        }
+        .hero-product-card img { width:100%; height:100%; object-fit:cover; display:block; }
+        .hero-product-card::after {
+            content:''; position:absolute; inset:0;
+            background:linear-gradient(180deg,rgba(10,20,34,0) 48%,rgba(10,20,34,0.76) 100%);
+            pointer-events:none;
+        }
+        .hero-product-caption {
+            position:absolute; left:22px; right:22px; bottom:22px; z-index:2; color:#fff;
+        }
+        .hero-product-caption span { display:block; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold-light); margin-bottom:6px; }
+        .hero-product-caption strong { display:block; font-family:'Playfair Display',serif; font-size:28px; line-height:1.1; }
+        .hero-side-stack { display:grid; gap:16px; }
+        .hero-mini-card {
+            position:relative; min-height:187px; border-radius:24px; overflow:hidden; background:#fff;
+            border:1px solid rgba(31,42,56,0.08); box-shadow:var(--shadow-card);
+        }
+        .hero-mini-card img { width:100%; height:100%; object-fit:cover; display:block; }
+        .hero-mini-card span {
+            position:absolute; left:16px; bottom:16px; right:16px; color:#fff; font-family:'Playfair Display',serif;
+            font-size:20px; z-index:2; text-shadow:0 2px 10px rgba(7,17,31,0.4);
+        }
+        .hero-mini-card::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg,transparent 42%,rgba(7,17,31,0.68)); }
+        .sliding-banner {
+            overflow:hidden; background:#172130; color:var(--gold-pale); border-top:1px solid rgba(255,255,255,0.06);
+            border-bottom:1px solid rgba(255,255,255,0.06);
+        }
+        .sliding-track {
+            display:flex; width:max-content; animation:slideText 26s linear infinite;
+        }
+        .sliding-track span {
+            padding:13px 28px; font-size:12px; letter-spacing:2px; text-transform:uppercase; white-space:nowrap;
+        }
+        @keyframes slideText { from{transform:translateX(0);} to{transform:translateX(-50%);} }
 
         .btn-primary { background:linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%); color:var(--dark); padding:15px 40px; font-size:12px; letter-spacing:3px; text-transform:uppercase; font-weight:600; text-decoration:none; border:none; cursor:pointer; transition:all 0.3s; font-family:'Jost',sans-serif; display:inline-block; border-radius:999px; box-shadow:0 12px 34px rgba(211,176,102,0.28); }
         .btn-primary:hover { transform:translateY(-2px); box-shadow:0 18px 42px rgba(211,176,102,0.44); }
@@ -477,7 +533,9 @@
 
         .cat-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; }
         .cat-card { position:relative; overflow:hidden; cursor:pointer; aspect-ratio:3/4; transition:transform 0.4s, box-shadow 0.4s; border-radius:26px; border:1px solid rgba(118,247,255,0.1); }
+        .cat-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.45s ease; }
         .cat-card:hover { transform:scale(1.03); box-shadow:0 26px 60px rgba(17,34,55,0.2); }
+        .cat-card:hover img { transform:scale(1.06); }
         .cat-card-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(26,18,8,0.85) 0%,rgba(26,18,8,0.2) 50%,transparent 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:20px 16px; }
         .cat-card h3 { font-family:'Playfair Display',serif; font-size:16px; color:var(--cream); font-weight:600; line-height:1.3; }
         .cat-card .cat-arrow { display:inline-block; color:var(--gold); font-size:18px; margin-top:6px; transform:translateX(0); transition:transform 0.3s; }
@@ -489,6 +547,19 @@
         .cat-5{background:linear-gradient(135deg,#0d1a2d 0%,#1a3d5c 100%);}
         .cat-6{background:linear-gradient(135deg,#2d0d0d 0%,#5c1a1a 100%);}
         .cat-icon { font-size:36px; margin-bottom:8px; display:block; }
+        .attar-info-section { padding:80px 40px; background:#fff; }
+        .attar-info-inner { max-width:1200px; margin:0 auto; display:grid; grid-template-columns:0.9fr 1.1fr; gap:46px; align-items:center; }
+        .attar-info-media { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .attar-info-media img { width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:22px; box-shadow:var(--shadow-card); background:#f3f6fa; }
+        .attar-info-media img:first-child { margin-top:36px; }
+        .attar-info-copy p { font-family:'Cormorant Garamond',serif; font-size:19px; line-height:1.85; color:var(--text-light); margin-bottom:18px; }
+        .market-section { padding:70px 40px; background:linear-gradient(180deg,#f8f6f1,#eef2f6); text-align:center; }
+        .market-grid { max-width:920px; margin:34px auto 0; display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+        .market-tile {
+            min-height:76px; display:flex; align-items:center; justify-content:center; padding:14px; border-radius:18px;
+            background:#fff; border:1px solid rgba(31,42,56,0.08); color:var(--text); font-weight:800;
+            letter-spacing:1.4px; text-transform:uppercase; font-size:12px; box-shadow:var(--shadow-card);
+        }
 
         .products-section { padding:60px 40px 80px; background:transparent; position:relative; overflow:hidden; }
         .products-section::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center,rgba(185,144,75,0.05) 0%,transparent 70%); pointer-events:none; }
@@ -1389,6 +1460,34 @@
                 transform:translateX(0);
             }
         }
+        @media(max-width:1100px){
+            .hero-shop-layout{grid-template-columns:1fr; padding:36px 0;}
+            .hero-content.shop-hero-copy{max-width:none; text-align:center;}
+            .hero-content.shop-hero-copy .hero-divider,
+            .hero-content.shop-hero-copy .hero-btns{justify-content:center;}
+            .attar-info-inner{grid-template-columns:1fr;}
+            .market-grid{grid-template-columns:repeat(3,1fr);}
+        }
+        @media(max-width:768px){
+            .hero-shop-layout{width:100%; gap:24px;}
+            .hero-product-board{grid-template-columns:1fr;}
+            .hero-product-card{min-height:340px; border-radius:22px;}
+            .hero-side-stack{grid-template-columns:1fr 1fr;}
+            .hero-mini-card{min-height:170px;}
+            .attar-info-section,.market-section{padding-left:14px; padding-right:14px;}
+            .attar-info-media{grid-template-columns:1fr 1fr;}
+            .market-grid{grid-template-columns:1fr 1fr;}
+        }
+        @media(max-width:480px){
+            .hero-content.shop-hero-copy{padding:0; margin-top:0;}
+            .hero-kicker{font-size:10px; letter-spacing:1.4px;}
+            .hero-product-card{min-height:300px;}
+            .hero-side-stack{grid-template-columns:1fr;}
+            .hero-mini-card{min-height:190px;}
+            .attar-info-media{grid-template-columns:1fr;}
+            .attar-info-media img:first-child{margin-top:0;}
+            .market-grid{grid-template-columns:1fr;}
+        }
     </style>
 </head>
 <body>
@@ -1843,24 +1942,40 @@
     <!-- HERO SECTION SETUP -->
     <section class="hero">
         <div class="hero-bg-pattern"></div>
-        <div class="hero-ornament"></div>
-        <div class="hero-ornament"></div>
-        <div class="hero-ornament"></div>
-        <div class="hero-content">
-            <p class="hero-tagline">Handcrafted in the Heart of Kannauj</p>
-            <h1 class="hero-title">The Soul of<br><em>Pure Attar</em></h1>
-            <p class="hero-subtitle">Discover authentic Indian attars, modern blends, and luxurious gifting rituals made for every mood and memory.</p>
-            <div class="hero-tech-strip">
-                <span class="hero-tech-pill">1973 Heritage</span>
-                <span class="hero-tech-pill">Pure Oil Profiles</span>
-                <span class="hero-tech-pill">Crafted by Legacy Artisans</span>
-                <span class="hero-tech-pill">Direct From Kannauj</span>
+        <div class="hero-shop-layout">
+            <div class="hero-content shop-hero-copy">
+                <span class="hero-kicker">Pure Indian Attars Since 1973</span>
+                <p class="hero-tagline">Handcrafted in the Heart of Kannauj</p>
+                <h1 class="hero-title">Ruh Imperium</h1>
+                <p class="hero-subtitle">Authentic attars, modern perfumes, and gift-ready discovery sets delivered with the soul of Indian perfumery.</p>
+                <div class="hero-tech-strip">
+                    <span class="hero-tech-pill">Pure Oil Profiles</span>
+                    <span class="hero-tech-pill">Direct From Kannauj</span>
+                    <span class="hero-tech-pill">Gift Ready</span>
+                </div>
+                <div class="hero-divider"><span></span><i>✿</i><span></span></div>
+                <div class="hero-btns">
+                    <button class="btn-primary" onclick="filterShop('all')">Shop Products</button>
+                    <button class="btn-outline" onclick="goSection('what-is-attar')">What is Attar?</button>
+                </div>
             </div>
-            <div class="hero-divider"><span></span><i>✿</i><span></span></div>
-            <div class="hero-btns">
-                <button class="btn-outline" onclick="filterShop('all')">Explore Collection</button>
-                <button class="btn-outline" onclick="goSection('story')">Enter the Story</button>
+            <div class="hero-product-board" aria-label="Featured Ruh Imperium products">
+                <button class="hero-product-card" type="button" onclick="openProductModal(11)">
+                    <img src="gulabattar.png" alt="Gulab Attar bottle">
+                    <span class="hero-product-caption"><span>Featured Attar</span><strong>Gulab Attar</strong></span>
+                </button>
+                <div class="hero-side-stack">
+                    <button class="hero-mini-card" type="button" onclick="openProductModal(1)"><img src="mitti.png" alt="Mitti Attar"><span>Mitti Attar</span></button>
+                    <button class="hero-mini-card" type="button" onclick="openProductModal(18)"><img src="dubai gold.png" alt="Dubai Gold perfume"><span>Dubai Gold</span></button>
+                </div>
             </div>
+        </div>
+    </section>
+
+    <section class="sliding-banner" aria-label="Ruh Imperium highlights">
+        <div class="sliding-track">
+            <span>Pure Attars</span><span>Modern Perfumes</span><span>Discovery Sets</span><span>Pan India Delivery</span><span>Kannauj Heritage</span><span>Gift Ready</span>
+            <span>Pure Attars</span><span>Modern Perfumes</span><span>Discovery Sets</span><span>Pan India Delivery</span><span>Kannauj Heritage</span><span>Gift Ready</span>
         </div>
     </section>
 
@@ -1886,17 +2001,17 @@
     <!-- CATEGORY DISCOVERY SETUP -->
     <section style="padding:80px 40px;max-width:1400px;margin:0 auto;">
         <div class="section-header reveal">
-            <span class="section-label">Browse Our World</span>
-            <h2 class="section-title">Discover the <em>Art of Attar</em></h2>
+            <span class="section-label">Our Products</span>
+            <h2 class="section-title">A heritage of fragrance in <em>every drop</em></h2>
             <div class="section-line"><span>✦</span></div>
         </div>
         <div class="cat-grid reveal">
-            <div class="cat-card cat-1" onclick="filterShop('Authentic Indian Attars')"><div class="cat-card-overlay"><span class="cat-icon">🌹</span><h3>Authentic Indian Attars</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-2" onclick="filterShop('Modern Attars')"><div class="cat-card-overlay"><span class="cat-icon">🌿</span><h3>Modern Attars</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-3" onclick="filterShop('Next Gen Fragrances')"><div class="cat-card-overlay"><span class="cat-icon">✨</span><h3>Next Gen Fragrances</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-4" onclick="filterShop('Discovery Set')"><div class="cat-card-overlay"><span class="cat-icon">🎁</span><h3>Discovery Sets</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-5" onclick="filterShop('Ruh / Absolute Oil')"><div class="cat-card-overlay"><span class="cat-icon">💧</span><h3>Ruh / Absolute Oil</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-6" onclick="filterShop('Eau De Parfum')"><div class="cat-card-overlay"><span class="cat-icon">🌸</span><h3>Eau De Parfum</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-1" onclick="filterShop('Authentic Indian Attars')"><img src="gulabattar.png" alt="Authentic Indian Attars"><div class="cat-card-overlay"><h3>Authentic Indian Attars</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-2" onclick="filterShop('Modern Attars')"><img src="mitti.png" alt="Modern Attars"><div class="cat-card-overlay"><h3>Modern Attars</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-3" onclick="filterShop('Next Gen Fragrances')"><img src="cafe rose.png" alt="Next Gen Fragrances"><div class="cat-card-overlay"><h3>Next Gen Fragrances</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-4" onclick="filterShop('Discovery Set')"><img src="set4.png" alt="Discovery Sets"><div class="cat-card-overlay"><h3>Discovery Sets</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-5" onclick="filterShop('Ruh / Absolute Oil')"><img src="amiri.png" alt="Ruh and Absolute Oil"><div class="cat-card-overlay"><h3>Ruh / Absolute Oil</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-6" onclick="filterShop('Eau De Parfum')"><img src="vanilla.png" alt="Eau De Parfum"><div class="cat-card-overlay"><h3>Eau De Parfum</h3><span class="cat-arrow">→</span></div></div>
         </div>
     </section>
 
@@ -1940,6 +2055,34 @@
             <button class="btn-primary" style="align-self:flex-start;margin-top:12px;" onclick="goSection('process')">Know More</button>
         </div>
     </div>
+
+    <section class="attar-info-section" id="what-is-attar">
+        <div class="attar-info-inner">
+            <div class="attar-info-media reveal">
+                <img src="gulabattar.png" alt="Rose attar bottle">
+                <img src="mitti.png" alt="Mitti attar bottle">
+            </div>
+            <div class="attar-info-copy reveal reveal-delay-1">
+                <span class="section-label">What is Attar?</span>
+                <h2 class="section-title">Traditional perfume oil, made <em>without alcohol</em></h2>
+                <p>Attar is a concentrated perfume oil traditionally distilled from flowers, woods, roots, spices, and earth notes into a natural oil base. A tiny swipe warms on the skin and reveals its character slowly.</p>
+                <p>Ruh Imperium pairs classic Kannauj notes like Mitti, Mogra, Gulab, Hina, Kewra, and Sandalwood with modern EDP-style blends for daily wear, gifting, and special occasions.</p>
+                <button class="btn-primary" onclick="filterShop('Authentic Indian Attars')">Shop Attars</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="market-section">
+        <span class="section-label">Available Across India</span>
+        <h2 class="section-title">Order Ruh Imperium <em>directly online</em></h2>
+        <div class="market-grid">
+            <div class="market-tile">Website</div>
+            <div class="market-tile">WhatsApp</div>
+            <div class="market-tile">UPI</div>
+            <div class="market-tile">Razorpay</div>
+            <div class="market-tile">Courier</div>
+        </div>
+    </section>
 
     <!-- PERFUME PROCESS SECTION SETUP -->
     <section class="process-section" id="process">

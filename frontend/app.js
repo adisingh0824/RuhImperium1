@@ -520,6 +520,21 @@ function renderHomeSections() {
     document.getElementById('bestsellerGrid').innerHTML = bestsellers.map(p => productCardHTML(p)).join('');
     const newArrivals = products.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4);
     document.getElementById('newArrivalsGrid').innerHTML = newArrivals.map(p => productCardHTML(p)).join('');
+    const wellness = products
+        .filter(p => p.tags.includes('Daily') || p.tags.includes('Office') || ['Fresh', 'Earthy', 'Woody'].includes(p.notes))
+        .slice(0, 4);
+    const pooja = products
+        .filter(p => p.tags.includes('Festival') || ['Authentic Indian Attars', 'Ruh / Absolute Oil'].includes(p.cat))
+        .slice(0, 4);
+    const gifting = products
+        .filter(p => p.tags.includes('Gifting') || p.cat === 'Discovery Set')
+        .slice(0, 4);
+    const wellnessGrid = document.getElementById('wellnessGrid');
+    const poojaGrid = document.getElementById('poojaGrid');
+    const giftingGrid = document.getElementById('giftingGrid');
+    if (wellnessGrid) wellnessGrid.innerHTML = wellness.map(p => productCardHTML(p)).join('');
+    if (poojaGrid) poojaGrid.innerHTML = pooja.map(p => productCardHTML(p)).join('');
+    if (giftingGrid) giftingGrid.innerHTML = gifting.map(p => productCardHTML(p)).join('');
     renderRecommendations();
 }
 
