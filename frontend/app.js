@@ -516,6 +516,10 @@ function renderShopGrid() {
 }
 
 function renderHomeSections() {
+    if (!Array.isArray(products) || products.length === 0) {
+        console.warn('Product data not loaded, homepage sections cannot be rendered.', products);
+        return;
+    }
     const bestsellers = products.filter(p => p.bestseller).slice(0, 4);
     document.getElementById('bestsellerGrid').innerHTML = bestsellers.map(p => productCardHTML(p)).join('');
     const newArrivals = products.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4);

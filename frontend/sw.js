@@ -1,12 +1,17 @@
-const STATIC_CACHE = 'ruh-imperium-static-v2';
-const RUNTIME_CACHE = 'ruh-imperium-runtime-v1';
+const STATIC_CACHE = 'ruh-imperium-static-v4';
+const RUNTIME_CACHE = 'ruh-imperium-runtime-v3';
 const OFFLINE_URL = '/offline.html';
 
 const APP_SHELL = [
   '/',
   '/index.html',
+  '/frontend/index.html',
   '/app.js',
+  '/frontend/app.js',
   '/products.js',
+  '/frontend/products.js',
+  '/sw.js',
+  '/frontend/sw.js',
   '/manifest.webmanifest',
   '/offline.html',
   '/pwa-icons/ruh-logo-192.png',

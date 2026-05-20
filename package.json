@@ -5,6 +5,11 @@
   "engines": {
     "node": "22.x"
   },
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install": "cd backend && npm install"
+  },
   "dependencies": {
     "mongodb": "^7.1.1",
     "nodemailer": "^8.0.5"

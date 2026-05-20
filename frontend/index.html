@@ -2405,10 +2405,19 @@
 <script>
     // PWA SETUP
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
             navigator.serviceWorker.register('/sw.js').catch(error => {
                 console.error('PWA registration failed:', error);
             });
+
+            if (!localStorage.getItem('ruh-sw-reset-v4')) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                if (registrations.length > 0) {
+                    await Promise.all(registrations.map(registration => registration.unregister()));
+                    localStorage.setItem('ruh-sw-reset-v4', '1');
+                    window.location.reload();
+                }
+            }
         });
     }
 </script>
