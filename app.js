@@ -1283,10 +1283,11 @@ function setAuthMode(mode) {
     document.getElementById('authPhone').parentElement.style.display = isSignup ? 'block' : 'none';
     document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
     document.getElementById('authOtpSection').style.display = 'none';
+    document.getElementById('authSetPasswordSection').style.display = 'none';
     document.getElementById('authSubmitBtn').style.display = 'block';
     document.getElementById('authVerifyOtpBtn').style.display = 'none';
     const sendOtpBtn = document.getElementById('authSendOtpBtn');
-    if (sendOtpBtn) sendOtpBtn.style.display = isSignup ? 'none' : 'block';
+    if (sendOtpBtn) sendOtpBtn.style.display = 'block';
     document.getElementById('authAltCopy').innerHTML = isSignup
         ? 'Already have an account? <a class="auth-link" onclick="setAuthMode(\'login\')">Sign in</a>'
         : 'New here? <a class="auth-link" onclick="setAuthMode(\'signup\')">Create an account</a>';
