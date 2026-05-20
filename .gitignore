@@ -1,4 +1,6 @@
 backend/node_modules/
+node_modules/
+data/
 database/data/
 backend/.env
 .env
