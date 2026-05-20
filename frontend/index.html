@@ -451,8 +451,11 @@
             color:var(--text); background:rgba(244,234,216,0.42); border:1px solid rgba(185,144,75,0.12);
         }
         .hero-shop-layout {
-            width:min(1220px, calc(100% - 48px)); display:grid; grid-template-columns:0.95fr 1.05fr;
-            gap:44px; align-items:start; position:relative; z-index:2;
+            width:min(1220px, calc(100% - 48px)); display:grid; grid-template-columns:1fr;
+            gap:28px; align-items:start; position:relative; z-index:2;
+        }
+        .hero-brand-row {
+            display:grid; grid-template-columns:minmax(0,0.95fr) minmax(320px,0.8fr); gap:34px; align-items:center;
         }
         .hero-content.shop-hero-copy {
             text-align:left; padding:0; background:transparent; border:none; box-shadow:none; backdrop-filter:none;
@@ -466,11 +469,16 @@
             border:1px solid rgba(185,144,75,0.22); border-radius:999px; background:rgba(255,255,255,0.72);
             color:var(--gold); font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:700;
         }
+        .hero-wide-photo {
+            min-height:330px; border-radius:30px; overflow:hidden; border:1px solid rgba(31,42,56,0.08);
+            background:#fff; box-shadow:0 28px 70px rgba(18,28,44,0.12); position:relative;
+        }
+        .hero-wide-photo img { width:100%; height:100%; object-fit:cover; display:block; }
         .hero-product-board {
-            display:grid; grid-template-columns:1.08fr 0.92fr; gap:16px; align-items:stretch;
+            display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-items:stretch;
         }
         .hero-product-card {
-            position:relative; min-height:390px; border-radius:28px; overflow:hidden; background:#fff;
+            position:relative; min-height:260px; border-radius:28px; overflow:hidden; background:#fff;
             border:1px solid rgba(31,42,56,0.08); box-shadow:0 28px 70px rgba(18,28,44,0.14);
         }
         .hero-product-card img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -484,9 +492,8 @@
         }
         .hero-product-caption span { display:block; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold-light); margin-bottom:6px; }
         .hero-product-caption strong { display:block; font-family:'Playfair Display',serif; font-size:28px; line-height:1.1; }
-        .hero-side-stack { display:grid; gap:16px; }
         .hero-mini-card {
-            position:relative; min-height:187px; border-radius:24px; overflow:hidden; background:#fff;
+            position:relative; min-height:260px; border-radius:24px; overflow:hidden; background:#fff;
             border:1px solid rgba(31,42,56,0.08); box-shadow:var(--shadow-card);
         }
         .hero-mini-card img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -1461,7 +1468,8 @@
             }
         }
         @media(max-width:1100px){
-            .hero-shop-layout{grid-template-columns:1fr; padding:36px 0;}
+            .hero-shop-layout{padding:36px 0;}
+            .hero-brand-row{grid-template-columns:1fr;}
             .hero-content.shop-hero-copy{max-width:none; text-align:center;}
             .hero-content.shop-hero-copy .hero-divider,
             .hero-content.shop-hero-copy .hero-btns{justify-content:center;}
@@ -1471,8 +1479,8 @@
         @media(max-width:768px){
             .hero-shop-layout{width:100%; gap:24px;}
             .hero-product-board{grid-template-columns:1fr;}
+            .hero-wide-photo{min-height:240px; border-radius:22px;}
             .hero-product-card{min-height:340px; border-radius:22px;}
-            .hero-side-stack{grid-template-columns:1fr 1fr;}
             .hero-mini-card{min-height:170px;}
             .attar-info-section,.market-section{padding-left:14px; padding-right:14px;}
             .attar-info-media{grid-template-columns:1fr 1fr;}
@@ -1481,8 +1489,8 @@
         @media(max-width:480px){
             .hero-content.shop-hero-copy{padding:0; margin-top:0;}
             .hero-kicker{font-size:10px; letter-spacing:1.4px;}
+            .hero-wide-photo{min-height:210px;}
             .hero-product-card{min-height:300px;}
-            .hero-side-stack{grid-template-columns:1fr;}
             .hero-mini-card{min-height:190px;}
             .attar-info-media{grid-template-columns:1fr;}
             .attar-info-media img:first-child{margin-top:0;}
@@ -1943,20 +1951,25 @@
     <section class="hero">
         <div class="hero-bg-pattern"></div>
         <div class="hero-shop-layout">
-            <div class="hero-content shop-hero-copy">
-                <span class="hero-kicker">Pure Indian Attars Since 1973</span>
-                <p class="hero-tagline">Handcrafted in the Heart of Kannauj</p>
-                <h1 class="hero-title">Ruh Imperium</h1>
-                <p class="hero-subtitle">Authentic attars, modern perfumes, and gift-ready discovery sets delivered with the soul of Indian perfumery.</p>
-                <div class="hero-tech-strip">
-                    <span class="hero-tech-pill">Pure Oil Profiles</span>
-                    <span class="hero-tech-pill">Direct From Kannauj</span>
-                    <span class="hero-tech-pill">Gift Ready</span>
+            <div class="hero-brand-row">
+                <div class="hero-content shop-hero-copy">
+                    <span class="hero-kicker">Pure Indian Attars Since 1973</span>
+                    <p class="hero-tagline">Handcrafted in the Heart of Kannauj</p>
+                    <h1 class="hero-title">Ruh Imperium</h1>
+                    <p class="hero-subtitle">Authentic attars, modern perfumes, and gift-ready discovery sets delivered with the soul of Indian perfumery.</p>
+                    <div class="hero-tech-strip">
+                        <span class="hero-tech-pill">Pure Oil Profiles</span>
+                        <span class="hero-tech-pill">Direct From Kannauj</span>
+                        <span class="hero-tech-pill">Gift Ready</span>
+                    </div>
+                    <div class="hero-divider"><span></span><i>✿</i><span></span></div>
+                    <div class="hero-btns">
+                        <button class="btn-primary" onclick="filterShop('all')">Shop Products</button>
+                        <button class="btn-outline" onclick="goSection('what-is-attar')">What is Attar?</button>
+                    </div>
                 </div>
-                <div class="hero-divider"><span></span><i>✿</i><span></span></div>
-                <div class="hero-btns">
-                    <button class="btn-primary" onclick="filterShop('all')">Shop Products</button>
-                    <button class="btn-outline" onclick="goSection('what-is-attar')">What is Attar?</button>
+                <div class="hero-wide-photo">
+                    <img src="set4.png" alt="Ruh Imperium perfume collection">
                 </div>
             </div>
             <div class="hero-product-board" aria-label="Featured Ruh Imperium products">
@@ -1964,10 +1977,8 @@
                     <img src="gulabattar.png" alt="Gulab Attar bottle">
                     <span class="hero-product-caption"><span>Featured Attar</span><strong>Gulab Attar</strong></span>
                 </button>
-                <div class="hero-side-stack">
-                    <button class="hero-mini-card" type="button" onclick="openProductModal(1)"><img src="mitti.png" alt="Mitti Attar"><span>Mitti Attar</span></button>
-                    <button class="hero-mini-card" type="button" onclick="openProductModal(18)"><img src="dubai gold.png" alt="Dubai Gold perfume"><span>Dubai Gold</span></button>
-                </div>
+                <button class="hero-mini-card" type="button" onclick="openProductModal(1)"><img src="mitti.png" alt="Mitti Attar"><span>Mitti Attar</span></button>
+                <button class="hero-mini-card" type="button" onclick="openProductModal(18)"><img src="dubai gold.png" alt="Dubai Gold perfume"><span>Dubai Gold</span></button>
             </div>
         </div>
     </section>
