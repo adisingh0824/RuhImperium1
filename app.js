@@ -1489,7 +1489,11 @@ async function requestAuthOtp() {
     }
     // Local OTP generation for testing
     const otp = String(Math.floor(100000 + Math.random() * 900000));
-    authOtpState = { user: null, code: otp, createdAt: Date.now() };
+    authOtpState = {
+        user: { name: '', email, phone, password: '' },
+        code: otp,
+        createdAt: Date.now()
+    };
     document.getElementById('authOtpSection').style.display = 'block';
     document.getElementById('authVerifyOtpBtn').style.display = 'block';
     document.getElementById('authSubmitBtn').style.display = 'none';

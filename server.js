@@ -621,13 +621,10 @@ function getOtpDeliveryMode() {
 }
 
 async function sendOtpMessage({ phone, otp }) {
-    if (getOtpDeliveryMode() !== 'sms') {
-        return { mode: 'preview', previewOtp: otp };
-    }
-
+    const deliveryMode = getOtpDeliveryMode();
     const mobile = normalizePhone(phone);
-    if (!mobile) {
-        throw new Error('A valid phone number is required for SMS OTP delivery.');
+    if (deliveryMode !== 'sms' || !mobile) {
+        return { mode: 'preview', previewOtp: otp };
     }
 
     const payload = {
@@ -1261,7 +1258,7 @@ async function handleApi(req, res, pathname, url) {
             }
         }
         const code = String(Math.floor(1000 + Math.random() * 9000));
-        const otps = (await readOtps()).filter(entry => entry.userId !== user.id && entry.expiresAt > Date.now());
+        const otps = (await readOtps()).filter(entry => entry.userId !== targetUser.id && entry.expiresAt > Date.now());
         otps.push({
             userId: targetUser.id,
             purpose: 'login',
