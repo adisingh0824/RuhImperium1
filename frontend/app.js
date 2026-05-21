@@ -683,9 +683,10 @@ function renderHomeSections() {
     fill('attarsCollectionGrid', catalog.filter(p => p.cat === 'Authentic Indian Attars').slice(0, 4));
     fill('edpCollectionGrid', catalog.filter(p => p.cat === 'Eau De Parfum').slice(0, 4));
     fill('modernCollectionGrid', catalog.filter(p => p.cat === 'Modern Attars').slice(0, 4));
-    const wellness = catalog
-        .filter(p => p.tags.includes('Daily') || p.tags.includes('Office') || ['Fresh', 'Earthy', 'Woody'].includes(p.notes))
-        .slice(0, 4);
+    fill('wellnessCollectionGrid', catalog.filter(p => p.cat === 'Wellness').slice(0, 4));
+    fill('ruhCollectionGrid', catalog.filter(p => p.cat === 'Ruh / Absolute Oil').slice(0, 4));
+    fill('discoveryCollectionGrid', catalog.filter(p => p.cat === 'Discovery Set').slice(0, 4));
+    const wellness = catalog.filter(p => p.cat === 'Wellness').slice(0, 4);
     const pooja = catalog
         .filter(p => p.tags.includes('Festival') || ['Authentic Indian Attars', 'Ruh / Absolute Oil'].includes(p.cat))
         .slice(0, 4);
@@ -700,7 +701,8 @@ function renderHomeSections() {
     if (window.refreshRuh3D) {
         [
             'bestsellerGrid', 'newArrivalsGrid', 'attarsCollectionGrid', 'edpCollectionGrid',
-            'modernCollectionGrid', 'wellnessGrid', 'poojaGrid', 'giftingGrid', 'recentlyViewedGrid'
+            'modernCollectionGrid', 'wellnessCollectionGrid', 'ruhCollectionGrid', 'discoveryCollectionGrid',
+            'wellnessGrid', 'poojaGrid', 'giftingGrid', 'recentlyViewedGrid'
         ].forEach(id => {
             const grid = document.getElementById(id);
             if (grid) window.refreshRuh3D(grid);
@@ -2247,6 +2249,17 @@ function triggerBackupImport() { showToast('Backup import is disabled in this de
 
 function submitReview() { showToast('Thanks for your review. It has been noted.'); }
 
+function initReviewProductSelect() {
+    const select = document.getElementById('reviewProduct');
+    if (!select) return;
+    const options = getCatalog()
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(p => `<option value="${p.id}">${escapeAttr(p.name)}</option>`)
+        .join('');
+    select.innerHTML = `<option value="">Select product</option>${options}`;
+}
+
 function setAdminFilterPreset() { showToast('Admin filtering is not active in this version.'); }
 
 function filterAdminOrders() { showToast('Admin search is not active in this demo.'); }
@@ -2342,6 +2355,7 @@ async function bootApp() {
     initProductGridActions();
     initCheckoutBindings();
     renderHomeSections();
+    initReviewProductSelect();
     updateWishBadge();
     updateCartBadge();
     updateAccountUI();

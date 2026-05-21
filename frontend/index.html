@@ -1593,6 +1593,7 @@
         <a data-filter="Discovery Set" onclick="closeMobileMenu();filterShop('Discovery Set')">Discovery Sets</a>
         <a data-filter="Ruh / Absolute Oil" onclick="closeMobileMenu();filterShop('Ruh / Absolute Oil')">Ruh / Oil</a>
         <a data-filter="Eau De Parfum" onclick="closeMobileMenu();filterShop('Eau De Parfum')">Eau De Parfum</a>
+        <a data-filter="Wellness" onclick="closeMobileMenu();filterShop('Wellness')">Wellness</a>
         <a onclick="closeMobileMenu();openScentAssistant()">AI Scent Finder</a>
         <a onclick="closeMobileMenu();goSection('shop-notes')">Shop by Notes</a>
         <a onclick="closeMobileMenu();goSection('gifting')">Shop by Use</a>
@@ -1953,6 +1954,7 @@
                         <a onclick="filterShop('Ruh / Absolute Oil')">Ruh / Absolute Oil</a>
                         <a onclick="filterShop('Discovery Set')">Discovery Set</a>
                         <a onclick="filterShop('Eau De Parfum')">Eau De Parfum</a>
+                        <a onclick="filterShop('Wellness')">Wellness</a>
                         <a onclick="filterShop('all')">All Products</a>
                     </div>
                 </div>
@@ -2007,12 +2009,12 @@
     <!-- CATEGORY GRID — Raahi collections -->
     <section class="collection-section" style="padding-top:0;">
         <div class="cat-grid reveal" id="homeCatGrid">
-            <div class="cat-card cat-1" onclick="filterShop('Authentic Indian Attars')"><img src="/gulabattar.png" alt="Authentic Indian Attars"><div class="cat-card-overlay"><h3>Authentic Indian Attars</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-2" onclick="filterShop('Modern Attars')"><img src="/mitti.png" alt="Modern Attars"><div class="cat-card-overlay"><h3>Modern Attars</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-3" onclick="filterShop('Next Gen Fragrances')"><img src="/cafe%20rose.png" alt="Next Gen fragrances"><div class="cat-card-overlay"><h3>Next Gen fragrances</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-4" onclick="filterShop('Eau De Parfum')"><img src="/vanilla.png" alt="Eau De Parfum"><div class="cat-card-overlay"><h3>Eau De Parfum</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-5" onclick="filterShop('Ruh / Absolute Oil')"><img src="/amiri.png" alt="Ruh Absolute Oil"><div class="cat-card-overlay"><h3>Ruh | Absolute Oils</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-6" onclick="filterShop('Discovery Set')"><img src="/set4.png" alt="Discovery Set"><div class="cat-card-overlay"><h3>Discovery Set</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-1" onclick="filterShop('Authentic Indian Attars')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/MH6A2535-5.jpg?v=1745485650" alt="Authentic Indian Attars"><div class="cat-card-overlay"><h3>Authentic Indian Attars</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-2" onclick="filterShop('Modern Attars')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/champaperfume3.jpg?v=1779306022" alt="Modern Attars"><div class="cat-card-overlay"><h3>Modern Attars</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-3" onclick="filterShop('Next Gen Fragrances')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/BlackMusk_31c83785-5aaf-47ab-86aa-440b36091a65.jpg?v=1709395049" alt="Next Gen fragrances"><div class="cat-card-overlay"><h3>Next Gen fragrances</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-4" onclick="filterShop('Eau De Parfum')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/Raahi_Gulab_100ml.jpg?v=1744539563" alt="Eau De Parfum"><div class="cat-card-overlay"><h3>Eau De Parfum</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-5" onclick="filterShop('Ruh / Absolute Oil')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/Ruh_Gulab_Roseoil.jpg?v=1744268176" alt="Ruh Absolute Oil" onerror="this.src='https://cdn.shopify.com/s/files/1/0614/4602/9490/files/Sandalwood_Oil_creative.jpg?v=1744268176'"><div class="cat-card-overlay"><h3>Ruh | Absolute Oils</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-6" onclick="filterShop('Discovery Set')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/Indian_Attars_1080_x_1080_px.jpg?v=1751399934" alt="Discovery Set"><div class="cat-card-overlay"><h3>Discovery Set</h3><span class="cat-arrow">→</span></div></div>
         </div>
     </section>
 
@@ -2093,6 +2095,34 @@
         </div>
         <div class="products-grid scene-3d" id="modernCollectionGrid"></div>
         <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Modern Attars')">View all</button></div>
+    </section>
+
+    <!-- WELLNESS — Raahi -->
+    <section class="collection-section" id="wellness-collection">
+        <div class="collection-header reveal">
+            <h2>Wellness</h2>
+            <p>Where ancient Indian wisdom meets modern self-care — sandalwood, rose water, and pure Kannauj ingredients.</p>
+        </div>
+        <div class="products-grid scene-3d" id="wellnessCollectionGrid"></div>
+        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Wellness')">View all</button></div>
+    </section>
+
+    <!-- RUH | ABSOLUTE OILS -->
+    <section class="collection-section alt" id="ruh-oils">
+        <div class="collection-header reveal">
+            <h2>Ruh | Absolute Oils</h2>
+        </div>
+        <div class="products-grid scene-3d" id="ruhCollectionGrid"></div>
+        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Ruh / Absolute Oil')">View all</button></div>
+    </section>
+
+    <!-- DISCOVERY SET -->
+    <section class="collection-section" id="discovery-sets">
+        <div class="collection-header reveal">
+            <h2>Discovery Set</h2>
+        </div>
+        <div class="products-grid scene-3d" id="discoveryCollectionGrid"></div>
+        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Discovery Set')">View all</button></div>
     </section>
 
     <!-- RECENTLY VIEWED PRODUCTS SETUP -->
@@ -2202,7 +2232,7 @@
                 </div>
             </div>
             <div class="products-grid scene-3d" id="wellnessGrid" style="margin-top:36px;"></div>
-            <div class="view-all-wrap"><button class="btn-primary" onclick="filterShop('Daily')">View Wellness Picks</button></div>
+            <div class="view-all-wrap"><button class="btn-primary" onclick="filterShop('Wellness')">View Wellness</button></div>
         </div>
     </section>
 
@@ -2376,6 +2406,8 @@
             <button class="filter-btn" onclick="shopFilter('Discovery Set',this)">Discovery Sets</button>
             <button class="filter-btn" onclick="shopFilter('Ruh / Absolute Oil',this)">Ruh / Oil</button>
             <button class="filter-btn" onclick="shopFilter('Eau De Parfum',this)">Eau De Parfum</button>
+            <button class="filter-btn" onclick="shopFilter('Wellness',this)">Wellness</button>
+            <button class="filter-btn" onclick="shopFilter('Next Gen Fragrances',this)">Next Gen</button>
         </div>
         <select class="sort-select" onchange="sortProducts(this.value)">
             <option value="default">Sort: Featured</option>
@@ -2417,6 +2449,7 @@
                 <li><a onclick="filterShop('Discovery Set')">Discovery Sets</a></li>
                 <li><a onclick="filterShop('Ruh / Absolute Oil')">Ruh / Absolute Oil</a></li>
                 <li><a onclick="filterShop('Eau De Parfum')">Eau De Parfum</a></li>
+                <li><a onclick="filterShop('Wellness')">Wellness</a></li>
             </ul>
         </div>
         <div class="footer-col">
