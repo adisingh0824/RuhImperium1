@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'ruh-imperium-static-v4';
+const STATIC_CACHE = 'ruh-imperium-static-v5';
 const RUNTIME_CACHE = 'ruh-imperium-runtime-v3';
 const OFFLINE_URL = '/offline.html';
 

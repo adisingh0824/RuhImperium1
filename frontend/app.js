@@ -9,7 +9,8 @@ const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
 const coupons = {
     RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer' },
     WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer' },
-    ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off' }
+    ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off' },
+    ADI50: { type: 'percent', value: 50, label: 'Special Offer', expiresAt: '2026-05-31T23:59:59.000Z' }
 };
 
 const ORDERS_STORAGE_KEY = 'ruhImperiumOrders';
@@ -715,6 +716,10 @@ function isCouponValidForCart(code, showFeedback = true) {
     const coupon = coupons[normalizedCode];
     if (!coupon) {
         if (showFeedback) showToast('Invalid coupon code.');
+        return false;
+    }
+    if (coupon.expiresAt && new Date(coupon.expiresAt).getTime() < Date.now()) {
+        if (showFeedback) showToast('This coupon has expired.');
         return false;
     }
     if (coupon.minOrder && getCartTotal() < coupon.minOrder) {
@@ -1500,8 +1505,11 @@ async function requestAuthOtp() {
             showDetailedError(response, '/api/auth/request-otp');
             return;
         }
-        // show otp preview when SMS not configured (previewOtp present)
-        if (response.previewOtp) showToast(`OTP: ${response.previewOtp} (preview)`);
+        if (response.previewOtp) {
+            showToast(`OTP: ${response.previewOtp} (preview)`);
+        } else {
+            showToast(response.message || 'OTP sent. Check your phone.');
+        }
         document.getElementById('authOtpSection').style.display = 'block';
         document.getElementById('authVerifyOtpBtn').style.display = 'block';
         document.getElementById('authSubmitBtn').style.display = 'none';
@@ -1906,8 +1914,6 @@ function triggerBackupImport() { showToast('Backup import is disabled in this de
 
 function submitReview() { showToast('Thanks for your review. It has been noted.'); }
 
-function installPWA() { showToast('Use your browser menu to install the app to the home screen.'); }
-
 function setAdminFilterPreset() { showToast('Admin filtering is not active in this version.'); }
 
 function filterAdminOrders() { showToast('Admin search is not active in this demo.'); }
@@ -1924,17 +1930,40 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCheckout(); closeAuthModal(); }
 });
 
-loadStoredState();
-loadLastOrder();
-loadServerConfig();
-initPwaInstall();
-renderHomeSections();
-updateWishBadge();
-updateCartBadge();
-updateAccountUI();
-updateCouponUI();
-updateOrderSummary();
-prefillCheckout();
-renderCartItems();
-initReveals();
-initAuthBindings();
+async function ensureProductCatalog() {
+    if (typeof products !== 'undefined' && Array.isArray(products) && products.length > 0) {
+        return;
+    }
+    try {
+        const data = await fetchJson('/api/products', { method: 'GET' });
+        if (Array.isArray(data.products) && data.products.length) {
+            if (typeof products !== 'undefined' && Array.isArray(products)) {
+                products.splice(0, products.length, ...data.products);
+            } else {
+                window.products = data.products;
+            }
+        }
+    } catch (error) {
+        console.warn('Product catalog API fallback failed:', error.message || error);
+    }
+}
+
+async function bootApp() {
+    loadStoredState();
+    loadLastOrder();
+    await ensureProductCatalog();
+    await loadServerConfig();
+    initPwaInstall();
+    renderHomeSections();
+    updateWishBadge();
+    updateCartBadge();
+    updateAccountUI();
+    updateCouponUI();
+    updateOrderSummary();
+    prefillCheckout();
+    renderCartItems();
+    initReveals();
+    initAuthBindings();
+}
+
+bootApp();

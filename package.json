@@ -8,7 +8,9 @@
   "scripts": {
     "start": "cd backend && npm start",
     "dev": "cd backend && npm run dev",
-    "install": "cd backend && npm install"
+    "install": "cd backend && npm install",
+    "sync:products": "node scripts/sync-products.js",
+    "predeploy": "npm run sync:products"
   },
   "dependencies": {
     "mongodb": "^7.1.1",

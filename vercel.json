@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "installCommand": "npm install && npm run sync:products",
   "cleanUrls": false,
   "trailingSlash": false,
   "rewrites": [

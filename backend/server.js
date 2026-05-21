@@ -362,6 +362,10 @@ function normalizePhone(phone) {
     return digits;
 }
 
+function generateOtp() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+}
+
 // EMAIL NOTIFICATION SETUP
 function getBaseUrl(req) {
     if (APP_BASE_URL) return APP_BASE_URL;
@@ -1033,6 +1037,13 @@ async function handleApi(req, res, pathname, url) {
         return;
     }
 
+    if (req.method === 'GET' && pathname === '/api/products') {
+        sendJson(res, 200, {
+            products: productCatalog.map(normalizeCatalogProduct)
+        });
+        return;
+    }
+
     if (req.method === 'GET' && pathname === '/api/config') {
         const razorpayConfigured = Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET);
         const authConfigured = Boolean(TOKEN_SECRET && TOKEN_SECRET !== 'change-this-auth-secret');
@@ -1258,7 +1269,7 @@ async function handleApi(req, res, pathname, url) {
                 return;
             }
         }
-        const code = String(Math.floor(1000 + Math.random() * 9000));
+        const code = generateOtp();
         const otps = (await readOtps()).filter(entry => entry.userId !== targetUser.id && entry.expiresAt > Date.now());
         otps.push({
             userId: targetUser.id,
@@ -1355,7 +1366,7 @@ async function handleApi(req, res, pathname, url) {
             sendJson(res, 400, { error: 'Email or phone is required.' });
             return;
         }
-        const code = String(Math.floor(1000 + Math.random() * 9000));
+        const code = generateOtp();
         const otps = (await readOtps()).filter(entry => !(entry.userId === authUser.id && entry.purpose === 'order') && entry.expiresAt > Date.now());
         otps.push({
             userId: authUser.id,

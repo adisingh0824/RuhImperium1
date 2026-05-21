@@ -1,6 +1,18 @@
 # Ruh Imperium Deployment
 
-This project is ready to deploy on Railway or Render with MongoDB Atlas.
+This project is ready to deploy on Vercel, Railway, or Render with MongoDB Atlas.
+
+## Vercel
+
+1. Push this project to GitHub (include `frontend/products.js` and `api/[...path].js`).
+2. Import the repo in Vercel.
+3. Add the environment variables below in the Vercel project settings.
+4. Deploy. The install step runs `npm run sync:products` so the storefront catalog stays aligned with `database/products.js`.
+5. Verify:
+   - `/api/health`
+   - `/api/config`
+   - `/api/products`
+   - `/products.js` (or open the shop and confirm product cards render)
 
 ## Required environment variables
 
