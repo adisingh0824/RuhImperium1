@@ -1,15 +1,22 @@
 const { handleApi } = require('../backend/server');
 
+function resolveApiPathname(req, url) {
+    let pathname = decodeURIComponent(url.pathname || '/api');
+    if (req.query && req.query.path) {
+        const segments = Array.isArray(req.query.path) ? req.query.path : String(req.query.path).split('/');
+        pathname = `/api/${segments.filter(Boolean).join('/')}`;
+    }
+    const rewrittenPath = url.searchParams.get('path');
+    if (rewrittenPath && (pathname === '/api' || pathname === '/api/')) {
+        pathname = `/api/${rewrittenPath.replace(/^\/+/, '')}`;
+    }
+    return pathname.replace(/\/+$/, '') || '/api';
+}
+
 module.exports = async (req, res) => {
     try {
         const url = new URL(req.url, `https://${req.headers.host || 'localhost'}`);
-        let pathname = decodeURIComponent(url.pathname);
-        const rewrittenPath = url.searchParams.get('path');
-        if ((pathname === '/api' || pathname === '/api/') && rewrittenPath) {
-            pathname = `/api/${rewrittenPath.replace(/^\/+/, '')}`;
-            url.pathname = pathname;
-            url.searchParams.delete('path');
-        }
+        const pathname = resolveApiPathname(req, url);
         await handleApi(req, res, pathname, url);
     } catch (error) {
         res.statusCode = 500;

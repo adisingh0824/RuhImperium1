@@ -60,6 +60,7 @@ const REMOTE_STATES = new Set(['West Bengal', 'Tamil Nadu', 'Karnataka', 'Mahara
 
 // COUPON VALIDATION SETUP
 const coupons = {
+    BUY2: { type: 'percent', value: 20, label: 'Buy 2 Offer', expiresAt: '2027-03-31T23:59:59.000Z' },
     RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer', expiresAt: '2027-03-31T23:59:59.000Z' },
     WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer', expiresAt: '2027-03-31T23:59:59.000Z' },
     ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off', expiresAt: '2027-03-31T23:59:59.000Z' },

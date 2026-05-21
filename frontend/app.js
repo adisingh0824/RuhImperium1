@@ -9,6 +9,7 @@ const COMPARE_STORAGE_KEY = 'ruhImperiumCompare';
 const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
 
 const coupons = {
+    BUY2: { type: 'percent', value: 20, label: 'Buy 2 Offer' },
     RAMJI20: { type: 'percent', value: 20, label: 'Ram Ji Signature Offer' },
     WELCOME10: { type: 'percent', value: 10, label: 'Welcome Offer' },
     ATTAR250: { type: 'flat', value: 250, minOrder: 1500, label: 'Flat Rs. 250 Off' },
@@ -75,6 +76,75 @@ function escapeAttr(value) {
     return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
+function getCatalog() {
+    if (typeof products !== 'undefined' && Array.isArray(products) && products.length) return products;
+    if (Array.isArray(window.__ruhCatalog) && window.__ruhCatalog.length) return window.__ruhCatalog;
+    return [];
+}
+
+function setCatalog(list) {
+    const catalog = Array.isArray(list) ? list : [];
+    window.__ruhCatalog = catalog;
+    if (typeof products !== 'undefined' && Array.isArray(products)) {
+        products.length = 0;
+        products.push(...catalog);
+    }
+}
+
+function assetUrl(path) {
+    const value = String(path || '').trim();
+    if (!value) return '';
+    if (/^https?:\/\//i.test(value)) return value;
+    const normalized = value.startsWith('/') ? value : `/${value}`;
+    return encodeURI(normalized);
+}
+
+function formatProductTitle(product) {
+    const size = product.sizes?.[0] ? ` | ${product.sizes[0]}` : '';
+    return `${product.name} | ${product.cat}${size}`;
+}
+
+function scoreLocalProductMatch(product, prompt) {
+    const text = String(prompt || '').toLowerCase();
+    const blob = [product.name, product.cat, product.notes, product.desc, ...(product.tags || [])].join(' ').toLowerCase();
+    let score = 0;
+    text.split(/[^a-z0-9]+/i).filter(term => term.length > 2).forEach(term => {
+        if (blob.includes(term)) score += 2;
+    });
+    const groups = [
+        { terms: ['fresh', 'office', 'summer', 'light'], notes: ['fresh', 'summer', 'office'] },
+        { terms: ['floral', 'rose', 'romantic', 'mogra'], notes: ['floral', 'rose', 'jasmine', 'mogra'] },
+        { terms: ['woody', 'earthy', 'oud', 'sandal'], notes: ['woody', 'earthy', 'oud', 'sandal'] },
+        { terms: ['sweet', 'vanilla', 'gourmand'], notes: ['vanilla', 'caramel', 'gourmand'] },
+        { terms: ['gift', 'festival', 'set'], notes: ['gifting', 'festival', 'discovery'] },
+        { terms: ['party', 'bold', 'winter'], notes: ['party', 'winter', 'musk', 'oriental'] }
+    ];
+    groups.forEach(group => {
+        if (group.terms.some(term => text.includes(term))) {
+            group.notes.forEach(note => {
+                if (blob.includes(note)) score += 4;
+            });
+        }
+    });
+    if (product.bestseller) score += 1;
+    return score;
+}
+
+function getLocalScentMatches(prompt, limit = 4) {
+    return getCatalog()
+        .map(product => ({ product, score: scoreLocalProductMatch(product, prompt) }))
+        .sort((a, b) => b.score - a.score || b.product.stars - a.product.stars)
+        .slice(0, limit)
+        .map(entry => entry.product.name);
+}
+
+function buildLocalScentReply(message, suggestions) {
+    if (!suggestions.length) {
+        return 'Tell me if you want fresh, floral, woody, sweet, office, party, gifting, summer, or winter notes and I will suggest attars.';
+    }
+    return `For "${message}", start with ${suggestions.slice(0, 3).join(', ')}. Tap a suggestion to browse matching products.`;
+}
+
 function persistOrders() {
     localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
 }
@@ -136,10 +206,17 @@ async function fetchJson(path, options = {}) {
     }
     const res = await fetch(path, config);
     const text = await res.text();
+    const trimmed = String(text || '').trim();
+    if (!trimmed) return res.ok ? {} : { error: 'Empty response from server.' };
+    if (trimmed.startsWith('<') || trimmed.startsWith('<!')) {
+        return { error: res.status === 404 ? 'Service unavailable. Please refresh the page.' : 'Unexpected server response.' };
+    }
     try {
-        return JSON.parse(text || '{}');
+        const data = JSON.parse(trimmed);
+        if (!res.ok && !data.error) data.error = data.message || `Request failed (${res.status})`;
+        return data;
     } catch (error) {
-        return { error: text || 'Unexpected response' };
+        return { error: trimmed.slice(0, 180) || 'Unexpected response' };
     }
 }
 
@@ -376,6 +453,22 @@ function scrollScentMessages() {
     if (messages) messages.scrollTop = messages.scrollHeight;
 }
 
+function renderScentAssistantReply(assistantBubble, message, response) {
+    const suggestions = Array.isArray(response.suggestions) && response.suggestions.length
+        ? response.suggestions
+        : getLocalScentMatches(message);
+    const reply = response.reply || buildLocalScentReply(message, suggestions);
+    assistantBubble.classList.remove('loading');
+    assistantBubble.innerHTML = `<p>${reply}</p>`;
+    if (suggestions.length) {
+        assistantBubble.innerHTML += `<div class="scent-suggestions">${suggestions.map(item => `<button type="button" class="scent-suggestion-card" data-suggestion="${escapeAttr(item)}"><strong>${item}</strong><small>Tap to search</small></button>`).join('')}</div>`;
+        assistantBubble.querySelectorAll('[data-suggestion]').forEach(btn => {
+            btn.addEventListener('click', () => handleScentSuggestion(btn.dataset.suggestion || ''));
+        });
+    }
+    scrollScentMessages();
+}
+
 async function sendScentMessage(event) {
     if (event) event.preventDefault();
     const input = document.getElementById('scentInput');
@@ -385,27 +478,31 @@ async function sendScentMessage(event) {
         showToast('Please ask the assistant a question.');
         return;
     }
+    if (!getCatalog().length) {
+        showToast('Products are still loading. Please try again in a moment.');
+        return;
+    }
     input.value = '';
     renderScentMessage(message, 'user');
-    const assistantBubble = renderScentMessage('Thinking through the best attar options for you...', 'assistant', true);
+    const assistantBubble = renderScentMessage('Finding the best attar matches for you...', 'assistant', true);
     try {
         const response = await fetchJson('/api/ai-scent-chat', {
             method: 'POST',
             body: { message }
         });
-        assistantBubble.classList.remove('loading');
-        assistantBubble.innerHTML = `<p>${response.reply || 'Here is a hand-picked match for your request.'}</p>`;
-        if (Array.isArray(response.suggestions) && response.suggestions.length) {
-            const suggestionsHtml = response.suggestions.map(item => `<button type="button" class="scent-suggestion-card" data-suggestion="${escapeAttr(item)}"><strong>${item}</strong><small>Tap to search</small></button>`).join('');
-            assistantBubble.innerHTML += `<div class="scent-suggestions">${suggestionsHtml}</div>`;
-            assistantBubble.querySelectorAll('[data-suggestion]').forEach(btn => {
-                btn.addEventListener('click', () => handleScentSuggestion(btn.dataset.suggestion || ''));
+        if (response.error) {
+            renderScentAssistantReply(assistantBubble, message, {
+                reply: buildLocalScentReply(message, getLocalScentMatches(message)),
+                suggestions: getLocalScentMatches(message)
             });
+            return;
         }
-        scrollScentMessages();
+        renderScentAssistantReply(assistantBubble, message, response);
     } catch (error) {
-        assistantBubble.classList.remove('loading');
-        assistantBubble.innerHTML = `<p>Sorry, the assistant is not available right now. Try again in a moment.</p>`;
+        renderScentAssistantReply(assistantBubble, message, {
+            reply: buildLocalScentReply(message, getLocalScentMatches(message)),
+            suggestions: getLocalScentMatches(message)
+        });
     }
 }
 
@@ -488,7 +585,7 @@ function filterByPrice(val) {
 }
 
 function getFilteredProducts() {
-    let filtered = products.filter(p => {
+    let filtered = getCatalog().filter(p => {
         if (currentFilter === 'all') return true;
         return (
             p.cat.toLowerCase().includes(currentFilter.toLowerCase()) ||
@@ -517,12 +614,13 @@ function productCardHTML(p) {
       <div class="card-3d-inner">
       ${p.badge ? `<span class="product-badge ${p.badge === 'NEW' ? 'new' : ''}">${p.badge}</span>` : ''}
       <div class="product-img-wrap">
-        <img src="${escapeAttr(p.img)}" alt="${escapeAttr(p.name)}" loading="lazy" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">
+        <img src="${assetUrl(p.img)}" alt="${escapeAttr(p.name)}" loading="lazy" draggable="false" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">
         <button class="wishlist-btn ${inWish ? 'active' : ''}" type="button" data-wish-id="${p.id}" aria-label="Toggle wishlist">♥</button>
       </div>
       <div class="product-info">
         <p class="product-desc">${p.cat}</p>
         <h3 class="product-name">${p.name}</h3>
+        <p class="product-variant">${p.cat}${p.sizes?.[0] ? ` · ${p.sizes[0]}` : ''}</p>
         <div class="product-stars">${starStr(p.stars)} <span>(${p.reviews} reviews)</span></div>
         <div class="product-price-row">
           <div>
@@ -551,21 +649,22 @@ function renderShopGrid() {
 }
 
 function renderHomeSections() {
-    if (!Array.isArray(products) || products.length === 0) {
-        console.warn('Product data not loaded, homepage sections cannot be rendered.', products);
+    const catalog = getCatalog();
+    if (!catalog.length) {
+        console.warn('Product data not loaded, homepage sections cannot be rendered.');
         return;
     }
-    const bestsellers = products.filter(p => p.bestseller).slice(0, 4);
+    const bestsellers = catalog.filter(p => p.bestseller).slice(0, 4);
     document.getElementById('bestsellerGrid').innerHTML = bestsellers.map(p => productCardHTML(p)).join('');
-    const newArrivals = products.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4);
+    const newArrivals = catalog.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4);
     document.getElementById('newArrivalsGrid').innerHTML = newArrivals.map(p => productCardHTML(p)).join('');
-    const wellness = products
+    const wellness = catalog
         .filter(p => p.tags.includes('Daily') || p.tags.includes('Office') || ['Fresh', 'Earthy', 'Woody'].includes(p.notes))
         .slice(0, 4);
-    const pooja = products
+    const pooja = catalog
         .filter(p => p.tags.includes('Festival') || ['Authentic Indian Attars', 'Ruh / Absolute Oil'].includes(p.cat))
         .slice(0, 4);
-    const gifting = products
+    const gifting = catalog
         .filter(p => p.tags.includes('Gifting') || p.cat === 'Discovery Set')
         .slice(0, 4);
     const wellnessGrid = document.getElementById('wellnessGrid');
@@ -602,7 +701,7 @@ function renderRecentlyViewed() {
     const grid = document.getElementById('recentlyViewedGrid');
     if (!grid) return;
     const ids = getRecentlyViewedIds();
-    const items = ids.map(id => products.find(p => p.id === id)).filter(Boolean);
+    const items = ids.map(id => getCatalog().find(p => p.id === id)).filter(Boolean);
     grid.innerHTML = items.length
         ? items.map(p => productCardHTML(p)).join('')
         : '<div class="recently-viewed-empty">Products you view will appear here for quick access.</div>';
@@ -610,7 +709,7 @@ function renderRecentlyViewed() {
 }
 
 function renderRecommendations() {
-    const recommendations = products
+    const recommendations = getCatalog()
         .filter(p => p.bestseller || p.badge === 'NEW')
         .slice(0, 5);
     const list = document.getElementById('recommendationList');
@@ -651,14 +750,15 @@ function showWishlist() {
     document.getElementById('shop-page').classList.add('active');
     document.getElementById('shopTitle').textContent = 'My Wishlist ❤️';
     window.scrollTo(0, 0);
-    const wishProducts = products.filter(p => wishlist.includes(p.id));
+    const wishProducts = getCatalog().filter(p => wishlist.includes(p.id));
     document.getElementById('shopCount').textContent = wishProducts.length + ' items';
     document.getElementById('shopGrid').innerHTML = wishProducts.map(p => productCardHTML(p)).join('');
 }
 
 function quickAdd(e, id) {
     e.stopPropagation();
-    const p = products.find(x => x.id === id);
+    const p = getCatalog().find(x => x.id === id);
+    if (!p) { showToast('Product not found.'); return; }
     addToCart(p, p.sizes[0]);
 }
 
@@ -848,20 +948,23 @@ function whatsappOrder() {
 }
 
 function openProductModal(id) {
-    const p = products.find(x => x.id === id);
-    if (!p) return;
+    const p = getCatalog().find(x => x.id === Number(id));
+    if (!p) {
+        showToast('Product not found. Refresh the page and try again.');
+        return;
+    }
     currentProduct = p;
     rememberRecentlyViewed(p.id);
 
     document.getElementById('modalCat').textContent    = p.cat;
-    document.getElementById('modalName').textContent   = p.name;
+    document.getElementById('modalName').textContent   = formatProductTitle(p);
     document.getElementById('modalStars').innerHTML    = starStr(p.stars) + ` <span>(${p.reviews} reviews)</span>`;
     document.getElementById('modalPrice').textContent  = '₹' + p.price.toLocaleString();
     document.getElementById('modalOldPrice').textContent = p.oldPrice ? '₹' + p.oldPrice.toLocaleString() : '';
     document.getElementById('modalDesc').textContent   = p.desc;
 
     const imgWrap = document.getElementById('modalImg');
-    imgWrap.innerHTML = `<img src="${p.img}" alt="${p.name}" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">`;
+    imgWrap.innerHTML = `<img src="${assetUrl(p.img)}" alt="${escapeAttr(p.name)}" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">`;
     if (p.badge) {
         const b = document.createElement('span');
         b.className = 'modal-badge' + (p.badge === 'NEW' ? ' new' : '');
@@ -946,8 +1049,8 @@ async function shareProduct(product, size) {
 }
 
 function quickBuy(id) {
-    const p = products.find(item => item.id === id);
-    if (!p) return;
+    const p = getCatalog().find(item => item.id === id);
+    if (!p) { showToast('Product not found.'); return; }
     addToCart(p, p.sizes[0]);
     openCheckout();
 }
@@ -981,7 +1084,7 @@ function updateCompareBar() {
     }
     bar.classList.add('show');
     list.innerHTML = compareIds.map(id => {
-        const p = products.find(item => item.id === id);
+        const p = getCatalog().find(item => item.id === id);
         if (!p) return '';
         return `<button type="button" class="compare-pill" data-open-id="${p.id}">${p.name}</button>`;
     }).join('');
@@ -1320,25 +1423,35 @@ function closeSearch() {
 
 function doSearch(query) {
     const el = document.getElementById('searchResults');
-    if (!query.trim()) { el.innerHTML = ''; return; }
-    const results = products.filter(p =>
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.cat.toLowerCase().includes(query.toLowerCase()) ||
-        p.notes.toLowerCase().includes(query.toLowerCase()) ||
-        p.desc.toLowerCase().includes(query.toLowerCase())
-    );
-    if (results.length === 0) {
-        el.innerHTML = `<div style="color:rgba(253,246,232,0.4);font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;padding:20px 0;">No attars found. Try a different search.</div>`;
+    const q = String(query || '').trim().toLowerCase();
+    if (!q) { el.innerHTML = ''; return; }
+    const catalog = getCatalog();
+    if (!catalog.length) {
+        el.innerHTML = `<div class="search-empty">Products are loading. Please wait a moment.</div>`;
         return;
     }
-    el.innerHTML = results.slice(0, 6).map(p => `
-    <div class="search-result-item" onclick="searchSelect(${p.id})">
-      <img class="sri-img" src="${p.img}" alt="${p.name}" onerror="this.style.display='none'">
+    const results = catalog.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.cat.toLowerCase().includes(q) ||
+        p.notes.toLowerCase().includes(q) ||
+        p.desc.toLowerCase().includes(q) ||
+        (p.tags || []).some(tag => tag.toLowerCase().includes(q))
+    );
+    if (results.length === 0) {
+        el.innerHTML = `<div class="search-empty">No attars found. Try a different search.</div>`;
+        return;
+    }
+    el.innerHTML = results.slice(0, 8).map(p => `
+    <div class="search-result-item" data-search-id="${p.id}" role="button" tabindex="0">
+      <img class="sri-img" src="${assetUrl(p.img)}" alt="${escapeAttr(p.name)}" draggable="false" onerror="this.style.display='none'">
       <div class="sri-info">
         <h4>${p.name}</h4>
         <p>${p.cat} · ₹${p.price.toLocaleString()}</p>
       </div>
     </div>`).join('');
+    el.querySelectorAll('[data-search-id]').forEach(row => {
+        row.addEventListener('click', () => searchSelect(Number(row.dataset.searchId)));
+    });
 }
 
 function searchSelect(id) { closeSearch(); openProductModal(id); }
@@ -2045,7 +2158,7 @@ function openCompareModal() {
     const modal = document.getElementById('compareModal');
     const grid = document.getElementById('compareGrid');
     if (!modal || !grid) return;
-    const items = compareIds.map(id => products.find(p => p.id === id)).filter(Boolean);
+    const items = compareIds.map(id => getCatalog().find(p => p.id === id)).filter(Boolean);
     grid.innerHTML = items.map(p => `
         <article class="compare-card card-3d">
             <img src="${escapeAttr(p.img)}" alt="${escapeAttr(p.name)}">
@@ -2126,17 +2239,11 @@ document.addEventListener('keydown', e => {
 });
 
 async function ensureProductCatalog() {
-    if (typeof products !== 'undefined' && Array.isArray(products) && products.length > 0) {
-        return;
-    }
+    if (getCatalog().length > 0) return;
     try {
         const data = await fetchJson('/api/products', { method: 'GET' });
         if (Array.isArray(data.products) && data.products.length) {
-            if (typeof products !== 'undefined' && Array.isArray(products)) {
-                products.splice(0, products.length, ...data.products);
-            } else {
-                window.products = data.products;
-            }
+            setCatalog(data.products);
         }
     } catch (error) {
         console.warn('Product catalog API fallback failed:', error.message || error);
@@ -2145,8 +2252,11 @@ async function ensureProductCatalog() {
 
 function initProductGridActions() {
     document.body.addEventListener('click', event => {
+        const searchRow = event.target.closest('[data-search-id]');
+        if (searchRow) return;
         const card = event.target.closest('[data-product-id]');
         if (card && !event.target.closest('button')) {
+            event.preventDefault();
             openProductModal(Number(card.dataset.productId));
             return;
         }

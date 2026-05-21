@@ -8,6 +8,8 @@ const APP_SHELL = [
     '/app.js',
     '/products.js',
     '/effects-3d.js',
+    '/raahi-theme.css',
+    '/ruh-imperium-logo.png',
     '/sw.js',
     '/manifest.webmanifest',
     '/offline.html',

@@ -11,7 +11,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Ruh Imperium">
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="icon" href="/pwa-icons/ruh-logo-192.png" type="image/png">
+    <link rel="icon" href="/ruh-imperium-logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/ruh-imperium-logo.png">
+    <link rel="stylesheet" href="/raahi-theme.css">
     <link rel="apple-touch-icon" href="/pwa-icons/apple-touch-icon.png">
     <title>Ruh Imperium | Pure Indian Attars Since 1973</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1747,7 +1749,7 @@
                 <input type="text" id="couponCode" placeholder="Enter coupon code">
                 <button class="coupon-btn" type="button" onclick="applyCoupon()">Apply Coupon</button>
             </div>
-            <div class="coupon-hint">Try `RAMJI20`, `WELCOME10`, `ADI50`, or `ATTAR250`. Coupons now support expiry validation too.</div>
+            <div class="coupon-hint">Try `BUY2`, `RAMJI20`, `WELCOME10`, `ADI50`, or `ATTAR250`.</div>
             <div class="coupon-chip" id="couponChip">
                 <span id="couponChipText"></span>
                 <button type="button" onclick="removeCoupon()">✕</button>
@@ -1931,7 +1933,7 @@
 </datalist>
 
 <!-- ANNOUNCEMENT BAR SETUP -->
-<div class="announcement">✨USE CODE <span>RAMJI20</span> FOR 20% OFF | FREE GIFT ON ALL PREPAID ORDERS✨</div>
+<div class="announcement">USE CODE : <span>BUY2</span> AND GET 20% DISCOUNT | FREE TESTER ON ALL PREPAID ORDERS</div>
 
 <!-- HEADER, NAVIGATION, ACCOUNT, CURRENCY, WISHLIST, AND CART ACCESS SETUP -->
 <header>
@@ -1958,6 +1960,7 @@
             </nav>
         </div>
         <div class="logo" onclick="showHome()">
+            <img class="brand-logo" src="/ruh-imperium-logo.png" alt="Ruh Imperium Perfume">
             <span class="logo-main">Ruh Imperium</span>
             <span class="logo-sub">Pure Indian Fragrances · Since 1973</span>
             <span class="logo-marketed">Marketed by Ram Ji Attar Wala</span>
@@ -1997,10 +2000,10 @@
         <div class="hero-shop-layout">
             <div class="hero-brand-row">
                 <div class="hero-content shop-hero-copy" data-depth="1">
-                    <span class="hero-kicker">Pure Indian Attars Since 1973</span>
-                    <p class="hero-tagline">Handcrafted in the Heart of Kannauj</p>
-                    <h1 class="hero-title">Ruh Imperium</h1>
-                    <p class="hero-subtitle">Authentic attars, modern perfumes, and gift-ready discovery sets delivered with the soul of Indian perfumery.</p>
+                    <span class="hero-kicker">Luxury Indian Fragrance House</span>
+                    <p class="hero-tagline">Handcrafted in Kannauj · Since 1973</p>
+                    <h1 class="hero-title">Wrap Yourself in <em>Luxury</em></h1>
+                    <p class="hero-subtitle">Discover the art of perfumery with authentic Indian attars, modern fragrances, discovery sets, and eau de parfum — direct from the distillery.</p>
                     <div class="hero-tech-strip">
                         <span class="hero-tech-pill">Pure Oil Profiles</span>
                         <span class="hero-tech-pill">Direct From Kannauj</span>
@@ -2013,16 +2016,16 @@
                     </div>
                 </div>
                 <div class="hero-wide-photo" data-depth="2">
-                    <img src="set4.png" alt="Ruh Imperium perfume collection">
+                    <img src="/set4.png" alt="Ruh Imperium perfume collection">
                 </div>
             </div>
             <div class="hero-product-board" aria-label="Featured Ruh Imperium products">
                 <button class="hero-product-card card-3d" type="button" onclick="openProductModal(11)">
-                    <img src="gulabattar.png" alt="Gulab Attar bottle">
+                    <img src="/gulabattar.png" alt="Gulab Attar bottle">
                     <span class="hero-product-caption"><span>Featured Attar</span><strong>Gulab Attar</strong></span>
                 </button>
-                <button class="hero-mini-card" type="button" onclick="openProductModal(1)"><img src="mitti.png" alt="Mitti Attar"><span>Mitti Attar</span></button>
-                <button class="hero-mini-card" type="button" onclick="openProductModal(18)"><img src="dubai gold.png" alt="Dubai Gold perfume"><span>Dubai Gold</span></button>
+                <button class="hero-mini-card" type="button" onclick="openProductModal(1)"><img src="/mitti.png" alt="Mitti Attar"><span>Mitti Attar</span></button>
+                <button class="hero-mini-card" type="button" onclick="openProductModal(18)"><img src="/dubai%20gold.png" alt="Dubai Gold perfume"><span>Dubai Gold</span></button>
             </div>
         </div>
     </section>
@@ -2032,6 +2035,13 @@
             <span>Pure Attars</span><span>Modern Perfumes</span><span>Discovery Sets</span><span>Pan India Delivery</span><span>Kannauj Heritage</span><span>Gift Ready</span>
             <span>Pure Attars</span><span>Modern Perfumes</span><span>Discovery Sets</span><span>Pan India Delivery</span><span>Kannauj Heritage</span><span>Gift Ready</span>
         </div>
+    </section>
+
+    <section class="trust-strip" aria-label="Store promises">
+        <article>Packaged at source and shipped direct to you</article>
+        <article>Not tested on animals</article>
+        <article>No animal derived ingredients</article>
+        <article>Free shipping on prepaid orders</article>
     </section>
 
     <!-- AI SCENT FINDER SETUP -->
@@ -2073,8 +2083,8 @@
     <!-- BESTSELLER PRODUCT GRID SETUP -->
     <section class="products-section">
         <div class="section-header reveal">
-            <span class="section-label">Most Loved</span>
-            <h2 class="section-title">Best Selling <em>Attars</em></h2>
+            <span class="section-label">Customer Favourites</span>
+            <h2 class="section-title">BEST SELLING</h2>
             <div class="section-line"><span>✦</span></div>
         </div>
         <div class="products-grid scene-3d" id="bestsellerGrid"></div>
