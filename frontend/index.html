@@ -1541,7 +1541,7 @@
         }
     </style>
 </head>
-<body>
+<body class="raahi-store">
 
 <!-- GLOBAL TOAST AND QUICK CONTACT SETUP -->
 <div id="toast"></div>
@@ -1594,8 +1594,8 @@
         <a data-filter="Ruh / Absolute Oil" onclick="closeMobileMenu();filterShop('Ruh / Absolute Oil')">Ruh / Oil</a>
         <a data-filter="Eau De Parfum" onclick="closeMobileMenu();filterShop('Eau De Parfum')">Eau De Parfum</a>
         <a onclick="closeMobileMenu();openScentAssistant()">AI Scent Finder</a>
-        <a onclick="closeMobileMenu();goSection('wellness')">Wellness</a>
-        <a onclick="closeMobileMenu();goSection('gifting')">Gifting</a>
+        <a onclick="closeMobileMenu();goSection('shop-notes')">Shop by Notes</a>
+        <a onclick="closeMobileMenu();goSection('gifting')">Shop by Use</a>
         <a onclick="closeMobileMenu();goSection('story')">Our Story</a>
         <a onclick="closeMobileMenu();goSection('contact')">Contact</a>
     </div>
@@ -1941,26 +1941,29 @@
         <div class="header-left-mobile">
             <button class="icon-btn mobile-menu-toggle" title="Menu" onclick="openMobileMenu()">☰</button>
         </div>
-        <div style="display:flex;gap:32px;align-items:center;" class="nav-desktop">
+        <div class="nav-desktop-left">
             <nav>
                 <a onclick="showHome()">Home</a>
                 <div class="nav-dropdown">
                     <a>Shop</a>
                     <div class="dropdown-menu">
-                        <a onclick="filterShop('Authentic Indian Attars')">Authentic Attars</a>
+                        <a onclick="filterShop('Authentic Indian Attars')">Authentic Indian Attars</a>
                         <a onclick="filterShop('Modern Attars')">Modern Attars</a>
+                        <a onclick="filterShop('Next Gen Fragrances')">Next Gen Fragrances</a>
                         <a onclick="filterShop('Ruh / Absolute Oil')">Ruh / Absolute Oil</a>
-                        <a onclick="filterShop('Discovery Set')">Discovery Sets</a>
+                        <a onclick="filterShop('Discovery Set')">Discovery Set</a>
                         <a onclick="filterShop('Eau De Parfum')">Eau De Parfum</a>
                         <a onclick="filterShop('all')">All Products</a>
                     </div>
                 </div>
-                <a onclick="goSection('wellness')">Wellness</a>
-                <a onclick="goSection('gifting')">Gifting</a>
+                <a onclick="goSection('shop-notes')">Shop by Notes</a>
+                <a onclick="goSection('gifting')">Shop by Use</a>
             </nav>
         </div>
         <div class="logo" onclick="showHome()">
-            <img class="brand-logo" src="/ruh-imperium-logo.png" alt="Ruh Imperium Perfume">
+            <span class="logo-frame">
+                <img class="brand-logo" src="/ruh-imperium-logo.png" alt="Ruh Imperium Perfume">
+            </span>
             <span class="logo-main">Ruh Imperium</span>
             <span class="logo-sub">Pure Indian Fragrances · Since 1973</span>
             <span class="logo-marketed">Marketed by Ram Ji Attar Wala</span>
@@ -1991,42 +1994,25 @@
 
 <div id="home-page">
 
-    <!-- HERO SECTION SETUP -->
-    <section class="hero hero-stage-3d">
-        <div class="hero-bg-pattern"></div>
-        <span class="float-3d one" aria-hidden="true"></span>
-        <span class="float-3d two" aria-hidden="true"></span>
-        <span class="float-3d three" aria-hidden="true"></span>
+    <!-- HERO — Raahi style -->
+    <section class="hero">
         <div class="hero-shop-layout">
-            <div class="hero-brand-row">
-                <div class="hero-content shop-hero-copy" data-depth="1">
-                    <span class="hero-kicker">Luxury Indian Fragrance House</span>
-                    <p class="hero-tagline">Handcrafted in Kannauj · Since 1973</p>
-                    <h1 class="hero-title">Wrap Yourself in <em>Luxury</em></h1>
-                    <p class="hero-subtitle">Discover the art of perfumery with authentic Indian attars, modern fragrances, discovery sets, and eau de parfum — direct from the distillery.</p>
-                    <div class="hero-tech-strip">
-                        <span class="hero-tech-pill">Pure Oil Profiles</span>
-                        <span class="hero-tech-pill">Direct From Kannauj</span>
-                        <span class="hero-tech-pill">Gift Ready</span>
-                    </div>
-                    <div class="hero-divider"><span></span><i>✿</i><span></span></div>
-                    <div class="hero-btns">
-                        <button class="btn-primary" onclick="filterShop('all')">Shop Products</button>
-                        <button class="btn-outline" onclick="goSection('what-is-attar')">What is Attar?</button>
-                    </div>
-                </div>
-                <div class="hero-wide-photo" data-depth="2">
-                    <img src="/set4.png" alt="Ruh Imperium perfume collection">
-                </div>
+            <div class="hero-content shop-hero-copy">
+                <p class="hero-tagline">Luxury Indian Fragrance House · Kannauj</p>
+                <h1 class="hero-title">Wrap Yourself in Luxury: Discover the Art of Perfumery with Our Fragrance Collections!</h1>
             </div>
-            <div class="hero-product-board" aria-label="Featured Ruh Imperium products">
-                <button class="hero-product-card card-3d" type="button" onclick="openProductModal(11)">
-                    <img src="/gulabattar.png" alt="Gulab Attar bottle">
-                    <span class="hero-product-caption"><span>Featured Attar</span><strong>Gulab Attar</strong></span>
-                </button>
-                <button class="hero-mini-card" type="button" onclick="openProductModal(1)"><img src="/mitti.png" alt="Mitti Attar"><span>Mitti Attar</span></button>
-                <button class="hero-mini-card" type="button" onclick="openProductModal(18)"><img src="/dubai%20gold.png" alt="Dubai Gold perfume"><span>Dubai Gold</span></button>
-            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORY GRID — Raahi collections -->
+    <section class="collection-section" style="padding-top:0;">
+        <div class="cat-grid reveal" id="homeCatGrid">
+            <div class="cat-card cat-1" onclick="filterShop('Authentic Indian Attars')"><img src="/gulabattar.png" alt="Authentic Indian Attars"><div class="cat-card-overlay"><h3>Authentic Indian Attars</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-2" onclick="filterShop('Modern Attars')"><img src="/mitti.png" alt="Modern Attars"><div class="cat-card-overlay"><h3>Modern Attars</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-3" onclick="filterShop('Next Gen Fragrances')"><img src="/cafe%20rose.png" alt="Next Gen fragrances"><div class="cat-card-overlay"><h3>Next Gen fragrances</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-4" onclick="filterShop('Eau De Parfum')"><img src="/vanilla.png" alt="Eau De Parfum"><div class="cat-card-overlay"><h3>Eau De Parfum</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-5" onclick="filterShop('Ruh / Absolute Oil')"><img src="/amiri.png" alt="Ruh Absolute Oil"><div class="cat-card-overlay"><h3>Ruh | Absolute Oils</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-6" onclick="filterShop('Discovery Set')"><img src="/set4.png" alt="Discovery Set"><div class="cat-card-overlay"><h3>Discovery Set</h3><span class="cat-arrow">→</span></div></div>
         </div>
     </section>
 
@@ -2063,32 +2049,50 @@
         </div>
     </section>
 
-    <!-- CATEGORY DISCOVERY SETUP -->
-    <section style="padding:80px 40px;max-width:1400px;margin:0 auto;">
-        <div class="section-header reveal">
-            <span class="section-label">Our Products</span>
-            <h2 class="section-title">A heritage of fragrance in <em>every drop</em></h2>
-            <div class="section-line"><span>✦</span></div>
+    <!-- NEXT GEN COLLECTION -->
+    <section class="collection-section alt" id="next-gen">
+        <div class="collection-header reveal">
+            <h2>Next Gen fragrances</h2>
+            <p>A collection of contemporary Modern Indian Fragrances</p>
         </div>
-        <div class="cat-grid reveal">
-            <div class="cat-card cat-1" onclick="filterShop('Authentic Indian Attars')"><img src="gulabattar.png" alt="Authentic Indian Attars"><div class="cat-card-overlay"><h3>Authentic Indian Attars</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-2" onclick="filterShop('Modern Attars')"><img src="mitti.png" alt="Modern Attars"><div class="cat-card-overlay"><h3>Modern Attars</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-3" onclick="filterShop('Next Gen Fragrances')"><img src="cafe rose.png" alt="Next Gen Fragrances"><div class="cat-card-overlay"><h3>Next Gen Fragrances</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-4" onclick="filterShop('Discovery Set')"><img src="set4.png" alt="Discovery Sets"><div class="cat-card-overlay"><h3>Discovery Sets</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-5" onclick="filterShop('Ruh / Absolute Oil')"><img src="amiri.png" alt="Ruh and Absolute Oil"><div class="cat-card-overlay"><h3>Ruh / Absolute Oil</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-6" onclick="filterShop('Eau De Parfum')"><img src="vanilla.png" alt="Eau De Parfum"><div class="cat-card-overlay"><h3>Eau De Parfum</h3><span class="cat-arrow">→</span></div></div>
-        </div>
+        <div class="products-grid scene-3d" id="newArrivalsGrid"></div>
+        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Next Gen Fragrances')">View all</button></div>
     </section>
 
-    <!-- BESTSELLER PRODUCT GRID SETUP -->
-    <section class="products-section">
-        <div class="section-header reveal">
-            <span class="section-label">Customer Favourites</span>
-            <h2 class="section-title">BEST SELLING</h2>
-            <div class="section-line"><span>✦</span></div>
+    <!-- BEST SELLING -->
+    <section class="collection-section" id="bestsellers">
+        <div class="collection-header reveal">
+            <h2>BEST SELLING</h2>
         </div>
         <div class="products-grid scene-3d" id="bestsellerGrid"></div>
-        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('all')">View All Products</button></div>
+        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('all')">View all products</button></div>
+    </section>
+
+    <!-- AUTHENTIC INDIAN ATTARS -->
+    <section class="collection-section alt" id="authentic-attars">
+        <div class="collection-header reveal">
+            <h2>Authentic Indian Attars</h2>
+        </div>
+        <div class="products-grid scene-3d" id="attarsCollectionGrid"></div>
+        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Authentic Indian Attars')">View all</button></div>
+    </section>
+
+    <!-- EAU DE PARFUM -->
+    <section class="collection-section" id="edp-collection">
+        <div class="collection-header reveal">
+            <h2>Eau De Parfum</h2>
+        </div>
+        <div class="products-grid scene-3d" id="edpCollectionGrid"></div>
+        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Eau De Parfum')">View all</button></div>
+    </section>
+
+    <!-- MODERN ATTARS -->
+    <section class="collection-section alt" id="modern-attars">
+        <div class="collection-header reveal">
+            <h2>Modern Attars</h2>
+        </div>
+        <div class="products-grid scene-3d" id="modernCollectionGrid"></div>
+        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Modern Attars')">View all</button></div>
     </section>
 
     <!-- RECENTLY VIEWED PRODUCTS SETUP -->
@@ -2124,8 +2128,8 @@
     <section class="attar-info-section" id="what-is-attar">
         <div class="attar-info-inner">
             <div class="attar-info-media reveal">
-                <img src="gulabattar.png" alt="Rose attar bottle">
-                <img src="mitti.png" alt="Mitti attar bottle">
+                <img src="/gulabattar.png" alt="Rose attar bottle">
+                <img src="/mitti.png" alt="Mitti attar bottle">
             </div>
             <div class="attar-info-copy reveal reveal-delay-1">
                 <span class="section-label">What is Attar?</span>
@@ -2163,22 +2167,20 @@
         </div>
     </section>
 
-    <!-- WELLNESS COLLECTION AND CTA SETUP -->
-    <section id="wellness" style="padding:80px 40px;background:var(--cream);">
+    <!-- SHOP BY NOTES — Raahi -->
+    <section id="shop-notes" class="collection-section">
+        <div class="collection-header reveal">
+            <h2>SHOP BY NOTES</h2>
+        </div>
+        <div class="notes-grid">
+            <div class="note-card reveal reveal-delay-1" onclick="filterByNote('Floral')"><span class="note-icon">🌸</span><h3>Floral</h3><p>Enchanting Floral collection — perfect fragrances for every romantic soul.</p></div>
+            <div class="note-card reveal reveal-delay-2" onclick="filterByNote('Woody')"><span class="note-icon">🪵</span><h3>Woody</h3><p>Dive into our lit Woody fragrances—bringing those earthy vibes straight to you!</p></div>
+            <div class="note-card reveal reveal-delay-3" onclick="filterByNote('Fresh')"><span class="note-icon">💨</span><h3>Fresh</h3><p>Get the ultimate freshness with our Fresh scents—perfect for every mood!</p></div>
+            <div class="note-card reveal reveal-delay-1" onclick="filterByNote('Musky')"><span class="note-icon">🌙</span><h3>Musky</h3><p>Level up your scent game with our Musky vibes—bold, confident, and unforgettable!</p></div>
+            <div class="note-card reveal reveal-delay-2" onclick="filterByNote('Gourmand')"><span class="note-icon">🍯</span><h3>Gourmand</h3><p>Satisfy your scent cravings—so mouthwatering, you'll want more!</p></div>
+            <div class="note-card reveal reveal-delay-3" onclick="filterByNote('Oriental')"><span class="note-icon">🏺</span><h3>Oriental</h3><p>Discover diverse Oriental scents—strong, attractive, and utterly irresistible.</p></div>
+        </div>
         <div style="max-width:1400px;margin:0 auto;">
-            <div class="section-header reveal">
-                <span class="section-label">Wellness Rituals</span>
-                <h2 class="section-title">Scents for <em>Daily Balance</em></h2>
-                <div class="section-line"><span>✦</span></div>
-            </div>
-            <div class="notes-grid">
-                <div class="note-card reveal reveal-delay-1" onclick="filterShop('Floral')"><span class="note-icon">🌸</span><h3>Floral</h3><p>Enchanting florals for every romantic soul</p></div>
-                <div class="note-card reveal reveal-delay-2" onclick="filterShop('Woody')"><span class="note-icon">🪵</span><h3>Woody</h3><p>Earthy, deep, grounding forest vibes</p></div>
-                <div class="note-card reveal reveal-delay-3" onclick="filterShop('Fresh')"><span class="note-icon">💨</span><h3>Fresh</h3><p>Cool and crisp for every mood</p></div>
-                <div class="note-card reveal reveal-delay-1" onclick="filterShop('Musky')"><span class="note-icon">🌙</span><h3>Musky</h3><p>Bold, confident, utterly unforgettable</p></div>
-                <div class="note-card reveal reveal-delay-2" onclick="filterShop('Gourmand')"><span class="note-icon">🍯</span><h3>Gourmand</h3><p>Warm and indulgent, addictively sweet</p></div>
-                <div class="note-card reveal reveal-delay-3" onclick="filterShop('Oriental')"><span class="note-icon">🏺</span><h3>Oriental</h3><p>Sensual, exotic, deeply attractive</p></div>
-            </div>
             <div class="action-strip reveal">
                 <div class="action-card">
                     <span class="action-eyebrow">Morning Reset</span>
@@ -2204,20 +2206,7 @@
         </div>
     </section>
 
-    <!-- NEW ARRIVALS SHOWCASE SETUP -->
-    <section style="padding:80px 40px;background:var(--dark-2);">
-        <div style="max-width:1400px;margin:0 auto;">
-            <div class="section-header reveal">
-                <span class="section-label" style="color:var(--gold-light)">New Arrivals</span>
-                <h2 class="section-title" style="color:var(--cream)">Next Gen <em style="color:var(--gold-light)">Fragrances</em></h2>
-                <div class="section-line"><span>✦</span></div>
-            </div>
-            <div class="products-grid scene-3d" id="newArrivalsGrid"></div>
-            <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Next Gen Fragrances')">View All</button></div>
-        </div>
-    </section>
-
-    <!-- POOJA PRODUCTS SECTION SETUP -->
+    <!-- POOJA / TRADITIONAL -->
     <section style="padding:80px 40px;background:var(--cream);">
         <div style="max-width:1400px;margin:0 auto;">
             <div class="section-header reveal">
@@ -2244,13 +2233,11 @@
         </div>
     </section>
 
-    <!-- GIFTING COLLECTION AND CTA SETUP -->
+    <!-- SHOP BY USE — Raahi -->
     <section class="use-section" id="gifting">
         <div style="max-width:1400px;margin:0 auto;">
-            <div class="section-header reveal">
-                <span class="section-label">Gift with Intention</span>
-                <h2 class="section-title" style="color:var(--cream)">Curated for <em style="color:var(--gold-light)">Gifting</em></h2>
-                <div class="section-line"><span>✦</span></div>
+            <div class="collection-header reveal">
+                <h2 style="color:#1a1a1a;">Shop By Use</h2>
             </div>
             <div class="use-grid">
                 <div class="use-card large reveal" data-emoji="🎉" onclick="filterShop('Party')"><h3>Party Wear</h3><p>Make a statement →</p></div>
@@ -2285,24 +2272,13 @@
         </div>
     </section>
 
-    <!-- TRUST BADGES SETUP -->
-    <section class="trust-section">
-        <div class="trust-grid">
-            <div class="trust-item reveal"><span class="trust-icon">📦</span><h4>Packaged at Source & Shipped Direct</h4></div>
-            <div class="trust-item reveal reveal-delay-1"><span class="trust-icon">🐾</span><h4>Not Tested on Animals</h4></div>
-            <div class="trust-item reveal reveal-delay-2"><span class="trust-icon">🌿</span><h4>No Animal Derived Ingredients</h4></div>
-            <div class="trust-item reveal reveal-delay-3"><span class="trust-icon">🚚</span><h4>Free Shipping on Prepaid Orders</h4></div>
-        </div>
-    </section>
-
-    <!-- CUSTOMER REVIEWS AND REVIEW SUBMISSION SETUP -->
+    <!-- CUSTOMER REVIEWS — Raahi -->
     <section class="reviews-section">
         <div class="reviews-header reveal">
-            <span class="section-label">What Our Customers Say</span>
-            <h2 class="section-title">Loved by <em>Thousands</em></h2>
+            <h2 class="section-title">Let customers speak for us</h2>
             <div class="rating-summary">
                 <span class="big-rating" id="liveReviewAverage">4.8</span>
-                <div><span class="rating-stars">★★★★★</span><span class="rating-count" id="liveReviewCount">Based on 1,000+ reviews</span></div>
+                <div><span class="rating-stars">★★★★★</span><span class="rating-count" id="liveReviewCount">1205 reviews</span></div>
             </div>
         </div>
         <div class="reviews-grid" id="customerReviewList">
@@ -2334,6 +2310,36 @@
             </select>
             <button type="button" onclick="submitReview()">Submit Review</button>
             <textarea id="reviewComment" placeholder="Write your review"></textarea>
+        </div>
+    </section>
+
+    <!-- BLOG — Raahi style -->
+    <section class="blog-section" id="blog">
+        <div class="collection-header reveal">
+            <h2>Blog posts</h2>
+        </div>
+        <div class="blog-grid">
+            <article class="blog-card reveal">
+                <div class="blog-card-body">
+                    <time>October 19, 2023</time>
+                    <h3>Ruh Imperium: Guardian of Tradition in the Heart of Kannauj</h3>
+                    <p>True Indian Attars from Kannauj are not merely fragrances; they are stories in a bottle, encapsulating history, tradition, and innovation.</p>
+                </div>
+            </article>
+            <article class="blog-card reveal reveal-delay-1">
+                <div class="blog-card-body">
+                    <time>May 29, 2023</time>
+                    <h3>10 frequently asked questions about Attar</h3>
+                    <p>What is attar? How is attar made? Everything you need to know about pure Indian perfume oils.</p>
+                </div>
+            </article>
+            <article class="blog-card reveal reveal-delay-2">
+                <div class="blog-card-body">
+                    <time>May 3, 2022</time>
+                    <h3>What is a Niche perfume?</h3>
+                    <p>Niche perfume made by Kannauj's master perfumer — hand blended with natural ingredients that smell wonderful.</p>
+                </div>
+            </article>
         </div>
     </section>
 
@@ -2369,6 +2375,7 @@
             <button class="filter-btn" onclick="shopFilter('Next Gen Fragrances',this)">Next Gen</button>
             <button class="filter-btn" onclick="shopFilter('Discovery Set',this)">Discovery Sets</button>
             <button class="filter-btn" onclick="shopFilter('Ruh / Absolute Oil',this)">Ruh / Oil</button>
+            <button class="filter-btn" onclick="shopFilter('Eau De Parfum',this)">Eau De Parfum</button>
         </div>
         <select class="sort-select" onchange="sortProducts(this.value)">
             <option value="default">Sort: Featured</option>
@@ -2390,10 +2397,10 @@
 <footer>
     <div class="footer-grid">
         <div class="footer-brand">
-            <span style="color:var(--gold-light);font-family:'Playfair Display',serif;font-size:22px;font-weight:700;display:block;">Ruh Imperium</span>
-            <span style="color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;font-style:italic;display:block;margin-top:4px;">Pure Indian Fragrances · Since 1973</span>
-            <span style="color:rgba(201,168,76,0.6);font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-style:italic;display:block;margin-top:3px;">Marketed by Ram Ji Attar Wala</span>
-            <p>Making India's native perfumery accessible to the world. Straight from Kannauj — the perfume capital of India — to your skin.</p>
+            <span class="logo-frame" onclick="showHome()" style="cursor:pointer;">
+                <img src="/ruh-imperium-logo.png" alt="Ruh Imperium">
+            </span>
+            <p style="margin-top:14px;">Making India's native perfumery accessible to the world. Straight from Kannauj — the perfume capital of India — to your skin.</p>
             <div class="footer-social">
                 <a href="#" class="social-btn">f</a>
                 <a href="https://wa.me/919785854770" target="_blank" class="social-btn">📱</a>
@@ -2416,7 +2423,7 @@
             <h4>Company</h4>
             <ul>
                 <li><a onclick="goSection('story')">Our Story</a></li>
-                <li><a>Blog</a></li>
+                <li><a onclick="showHome();goSection('blog')">Blog</a></li>
                 <li><a href="https://wa.me/919785854770?text=I%20am%20interested%20in%20bulk%20orders" target="_blank">Bulk Enquiry</a></li>
                 <li><a onclick="goSection('contact')">Contact Us</a></li>
             </ul>

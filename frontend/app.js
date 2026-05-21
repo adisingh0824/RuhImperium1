@@ -568,6 +568,16 @@ function filterShop(cat) {
     renderShopGrid();
 }
 
+function filterByNote(note) {
+    currentFilter = note;
+    document.getElementById('home-page').style.display = 'none';
+    document.getElementById('shop-page').classList.add('active');
+    window.scrollTo(0, 0);
+    document.getElementById('shopTitle').textContent = `${note} Fragrances`;
+    updateShopFilterUI(note);
+    renderShopGrid();
+}
+
 function shopFilter(cat, btn) {
     currentFilter = cat;
     if (btn) btn.classList.add('active');
@@ -606,9 +616,18 @@ function starStr(s) {
     return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0));
 }
 
+function productCardTitle(p) {
+    const size = p.sizes?.[0] || '';
+    return size ? `${p.name} | ${p.cat} | ${size}` : `${p.name} | ${p.cat}`;
+}
+
 function productCardHTML(p) {
     const inWish = wishlist.includes(p.id);
     const inCompare = compareIds.includes(p.id);
+    const hasOptions = (p.sizes?.length || 0) > 1;
+    const mainBtn = hasOptions
+        ? `<button class="add-btn-main" type="button" data-open-id="${p.id}">Choose options</button>`
+        : `<button class="add-btn-main" type="button" data-add-id="${p.id}">Add to cart</button>`;
     return `
     <div class="product-card card-3d" data-product-id="${p.id}" role="button" tabindex="0">
       <div class="card-3d-inner">
@@ -619,8 +638,8 @@ function productCardHTML(p) {
       </div>
       <div class="product-info">
         <p class="product-desc">${p.cat}</p>
-        <h3 class="product-name">${p.name}</h3>
-        <p class="product-variant">${p.cat}${p.sizes?.[0] ? ` · ${p.sizes[0]}` : ''}</p>
+        <h3 class="product-name">${productCardTitle(p)}</h3>
+        <p class="product-variant">${p.notes}${p.reviews ? ` · ${p.reviews} reviews` : ''}</p>
         <div class="product-stars">${starStr(p.stars)} <span>(${p.reviews} reviews)</span></div>
         <div class="product-price-row">
           <div>
@@ -630,6 +649,7 @@ function productCardHTML(p) {
           <button class="add-btn" type="button" data-add-id="${p.id}">Add to Cart</button>
         </div>
         <div class="product-actions">
+          ${mainBtn}
           <button class="buy-now-btn" type="button" data-buy-id="${p.id}">Buy Now</button>
           <button class="compare-btn ${inCompare ? 'active' : ''}" type="button" data-compare-id="${p.id}">${inCompare ? 'Added' : 'Compare'}</button>
         </div>
@@ -654,10 +674,15 @@ function renderHomeSections() {
         console.warn('Product data not loaded, homepage sections cannot be rendered.');
         return;
     }
-    const bestsellers = catalog.filter(p => p.bestseller).slice(0, 4);
-    document.getElementById('bestsellerGrid').innerHTML = bestsellers.map(p => productCardHTML(p)).join('');
-    const newArrivals = catalog.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4);
-    document.getElementById('newArrivalsGrid').innerHTML = newArrivals.map(p => productCardHTML(p)).join('');
+    const fill = (id, items) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = items.map(p => productCardHTML(p)).join('');
+    };
+    fill('bestsellerGrid', catalog.filter(p => p.bestseller).slice(0, 4));
+    fill('newArrivalsGrid', catalog.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4));
+    fill('attarsCollectionGrid', catalog.filter(p => p.cat === 'Authentic Indian Attars').slice(0, 4));
+    fill('edpCollectionGrid', catalog.filter(p => p.cat === 'Eau De Parfum').slice(0, 4));
+    fill('modernCollectionGrid', catalog.filter(p => p.cat === 'Modern Attars').slice(0, 4));
     const wellness = catalog
         .filter(p => p.tags.includes('Daily') || p.tags.includes('Office') || ['Fresh', 'Earthy', 'Woody'].includes(p.notes))
         .slice(0, 4);
@@ -667,16 +692,16 @@ function renderHomeSections() {
     const gifting = catalog
         .filter(p => p.tags.includes('Gifting') || p.cat === 'Discovery Set')
         .slice(0, 4);
-    const wellnessGrid = document.getElementById('wellnessGrid');
-    const poojaGrid = document.getElementById('poojaGrid');
-    const giftingGrid = document.getElementById('giftingGrid');
-    if (wellnessGrid) wellnessGrid.innerHTML = wellness.map(p => productCardHTML(p)).join('');
-    if (poojaGrid) poojaGrid.innerHTML = pooja.map(p => productCardHTML(p)).join('');
-    if (giftingGrid) giftingGrid.innerHTML = gifting.map(p => productCardHTML(p)).join('');
+    fill('wellnessGrid', wellness);
+    fill('poojaGrid', pooja);
+    fill('giftingGrid', gifting);
     renderRecommendations();
     renderRecentlyViewed();
     if (window.refreshRuh3D) {
-        ['bestsellerGrid', 'newArrivalsGrid', 'wellnessGrid', 'poojaGrid', 'giftingGrid'].forEach(id => {
+        [
+            'bestsellerGrid', 'newArrivalsGrid', 'attarsCollectionGrid', 'edpCollectionGrid',
+            'modernCollectionGrid', 'wellnessGrid', 'poojaGrid', 'giftingGrid', 'recentlyViewedGrid'
+        ].forEach(id => {
             const grid = document.getElementById(id);
             if (grid) window.refreshRuh3D(grid);
         });
@@ -2264,6 +2289,12 @@ function initProductGridActions() {
         if (wishBtn) {
             event.stopPropagation();
             toggleWish(event, Number(wishBtn.dataset.wishId));
+            return;
+        }
+        const openBtn = event.target.closest('[data-open-id]');
+        if (openBtn) {
+            event.stopPropagation();
+            openProductModal(Number(openBtn.dataset.openId));
             return;
         }
         const addBtn = event.target.closest('[data-add-id]');
