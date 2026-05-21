@@ -634,7 +634,7 @@ function productCardHTML(p) {
       <div class="card-3d-inner">
       ${p.badge ? `<span class="product-badge ${p.badge === 'NEW' ? 'new' : ''}">${p.badge}</span>` : ''}
       <div class="product-img-wrap">
-        <img src="${assetUrl(p.img)}" alt="${escapeAttr(p.name)}" loading="lazy" draggable="false" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">
+        <img src="${assetUrl(p.img)}" alt="${escapeAttr(p.name)}" loading="lazy" draggable="false" onerror="this.onerror=null;this.src='/ruh-imperium-logo.png';this.style.objectFit='contain';this.style.padding='18px';this.parentElement.style.background='#efefef'">
         <button class="wishlist-btn ${inWish ? 'active' : ''}" type="button" data-wish-id="${p.id}" aria-label="Toggle wishlist">♥</button>
       </div>
       <div class="product-info">
@@ -675,9 +675,13 @@ function renderHomeSections() {
         console.warn('Product data not loaded, homepage sections cannot be rendered.');
         return;
     }
+    const emptyMsg = '<p class="grid-empty" style="grid-column:1/-1;text-align:center;padding:40px 20px;color:#666;font-size:14px;">Loading products…</p>';
     const fill = (id, items) => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = items.map(p => productCardHTML(p)).join('');
+        if (!el) return;
+        el.innerHTML = items.length
+            ? items.map(p => productCardHTML(p)).join('')
+            : emptyMsg;
     };
     fill('bestsellerGrid', catalog.filter(p => p.bestseller).slice(0, 4));
     fill('newArrivalsGrid', catalog.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4));
@@ -2253,10 +2257,25 @@ function filterAdminOrders() { showToast('Admin search is not active in this dem
 
 function initReveals() {
     const reveals = document.querySelectorAll('.reveal');
+    if (!reveals.length) return;
+    const showIfVisible = el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight + 80 && rect.bottom > -80) {
+            el.classList.add('visible');
+        }
+    };
+    if (!('IntersectionObserver' in window)) {
+        reveals.forEach(el => el.classList.add('visible'));
+        return;
+    }
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-    reveals.forEach(el => observer.observe(el));
+    }, { threshold: 0.05, rootMargin: '0px 0px 0px 0px' });
+    reveals.forEach(el => {
+        showIfVisible(el);
+        observer.observe(el);
+    });
+    window.addEventListener('load', () => reveals.forEach(showIfVisible), { once: true });
 }
 
 document.addEventListener('keydown', e => {
@@ -2336,6 +2355,9 @@ function applyDeepLinkProduct() {
 async function bootApp() {
     loadStoredState();
     loadLastOrder();
+    if (!getCatalog().length && typeof products === 'undefined') {
+        console.error('products.js did not load — check /products.js is deployed');
+    }
     await ensureProductCatalog();
     await loadServerConfig();
     initPwaInstall();

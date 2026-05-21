@@ -452,6 +452,12 @@ body.ruh-store .view-all-wrap .btn-outline:hover {
     color: #fff;
 }
 
+/* Never hide homepage content behind scroll animations */
+body.ruh-store .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
 /* Hide extra homepage blocks */
 body.ruh-store .sliding-banner,
 body.ruh-store .scent-finder-band,
