@@ -1,43 +1,50 @@
-/* Ruh Imperium — Raahi Parfums layout */
+/* Ruh Imperium — Raahi Parfums exact layout (loads after index.html styles) */
+
 body.raahi-store {
-    background: #fff;
+    background: #fff !important;
     color: #1a1a1a;
-    font-family: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+/* Announcement */
 body.raahi-store .announcement {
-    background: #111;
-    color: #f5f5f5;
-    font-size: 11px;
-    letter-spacing: 2px;
-    padding: 11px 16px;
+    background: #111 !important;
+    color: #f5f5f5 !important;
+    font-size: 11px !important;
+    letter-spacing: 2px !important;
+    padding: 10px 16px !important;
     text-transform: uppercase;
+    border-bottom: none !important;
+    box-shadow: none !important;
 }
 
 body.raahi-store .announcement span {
-    color: #d4af37;
+    color: #d4af37 !important;
     font-weight: 700;
 }
 
-/* Header — logo centered like Raahi */
+/* Header */
 body.raahi-store header {
-    background: #fff;
-    border-bottom: 1px solid #e8e8e8;
-    box-shadow: none;
+    background: #fff !important;
+    border-bottom: 1px solid #e8e8e8 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
     position: sticky;
     top: 0;
     z-index: 1000;
 }
 
 body.raahi-store .header-inner {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    max-width: 1280px;
-    height: auto;
-    min-height: 88px;
-    padding: 12px 24px;
-    gap: 16px;
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
+    align-items: center !important;
+    justify-content: unset !important;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    height: auto !important;
+    min-height: 82px !important;
+    padding: 12px 32px !important;
+    gap: 20px !important;
 }
 
 body.raahi-store .header-left-mobile {
@@ -47,58 +54,76 @@ body.raahi-store .header-left-mobile {
 body.raahi-store .nav-desktop-left {
     display: flex;
     justify-content: flex-start;
+    grid-column: 1;
 }
 
-body.raahi-store .nav-desktop-left nav,
-body.raahi-store .header-icons nav {
-    display: flex;
-    gap: 22px;
+body.raahi-store .nav-desktop-left nav {
+    display: flex !important;
+    gap: 24px !important;
     align-items: center;
     flex-wrap: wrap;
 }
 
 body.raahi-store .header-icons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 14px;
-    align-items: center;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 18px !important;
+    grid-column: 3;
+}
+
+body.raahi-store .header-icons .nav-desktop-right {
+    display: flex !important;
+    gap: 24px !important;
 }
 
 body.raahi-store nav a {
-    font-size: 12px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #1a1a1a;
-    font-weight: 500;
+    font-size: 12px !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
+    font-family: 'Jost', sans-serif !important;
 }
 
 body.raahi-store nav a:hover {
-    color: #8b6914;
+    color: #8b6914 !important;
 }
 
 body.raahi-store nav a::after {
-    display: none;
+    display: none !important;
 }
 
+body.raahi-store .dropdown-menu {
+    border-radius: 0 !important;
+    border: 1px solid #e8e8e8 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Logo — image only in black frame (like Raahi) */
 body.raahi-store .logo {
+    grid-column: 2;
     justify-self: center;
-    cursor: pointer;
     text-align: center;
+    cursor: pointer;
+    line-height: 0 !important;
+    flex: unset !important;
+    min-width: unset !important;
 }
 
 body.raahi-store .logo-frame {
     display: inline-block;
     background: #0a0a0a;
-    padding: 10px 22px 8px;
-    border-radius: 2px;
+    padding: 10px 32px 8px;
+    border-radius: 0;
     line-height: 0;
 }
 
 body.raahi-store .logo-frame img,
 body.raahi-store .logo img.brand-logo {
-    height: 52px;
+    height: 48px;
     width: auto;
-    max-width: min(260px, 72vw);
+    max-width: min(220px, 50vw);
     object-fit: contain;
     display: block;
     filter: none;
@@ -110,129 +135,168 @@ body.raahi-store .logo-marketed {
     display: none !important;
 }
 
+/* Header icons — minimal like Raahi */
 body.raahi-store .icon-btn {
-    font-size: 17px;
+    font-size: 0;
     color: #1a1a1a;
+    padding: 4px;
+    background: none !important;
+    border: none !important;
+    transform: none !important;
 }
 
-body.raahi-store .currency-selector,
+body.raahi-store .icon-btn:hover {
+    color: #8b6914;
+    transform: none !important;
+}
+
+body.raahi-store .icon-btn svg {
+    display: block;
+}
+
+body.raahi-store .account-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: auto;
+    padding: 4px !important;
+    border: none !important;
+    background: none !important;
+}
+
+body.raahi-store .account-pill strong,
+body.raahi-store .account-pill-text {
+    display: none !important;
+}
+
 body.raahi-store .currency-chip-btn {
-    font-size: 11px;
+    display: none !important;
+}
+
+body.raahi-store .currency-selector {
+    font-size: 11px !important;
     letter-spacing: 1px;
     text-transform: uppercase;
+    border: 1px solid #ddd !important;
+    border-radius: 0 !important;
+    padding: 6px 8px !important;
+    background: #fff !important;
+    color: #1a1a1a !important;
+    font-family: 'Jost', sans-serif;
+    cursor: pointer;
+    outline: none;
 }
 
-/* Hero — Raahi minimal */
-body.raahi-store .hero {
-    background: #fafafa;
-    min-height: auto;
-    padding: 48px 24px 32px;
-    text-align: center;
+body.raahi-store .header-cart-btn {
+    position: relative;
+}
+
+body.raahi-store .cart-count {
+    top: -4px;
+    right: -6px;
+    background: #1a1a1a !important;
+    font-size: 9px;
+    width: 15px;
+    height: 15px;
+}
+
+body.raahi-store .top-admin-badge {
+    font-size: 10px;
+}
+
+/* Hero — centered, plain white, no card */
+body.raahi-store .hero,
+body.raahi-store .hero.raahi-hero {
+    min-height: auto !important;
+    height: auto !important;
+    padding: 48px 24px 36px !important;
+    margin: 0 !important;
+    background: #fff !important;
+    display: block !important;
+    align-items: unset !important;
+    justify-content: unset !important;
+    overflow: visible !important;
+    text-align: center !important;
+}
+
+body.raahi-store .hero::after,
+body.raahi-store .hero-bg-pattern,
+body.raahi-store .hero-ornament,
+body.raahi-store .float-3d {
+    display: none !important;
+}
+
+body.raahi-store .raahi-hero-title,
+body.raahi-store .hero-title {
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-size: clamp(24px, 3.8vw, 36px) !important;
+    font-weight: 400 !important;
+    line-height: 1.35 !important;
+    color: #1a1a1a !important;
+    text-align: center !important;
+    max-width: 820px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    border-radius: 0 !important;
+    animation: none !important;
 }
 
 body.raahi-store .hero-shop-layout,
 body.raahi-store .hero-brand-row,
-body.raahi-store .hero-product-board {
-    display: block;
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
+body.raahi-store .hero:not(.raahi-hero) .hero-content {
+    display: none !important;
 }
 
-body.raahi-store .hero-brand-row {
-    display: block;
-}
-
-body.raahi-store .hero-wide-photo,
-body.raahi-store .float-3d,
-body.raahi-store .hero-tech-strip,
-body.raahi-store .hero-divider,
-body.raahi-store .hero-btns {
-    display: none;
-}
-
-body.raahi-store .hero-content.shop-hero-copy {
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    text-align: center;
-    max-width: 820px;
-    margin: 0 auto;
-}
-
-body.raahi-store .hero-kicker {
-    background: transparent;
-    border: none;
-    color: #8b6914;
-    margin-bottom: 12px;
-}
-
-body.raahi-store .hero-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(28px, 4.5vw, 42px);
-    font-weight: 600;
-    line-height: 1.2;
-    color: #1a1a1a;
-    margin-bottom: 12px;
-}
-
-body.raahi-store .hero-subtitle {
-    font-size: 16px;
-    color: #555;
-    line-height: 1.6;
-    max-width: 680px;
-    margin: 0 auto;
+body.raahi-store .hero.raahi-hero .raahi-hero-title {
+    display: block !important;
 }
 
 body.raahi-store .hero-tagline {
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: #8b6914;
-    text-transform: uppercase;
-    margin-bottom: 16px;
+    display: none !important;
 }
 
-body.raahi-store #shop-notes .notes-grid {
+/* Category grid — Raahi */
+body.raahi-store .collection-section:first-of-type {
+    padding-top: 8px !important;
+}
+
+body.raahi-store .cat-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 10px !important;
     max-width: 1280px;
     margin: 0 auto;
-    padding: 0 24px;
-}
-
-body.raahi-store footer {
-    background: #111;
-    color: #f5f5f5;
-}
-
-body.raahi-store footer a {
-    color: rgba(255, 255, 255, 0.72);
-}
-
-body.raahi-store footer a:hover {
-    color: #d4af37;
-}
-
-/* Category grid */
-body.raahi-store .cat-grid {
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    margin-top: 36px;
+    padding: 0 24px 24px;
 }
 
 body.raahi-store .cat-card {
-    border-radius: 8px;
+    border-radius: 4px !important;
     aspect-ratio: 4/5;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: none !important;
+    border: none !important;
+}
+
+body.raahi-store .cat-card img {
+    object-fit: cover;
+}
+
+body.raahi-store .cat-card-overlay {
+    background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.55) 100%) !important;
 }
 
 body.raahi-store .cat-card h3 {
-    font-size: 13px;
+    font-size: 12px !important;
     letter-spacing: 0.5px;
+    font-weight: 500;
+    text-transform: none;
 }
 
 /* Collection sections */
 body.raahi-store .collection-section {
-    padding: 48px 24px;
+    padding: 44px 24px;
     max-width: 1280px;
     margin: 0 auto;
 }
@@ -248,40 +312,24 @@ body.raahi-store .collection-header {
 
 body.raahi-store .collection-header h2 {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(22px, 3vw, 32px);
-    font-weight: 600;
+    font-size: clamp(20px, 2.8vw, 28px);
+    font-weight: 500;
     color: #1a1a1a;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+    text-transform: none;
 }
 
 body.raahi-store .collection-header p {
     margin-top: 8px;
     color: #666;
     font-size: 14px;
-    max-width: 640px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
-body.raahi-store .section-label {
-    color: #8b6914;
-    letter-spacing: 3px;
-    font-size: 11px;
-}
-
-body.raahi-store .section-title {
-    font-family: 'Playfair Display', serif;
-    color: #1a1a1a;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Product cards — Shopify / Raahi */
+/* Product cards */
 body.raahi-store .products-grid,
 body.raahi-store .shop-products-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 20px !important;
 }
 
 body.raahi-store .product-card {
@@ -289,9 +337,6 @@ body.raahi-store .product-card {
     border: none;
     border-radius: 0;
     box-shadow: none;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
 }
 
 body.raahi-store .product-card:hover {
@@ -300,53 +345,27 @@ body.raahi-store .product-card:hover {
 }
 
 body.raahi-store .product-card .card-3d-inner {
-    transform: none;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    transform: none !important;
 }
 
 body.raahi-store .product-img-wrap {
     aspect-ratio: 1;
-    border-radius: 0;
     background: #f5f5f5;
-    overflow: hidden;
-}
-
-body.raahi-store .product-img-wrap img {
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
+    border-radius: 0;
 }
 
 body.raahi-store .product-badge {
-    top: 10px;
-    left: 10px;
-    border-radius: 2px;
-    font-size: 10px;
-    letter-spacing: 1px;
     background: #1a1a1a;
-    color: #fff;
+    border-radius: 0;
+    font-size: 10px;
 }
 
 body.raahi-store .product-badge.new {
     background: #8b6914;
-    color: #fff;
-}
-
-body.raahi-store .wishlist-btn {
-    top: 10px;
-    right: 10px;
-    background: #fff;
-    border: 1px solid #ddd;
 }
 
 body.raahi-store .product-info {
-    padding: 14px 4px 4px;
-    text-align: left;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    padding: 12px 2px 4px;
 }
 
 body.raahi-store .product-info::before {
@@ -359,43 +378,30 @@ body.raahi-store .product-desc {
 
 body.raahi-store .product-name {
     font-family: 'Jost', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     line-height: 1.45;
-    color: #1a1a1a;
-    margin-bottom: 6px;
-    min-height: 40px;
+    min-height: 38px;
 }
 
 body.raahi-store .product-variant {
-    font-size: 11px;
-    color: #888;
-    margin-bottom: 8px;
+    display: none;
 }
 
 body.raahi-store .product-stars {
     font-size: 11px;
-    margin-bottom: 10px;
-    flex-direction: row;
+    margin-bottom: 8px;
 }
 
 body.raahi-store .product-price-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
-    margin-bottom: 12px;
+    gap: 2px;
 }
 
 body.raahi-store .product-price {
-    font-family: 'Jost', sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
-    color: #1a1a1a;
-}
-
-body.raahi-store .product-price-old {
-    font-size: 13px;
-    color: #999;
 }
 
 body.raahi-store .product-price-row .add-btn {
@@ -405,13 +411,12 @@ body.raahi-store .product-price-row .add-btn {
 body.raahi-store .product-actions {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 8px;
     margin-top: auto;
 }
 
 body.raahi-store .product-actions .add-btn-main {
     width: 100%;
-    padding: 12px 16px;
+    padding: 11px 14px;
     border: 1px solid #1a1a1a;
     background: #fff;
     color: #1a1a1a;
@@ -419,9 +424,8 @@ body.raahi-store .product-actions .add-btn-main {
     letter-spacing: 2px;
     text-transform: uppercase;
     font-weight: 600;
-    cursor: pointer;
     border-radius: 0;
-    transition: background 0.2s, color 0.2s;
+    cursor: pointer;
 }
 
 body.raahi-store .product-actions .add-btn-main:hover {
@@ -434,17 +438,13 @@ body.raahi-store .product-actions .compare-btn {
     display: none;
 }
 
-body.raahi-store .view-all-wrap {
-    margin-top: 28px;
-}
-
 body.raahi-store .view-all-wrap .btn-outline {
     border: 1px solid #1a1a1a;
     border-radius: 0;
-    letter-spacing: 2px;
-    padding: 14px 32px;
     color: #1a1a1a;
     background: transparent;
+    letter-spacing: 2px;
+    padding: 12px 28px;
 }
 
 body.raahi-store .view-all-wrap .btn-outline:hover {
@@ -452,225 +452,223 @@ body.raahi-store .view-all-wrap .btn-outline:hover {
     color: #fff;
 }
 
-/* Shop by notes */
+/* Hide extra homepage blocks not on Raahi */
+body.raahi-store .sliding-banner,
+body.raahi-store .scent-finder-band,
+body.raahi-store .recently-viewed-section {
+    display: none !important;
+}
+
+/* Notes / Use */
+body.raahi-store #shop-notes .notes-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
 body.raahi-store .notes-grid .note-card {
-    background: #fff;
     border: 1px solid #eee;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-body.raahi-store .notes-grid .note-card:hover {
-    border-color: #d4af37;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-}
-
-body.raahi-store #wellness {
-    background: #fff !important;
-}
-
-body.raahi-store #wellness .section-title {
-    text-transform: uppercase;
+    border-radius: 4px;
+    background: #fff;
 }
 
 body.raahi-store .use-section {
     background: #fafafa !important;
 }
 
-body.raahi-store .use-section .section-title {
-    text-transform: uppercase;
-}
-
 body.raahi-store .use-card {
-    border-radius: 8px;
     border: 1px solid #e8e8e8;
     background: #fff;
     color: #1a1a1a;
+    border-radius: 4px;
 }
 
 body.raahi-store .use-card h3 {
     color: #1a1a1a;
 }
 
-body.raahi-store .use-card p {
-    color: #666;
+/* Trust strip — Raahi (before reviews) */
+body.raahi-store .trust-strip {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    background: #fff;
 }
 
-/* Reviews — Raahi */
+body.raahi-store .trust-strip article {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    font-weight: 500;
+    padding: 8px;
+    border: none;
+    background: transparent;
+}
+
+/* Reviews */
 body.raahi-store .reviews-section {
     background: #fafafa;
 }
 
 body.raahi-store .reviews-header .section-title {
+    font-size: clamp(22px, 3vw, 30px);
     text-transform: none;
-    font-size: clamp(24px, 3vw, 34px);
 }
 
 body.raahi-store .rating-count::before {
     content: 'from ';
 }
 
-/* Trust */
-body.raahi-store .trust-strip {
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    padding: 24px 20px;
-    margin-bottom: 0;
-}
-
-body.raahi-store .trust-strip article {
-    border: none;
-    background: transparent;
-    font-size: 11px;
-    padding: 8px;
-}
-
-body.raahi-store .trust-section {
-    background: #fff;
-    border: none;
-}
-
-body.raahi-store .trust-item h4 {
-    color: #1a1a1a;
-    font-size: 12px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-
 /* Blog */
 body.raahi-store .blog-section {
-    padding: 56px 24px;
+    padding: 48px 24px;
     max-width: 1280px;
     margin: 0 auto;
-    background: #fff;
 }
 
 body.raahi-store .blog-grid {
-    display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-top: 28px;
+    gap: 20px;
 }
 
 body.raahi-store .blog-card {
     border: 1px solid #eee;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fff;
+    border-radius: 4px;
 }
 
-body.raahi-store .blog-card-body {
-    padding: 18px;
+/* Footer */
+body.raahi-store footer {
+    background: #111 !important;
+    color: #f5f5f5;
 }
 
-body.raahi-store .blog-card h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    margin-bottom: 8px;
-    color: #1a1a1a;
+body.raahi-store footer a {
+    color: rgba(255, 255, 255, 0.7);
 }
 
-body.raahi-store .blog-card p {
-    font-size: 13px;
-    color: #666;
-    line-height: 1.6;
+body.raahi-store footer a:hover {
+    color: #d4af37;
 }
 
-body.raahi-store .blog-card time {
+body.raahi-store footer .footer-brand p {
+    color: rgba(255, 255, 255, 0.55) !important;
+}
+
+/* Floating AI + WhatsApp */
+body.raahi-store .ai-float {
+    background: #1a1a1a !important;
+    color: #fff !important;
     font-size: 11px;
-    color: #999;
-    text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-/* Footer logo */
-body.raahi-store footer .footer-brand .logo-frame {
-    margin-bottom: 16px;
+/* Shop page */
+body.raahi-store #shop-page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
 }
 
-body.raahi-store footer .footer-brand .logo-frame img {
-    height: 44px;
+body.raahi-store #shop-page h2 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
 }
 
-/* Search overlay light */
+body.raahi-store .filter-btn {
+    border-radius: 0;
+    border: 1px solid #ddd;
+}
+
+body.raahi-store .filter-btn.active {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+}
+
+/* Search overlay */
 body.raahi-store .search-overlay {
-    background: rgba(255, 255, 255, 0.98);
-}
-
-body.raahi-store .search-box input {
-    color: #1a1a1a;
-}
-
-/* Slideshow strip subtle */
-body.raahi-store .sliding-banner {
-    background: #f5f5f5;
-    color: #333;
-    border: none;
-}
-
-body.raahi-store .sliding-track span {
-    color: #555;
+    background: rgba(255, 255, 255, 0.98) !important;
 }
 
 @media (max-width: 1100px) {
     body.raahi-store .products-grid,
     body.raahi-store .shop-products-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, 1fr) !important;
     }
 
     body.raahi-store .cat-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    body.raahi-store .trust-strip {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 768px) {
     body.raahi-store .header-inner {
-        grid-template-columns: auto 1fr auto;
-        padding: 10px 14px;
-        min-height: 64px;
+        grid-template-columns: auto 1fr auto !important;
+        padding: 10px 14px !important;
+        min-height: 64px !important;
     }
 
     body.raahi-store .header-left-mobile {
-        display: flex;
+        display: flex !important;
+        grid-column: 1;
     }
 
     body.raahi-store .nav-desktop-left,
-    body.raahi-store .header-icons > nav.nav-desktop {
+    body.raahi-store .header-icons .nav-desktop-right {
         display: none !important;
     }
 
+    body.raahi-store .logo {
+        grid-column: 2;
+        justify-self: center;
+    }
+
     body.raahi-store .logo-frame {
-        padding: 6px 12px 5px;
+        padding: 8px 18px 6px;
     }
 
     body.raahi-store .logo-frame img {
-        height: 38px;
-        max-width: 160px;
-    }
-
-    body.raahi-store .logo {
-        justify-self: center;
-        text-align: center;
-        grid-column: 2;
-    }
-
-    body.raahi-store .header-left-mobile {
-        grid-column: 1;
+        height: 36px;
+        max-width: 140px;
     }
 
     body.raahi-store .header-icons {
         grid-column: 3;
+        gap: 12px !important;
+    }
+
+    body.raahi-store .currency-selector {
+        display: none;
     }
 
     body.raahi-store .products-grid,
     body.raahi-store .shop-products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
+        grid-template-columns: repeat(2, 1fr) !important;
     }
 
     body.raahi-store .cat-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr) !important;
+        padding: 0 14px 20px;
+    }
+
+    body.raahi-store .raahi-hero-title {
+        font-size: clamp(20px, 5.5vw, 28px) !important;
+        padding: 0 8px !important;
+    }
+
+    body.raahi-store .hero.raahi-hero {
+        padding: 32px 16px 24px !important;
     }
 
     body.raahi-store .blog-grid {
@@ -678,13 +676,54 @@ body.raahi-store .sliding-track span {
     }
 
     body.raahi-store .collection-section {
-        padding: 36px 14px;
+        padding: 32px 14px;
     }
 }
 
 @media (max-width: 480px) {
-    body.raahi-store .products-grid,
-    body.raahi-store .shop-products-grid {
-        grid-template-columns: 1fr 1fr;
+    body.raahi-store .trust-strip {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Story / process sections — lighter Raahi tone */
+body.raahi-store .story-banner,
+body.raahi-store .process-section,
+body.raahi-store .attar-info-section,
+body.raahi-store .market-section {
+    background: #fff !important;
+}
+
+body.raahi-store .process-section {
+    background: #fafafa !important;
+}
+
+body.raahi-store .newsletter {
+    background: #111 !important;
+}
+
+body.raahi-store .newsletter .section-title {
+    color: #fff !important;
+}
+
+/* Override touch/coarse rules that left-align hero */
+@media (hover: none) and (pointer: coarse) {
+    body.raahi-store .hero,
+    body.raahi-store .hero.raahi-hero {
+        padding: 28px 14px 20px !important;
+        text-align: center !important;
+    }
+
+    body.raahi-store .raahi-hero-title {
+        text-align: center !important;
+    }
+
+    body.raahi-store .header-inner {
+        display: grid !important;
+    }
+
+    body.raahi-store .logo {
+        text-align: center !important;
+        flex: unset !important;
     }
 }
