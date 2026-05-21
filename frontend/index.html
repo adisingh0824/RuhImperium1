@@ -1539,9 +1539,9 @@
             .market-grid{grid-template-columns:1fr;}
         }
     </style>
-    <link rel="stylesheet" href="/raahi-theme.css">
+    <link rel="stylesheet" href="/ruh-store-theme.css">
 </head>
-<body class="raahi-store">
+<body class="ruh-store">
 
 <!-- GLOBAL TOAST AND QUICK CONTACT SETUP -->
 <div id="toast"></div>
@@ -1997,20 +1997,18 @@
 
 <div id="home-page">
 
-    <!-- HERO — Raahi exact -->
-    <section class="hero raahi-hero">
-        <h1 class="hero-title raahi-hero-title">Wrap Yourself in Luxury: Discover Art of Perfumery with Our Fragrance collections!</h1>
+    <section class="hero ruh-hero">
+        <h1 class="hero-title ruh-hero-title">Wrap Yourself in Luxury: Discover Art of Perfumery with Our Fragrance collections!</h1>
     </section>
 
-    <!-- CATEGORY GRID — Raahi collections -->
     <section class="collection-section" style="padding-top:0;">
         <div class="cat-grid reveal" id="homeCatGrid">
-            <div class="cat-card cat-1" onclick="filterShop('Authentic Indian Attars')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/MH6A2535-5.jpg?v=1745485650" alt="Authentic Indian Attars"><div class="cat-card-overlay"><h3>Authentic Indian Attars</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-2" onclick="filterShop('Modern Attars')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/champaperfume3.jpg?v=1779306022" alt="Modern Attars"><div class="cat-card-overlay"><h3>Modern Attars</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-3" onclick="filterShop('Next Gen Fragrances')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/BlackMusk_31c83785-5aaf-47ab-86aa-440b36091a65.jpg?v=1709395049" alt="Next Gen fragrances"><div class="cat-card-overlay"><h3>Next Gen fragrances</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-4" onclick="filterShop('Eau De Parfum')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/Raahi_Gulab_100ml.jpg?v=1744539563" alt="Eau De Parfum"><div class="cat-card-overlay"><h3>Eau De Parfum</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-5" onclick="filterShop('Ruh / Absolute Oil')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/Ruh_Gulab_Roseoil.jpg?v=1744268176" alt="Ruh Absolute Oil" onerror="this.src='https://cdn.shopify.com/s/files/1/0614/4602/9490/files/Sandalwood_Oil_creative.jpg?v=1744268176'"><div class="cat-card-overlay"><h3>Ruh | Absolute Oils</h3><span class="cat-arrow">→</span></div></div>
-            <div class="cat-card cat-6" onclick="filterShop('Discovery Set')"><img src="https://cdn.shopify.com/s/files/1/0614/4602/9490/files/Indian_Attars_1080_x_1080_px.jpg?v=1751399934" alt="Discovery Set"><div class="cat-card-overlay"><h3>Discovery Set</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-1" onclick="filterShop('Authentic Indian Attars')"><img src="/gulabattar.png" alt="Authentic Indian Attars"><div class="cat-card-overlay"><h3>Authentic Indian Attars</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-2" onclick="filterShop('Modern Attars')"><img src="/mitti.png" alt="Modern Attars"><div class="cat-card-overlay"><h3>Modern Attars</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-3" onclick="filterShop('Next Gen Fragrances')"><img src="/cafe%20rose.png" alt="Next Gen fragrances"><div class="cat-card-overlay"><h3>Next Gen fragrances</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-4" onclick="filterShop('Eau De Parfum')"><img src="/vanilla.png" alt="Eau De parfume"><div class="cat-card-overlay"><h3>Eau De parfume</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-5" onclick="filterShop('Ruh / Absolute Oil')"><img src="/amiri.png" alt="Ruh Absolute Oils"><div class="cat-card-overlay"><h3>Ruh | Absolute Olis</h3><span class="cat-arrow">→</span></div></div>
+            <div class="cat-card cat-6" onclick="filterShop('Discovery Set')"><img src="/set4.png" alt="Discovery Set"><div class="cat-card-overlay"><h3>Discovery Set</h3><span class="cat-arrow">→</span></div></div>
         </div>
     </section>
 
@@ -2051,217 +2049,63 @@
         <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Eau De Parfum')">View all</button></div>
     </section>
 
-    <!-- MODERN ATTARS -->
-    <section class="collection-section alt" id="modern-attars">
-        <div class="collection-header reveal">
-            <h2>Modern Attars</h2>
+    <section class="promo-band" id="sandalwood-promo">
+        <div class="promo-band-inner reveal">
+            <h2>Sandalwood Stick + Rubbing Stone</h2>
+            <p class="promo-lead">Ayurveda's chill pill!</p>
+            <p>Spa treatment from nature – calming your mind, pampering your skin, and making you smell divine all at once.</p>
+            <p>When modern life goes nuts, trust this ancient remedy to bring back your inner balance.</p>
+            <button class="btn-outline" type="button" onclick="filterShop('Wellness')">Shop Wellness</button>
         </div>
-        <div class="products-grid scene-3d" id="modernCollectionGrid"></div>
-        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Modern Attars')">View all</button></div>
     </section>
 
-    <!-- WELLNESS — Raahi -->
     <section class="collection-section" id="wellness-collection">
         <div class="collection-header reveal">
             <h2>Wellness</h2>
-            <p>Where ancient Indian wisdom meets modern self-care — sandalwood, rose water, and pure Kannauj ingredients.</p>
+            <p>Wellness : where ancient Indian wisdom meets modern self-care, featuring natural products to nurture your body, mind, and spirit.</p>
         </div>
         <div class="products-grid scene-3d" id="wellnessCollectionGrid"></div>
         <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Wellness')">View all</button></div>
     </section>
 
-    <!-- RUH | ABSOLUTE OILS -->
-    <section class="collection-section alt" id="ruh-oils">
-        <div class="collection-header reveal">
-            <h2>Ruh | Absolute Oils</h2>
-        </div>
-        <div class="products-grid scene-3d" id="ruhCollectionGrid"></div>
-        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Ruh / Absolute Oil')">View all</button></div>
-    </section>
-
-    <!-- DISCOVERY SET -->
-    <section class="collection-section" id="discovery-sets">
-        <div class="collection-header reveal">
-            <h2>Discovery Set</h2>
-        </div>
-        <div class="products-grid scene-3d" id="discoveryCollectionGrid"></div>
-        <div class="view-all-wrap"><button class="btn-outline" onclick="filterShop('Discovery Set')">View all</button></div>
-    </section>
-
-    <!-- RECENTLY VIEWED PRODUCTS SETUP -->
-    <section class="recently-viewed-section">
-        <div class="section-header reveal">
-            <span class="section-label">Continue Exploring</span>
-            <h2 class="section-title">Recently <em>Viewed</em></h2>
-            <div class="section-line"><span>✦</span></div>
-        </div>
-        <div class="products-grid scene-3d" id="recentlyViewedGrid"></div>
-    </section>
-
-    <!-- BRAND STORY SECTION SETUP -->
-    <div class="story-banner" id="story">
-        <div class="story-visual">
-            <span class="story-big-text">Attar</span>
-            <div class="story-emblem">
-                <div class="story-emblem-circle">
-                    <span class="story-year">1973</span>
-                    <span class="story-since">Since</span>
-                </div>
-            </div>
-        </div>
-        <div class="story-text">
-            <span class="section-label">Our Legacy</span>
-            <h2 class="section-title">The Art of<br><em>Perfume Making</em></h2>
-            <p>A legacy of over <strong>50 years</strong> in the Indian perfume industry, Ruh Imperium was founded in Kannauj with one mission — to bring the purest, most authentic attars directly from the distillery to your skin.</p>
-            <p>No unnecessary middlemen. Straight from <strong>India's perfume capital 'Kannauj'</strong>. Every bottle carries the wisdom of generations, the patience of the ancient deg-bhapka distillation process.</p>
-            <button class="btn-primary" style="align-self:flex-start;margin-top:12px;" onclick="goSection('process')">Know More</button>
-        </div>
-    </div>
-
-    <section class="attar-info-section" id="what-is-attar">
-        <div class="attar-info-inner">
-            <div class="attar-info-media reveal">
-                <img src="/gulabattar.png" alt="Rose attar bottle">
-                <img src="/mitti.png" alt="Mitti attar bottle">
-            </div>
-            <div class="attar-info-copy reveal reveal-delay-1">
-                <span class="section-label">What is Attar?</span>
-                <h2 class="section-title">Traditional perfume oil, made <em>without alcohol</em></h2>
-                <p>Attar is a concentrated perfume oil traditionally distilled from flowers, woods, roots, spices, and earth notes into a natural oil base. A tiny swipe warms on the skin and reveals its character slowly.</p>
-                <p>Ruh Imperium pairs classic Kannauj notes like Mitti, Mogra, Gulab, Hina, Kewra, and Sandalwood with modern EDP-style blends for daily wear, gifting, and special occasions.</p>
-                <button class="btn-primary" onclick="filterShop('Authentic Indian Attars')">Shop Attars</button>
-            </div>
+    <section class="editorial-block" id="story">
+        <div class="editorial-inner reveal">
+            <h2>THE ART OF PERFUME MAKING</h2>
+            <p>A legacy of over 200 years in the Indian perfume industry and a eureka moment is what led to the creation of Ruh Imperium. Technology was put to good use, and a new era of intense perfumery began, courtesy of a homegrown brand with a world bound take. No unnecessary middlemen. Straight from India's perfume capital 'Kannauj' to your skin.</p>
         </div>
     </section>
 
-    <section class="market-section">
-        <span class="section-label">Available Across India</span>
-        <h2 class="section-title">Order Ruh Imperium <em>directly online</em></h2>
-        <div class="market-grid">
-            <div class="market-tile">Website</div>
-            <div class="market-tile">WhatsApp</div>
-            <div class="market-tile">UPI</div>
-            <div class="market-tile">Razorpay</div>
-            <div class="market-tile">Courier</div>
+    <section class="editorial-block alt" id="manufacturing">
+        <div class="editorial-inner reveal">
+            <h2>WHERE ARE YOUR FRAGRANCES MANUFACTURED?</h2>
+            <p>100% of our products are manufactured and packaged at our distilleries. Watch the heritage of our distillery in Kannauj, India — the perfume capital of the world.</p>
         </div>
     </section>
 
-    <!-- PERFUME PROCESS SECTION SETUP -->
-    <section class="process-section" id="process">
-        <div class="section-header reveal">
-            <span class="section-label">From Nature to You</span>
-            <h2 class="section-title" style="color:var(--cream)">Our <em style="color:var(--gold-light)">Process</em></h2>
-            <div class="section-line"><span>✦</span></div>
-        </div>
-        <div class="process-grid">
-            <div class="process-step reveal reveal-delay-1"><div class="process-num">01</div><span class="process-icon">🌾</span><h3>Grow</h3><p>We source fresh flowers, roots, and botanicals from India's finest herbalists and trusted farmers.</p></div>
-            <div class="process-step reveal reveal-delay-2"><div class="process-num">02</div><span class="process-icon">🌺</span><h3>Harvest</h3><p>Once in full bloom, the finest selection is hand-collected and brought to our oil distillery in Kannauj.</p></div>
-            <div class="process-step reveal reveal-delay-3"><div class="process-num">03</div><span class="process-icon">🫙</span><h3>Extract</h3><p>Slowly extracted in copper 'Degs' for up to a month, as done for centuries, to capture the finest note.</p></div>
-        </div>
-    </section>
-
-    <!-- SHOP BY NOTES — Raahi -->
     <section id="shop-notes" class="collection-section">
         <div class="collection-header reveal">
             <h2>SHOP BY NOTES</h2>
         </div>
         <div class="notes-grid">
-            <div class="note-card reveal reveal-delay-1" onclick="filterByNote('Floral')"><span class="note-icon">🌸</span><h3>Floral</h3><p>Enchanting Floral collection — perfect fragrances for every romantic soul.</p></div>
+            <div class="note-card reveal reveal-delay-1" onclick="filterByNote('Floral')"><span class="note-icon">🌸</span><h3>Floral</h3><p>Enchanting Floral collection - perfect fragrances for every romantic soul.</p></div>
             <div class="note-card reveal reveal-delay-2" onclick="filterByNote('Woody')"><span class="note-icon">🪵</span><h3>Woody</h3><p>Dive into our lit Woody fragrances—bringing those earthy vibes straight to you!</p></div>
             <div class="note-card reveal reveal-delay-3" onclick="filterByNote('Fresh')"><span class="note-icon">💨</span><h3>Fresh</h3><p>Get the ultimate freshness with our Fresh scents—perfect for every mood!</p></div>
-            <div class="note-card reveal reveal-delay-1" onclick="filterByNote('Musky')"><span class="note-icon">🌙</span><h3>Musky</h3><p>Level up your scent game with our Musky vibes—bold, confident, and unforgettable!</p></div>
-            <div class="note-card reveal reveal-delay-2" onclick="filterByNote('Gourmand')"><span class="note-icon">🍯</span><h3>Gourmand</h3><p>Satisfy your scent cravings—so mouthwatering, you'll want more!</p></div>
-            <div class="note-card reveal reveal-delay-3" onclick="filterByNote('Oriental')"><span class="note-icon">🏺</span><h3>Oriental</h3><p>Discover diverse Oriental scents—strong, attractive, and utterly irresistible.</p></div>
-        </div>
-        <div style="max-width:1400px;margin:0 auto;">
-            <div class="action-strip reveal">
-                <div class="action-card">
-                    <span class="action-eyebrow">Morning Reset</span>
-                    <h3>Fresh Wellness</h3>
-                    <p>Light, clean and cooling notes for easy mornings, work days, and heat-friendly wear.</p>
-                    <button class="btn-primary" onclick="filterShop('Fresh')">Shop Fresh</button>
-                </div>
-                <div class="action-card">
-                    <span class="action-eyebrow">Daily Ritual</span>
-                    <h3>Everyday Attars</h3>
-                    <p>Go straight to calm, wearable attars made for everyday comfort and long wear.</p>
-                    <button class="btn-primary" onclick="filterShop('Daily')">Shop Daily Wear</button>
-                </div>
-                <div class="action-card">
-                    <span class="action-eyebrow">Grounding Notes</span>
-                    <h3>Woody & Earthy</h3>
-                    <p>Explore mitti, sandalwood, and deep grounding profiles for evening balance.</p>
-                    <button class="btn-primary" onclick="filterShop('Woody')">Shop Woody</button>
-                </div>
-            </div>
-            <div class="products-grid scene-3d" id="wellnessGrid" style="margin-top:36px;"></div>
-            <div class="view-all-wrap"><button class="btn-primary" onclick="filterShop('Wellness')">View Wellness</button></div>
+            <div class="note-card reveal reveal-delay-1" onclick="filterByNote('Musky')"><span class="note-icon">🌙</span><h3>Musky</h3><p>Level up your scent game with our Musky vibes—bold, confident, and absolutely unforgettable!</p></div>
+            <div class="note-card reveal reveal-delay-2" onclick="filterByNote('Gourmand')"><span class="note-icon">🍯</span><h3>Gourmand</h3><p>Satisfy your scent cravings—so mouthwatering, you'll want to lick yourself!</p></div>
+            <div class="note-card reveal reveal-delay-3" onclick="filterByNote('Oriental')"><span class="note-icon">🏺</span><h3>Oriental</h3><p>Discover diverse Oriental scents, from sensual East to nature-inspired blends. strong, attractive, and utterly irresistible.</p></div>
         </div>
     </section>
 
-    <!-- POOJA / TRADITIONAL -->
-    <section style="padding:80px 40px;background:var(--cream);">
-        <div style="max-width:1400px;margin:0 auto;">
-            <div class="section-header reveal">
-                <span class="section-label">Pooja Essentials</span>
-                <h2 class="section-title">Pooja <em>Products</em></h2>
-                <div class="section-line"><span>✦</span></div>
-            </div>
-            <div class="action-strip reveal">
-                <div class="action-card">
-                    <span class="action-eyebrow">Temple Favorites</span>
-                    <h3>Traditional Attars</h3>
-                    <p>Explore rose, kewra, hina, mogra, sandalwood, and other classic fragrances often chosen for pooja, rituals, and sacred gifting.</p>
-                    <button class="btn-primary" onclick="filterShop('Authentic Indian Attars')">Shop Traditional Attars</button>
-                </div>
-                <div class="action-card">
-                    <span class="action-eyebrow">Festive Use</span>
-                    <h3>Ritual & Festival Picks</h3>
-                    <p>Browse products suited for festive offerings, family functions, and devotional fragrance use through the year.</p>
-                    <button class="btn-primary" onclick="filterShop('Festival')">Shop Festival Picks</button>
-                </div>
-            </div>
-            <div class="products-grid scene-3d" id="poojaGrid" style="margin-top:36px;"></div>
-            <div class="view-all-wrap"><button class="btn-primary" onclick="filterShop('Festival')">View Pooja Products</button></div>
-        </div>
-    </section>
-
-    <!-- SHOP BY USE — Raahi -->
     <section class="use-section" id="gifting">
-        <div style="max-width:1400px;margin:0 auto;">
-            <div class="collection-header reveal">
-                <h2 style="color:#1a1a1a;">Shop By Use</h2>
-            </div>
-            <div class="use-grid">
-                <div class="use-card large reveal" data-emoji="🎉" onclick="filterShop('Party')"><h3>Party Wear</h3><p>Make a statement →</p></div>
-                <div class="use-card reveal reveal-delay-1" data-emoji="💼" onclick="filterShop('Office')"><h3>Office Wear</h3><p>Subtle & sophisticated →</p></div>
-                <div class="use-card reveal reveal-delay-2" data-emoji="☀️" onclick="filterShop('Summer')"><h3>Summer</h3><p>Light & refreshing →</p></div>
-                <div class="use-card reveal reveal-delay-1" data-emoji="🌙" onclick="filterShop('Daily')"><h3>Daily Wear</h3><p>Effortless everyday →</p></div>
-                <div class="use-card reveal reveal-delay-2" data-emoji="❄️" onclick="filterShop('Winter')"><h3>Winter</h3><p>Warm & enveloping →</p></div>
-                <div class="use-card reveal reveal-delay-3" data-emoji="🪔" onclick="filterShop('Festival')"><h3>Festival Season</h3><p>Rich & celebratory →</p></div>
-            </div>
-            <div class="action-strip reveal">
-                <div class="action-card dark">
-                    <span class="action-eyebrow">Starter Gift</span>
-                    <h3>Discovery Sets</h3>
-                    <p>Easy gifting for first-timers, family bundles, and festive return presents.</p>
-                    <button class="btn-primary" onclick="filterShop('Discovery Set')">Shop Discovery Sets</button>
-                </div>
-                <div class="action-card dark">
-                    <span class="action-eyebrow">Most Gifted</span>
-                    <h3>Gift Collection</h3>
-                    <p>Jump into the perfume picks already tagged and arranged for gifting moments.</p>
-                    <button class="btn-primary" onclick="filterShop('Gifting')">Shop Gifting</button>
-                </div>
-                <div class="action-card dark">
-                    <span class="action-eyebrow">Festive Choice</span>
-                    <h3>Celebration Scents</h3>
-                    <p>Warm, memorable fragrances for weddings, Eid, Diwali, birthdays, and special days.</p>
-                    <button class="btn-primary" onclick="filterShop('Festival')">Shop Festive Picks</button>
-                </div>
-            </div>
-            <div class="products-grid scene-3d" id="giftingGrid" style="margin-top:36px;"></div>
-            <div class="view-all-wrap"><button class="btn-primary" onclick="filterShop('Gifting')">View Gift Collection</button></div>
+        <div class="collection-header reveal">
+            <h2>Shop By Use</h2>
+        </div>
+        <div class="use-grid use-grid-shop">
+            <div class="use-card reveal" onclick="filterShop('Party')"><h3>Party Wear</h3></div>
+            <div class="use-card reveal reveal-delay-1" onclick="filterShop('Office')"><h3>Office Wear</h3></div>
+            <div class="use-card reveal reveal-delay-2" onclick="filterShop('Summer')"><h3>Summer</h3></div>
+            <div class="use-card reveal reveal-delay-1" onclick="filterShop('Daily')"><h3>Daily Wear</h3></div>
+            <div class="use-card reveal reveal-delay-2" onclick="filterShop('Winter')"><h3>Winter</h3></div>
         </div>
     </section>
 
@@ -2285,18 +2129,33 @@
         <div class="reviews-grid" id="customerReviewList">
             <div class="review-card reveal reveal-delay-1">
                 <div class="review-stars">★★★★★</div>
-                <p class="review-text">"The Mitti Attar brought back memories of the first rain on dry earth. Absolutely pure, long-lasting and genuine."</p>
-                <div class="reviewer"><div class="reviewer-avatar">R</div><div><span class="reviewer-name">Rajesh Kumar</span><span class="reviewer-date">March 18, 2026</span><span class="reviewer-product">Mitti Attar</span></div></div>
+                <p class="review-text">Best in class</p>
+                <div class="reviewer"><div class="reviewer-avatar">D</div><div><span class="reviewer-name">Dodiya meet</span><span class="reviewer-date">April 14, 2026</span><span class="reviewer-product">Parijat Attar | 12ml</span></div></div>
             </div>
             <div class="review-card reveal reveal-delay-2">
                 <div class="review-stars">★★★★★</div>
-                <p class="review-text">"Mogra Attar smells exactly like real mogra flowers. Even a tiny amount lasts the whole day. Truly authentic!"</p>
-                <div class="reviewer"><div class="reviewer-avatar">P</div><div><span class="reviewer-name">Priya Sharma</span><span class="reviewer-date">March 15, 2026</span><span class="reviewer-product">Mogra Attar</span></div></div>
+                <p class="review-text">Its jus outta world..amazingg</p>
+                <div class="reviewer"><div class="reviewer-avatar">A</div><div><span class="reviewer-name">Anonymous</span><span class="reviewer-date">April 14, 2026</span><span class="reviewer-product">Pink Lotus Attar | Indian Attar | 12ml</span></div></div>
             </div>
             <div class="review-card reveal reveal-delay-3">
                 <div class="review-stars">★★★★★</div>
-                <p class="review-text">"The Discovery Set is the perfect way to experience Ram Ji's range. Pure and truly traditional Indian perfumery."</p>
-                <div class="reviewer"><div class="reviewer-avatar">A</div><div><span class="reviewer-name">Ananya Gupta</span><span class="reviewer-date">March 12, 2026</span><span class="reviewer-product">Discovery Set</span></div></div>
+                <p class="review-text">NICE FRAGRANCE</p>
+                <div class="reviewer"><div class="reviewer-avatar">A</div><div><span class="reviewer-name">Anonymous</span><span class="reviewer-date">April 14, 2026</span><span class="reviewer-product">Mitti Attar | Authentic Indian Attar</span></div></div>
+            </div>
+            <div class="review-card reveal">
+                <div class="review-stars">★★★★★</div>
+                <p class="review-text">The fragrance is amazing. The floral notes give the feel of the temple flowers. No words just appreciation.</p>
+                <div class="reviewer"><div class="reviewer-avatar">P</div><div><span class="reviewer-name">P. SETH</span><span class="reviewer-date">April 13, 2026</span><span class="reviewer-product">Raas Leela | Eau De Parfum | 50ml</span></div></div>
+            </div>
+            <div class="review-card reveal reveal-delay-1">
+                <div class="review-stars">★★★★★</div>
+                <p class="review-text">The attars are not only for nose but they directly enters into the soul and activates heart and soul and very important never irritates nose or brain</p>
+                <div class="reviewer"><div class="reviewer-avatar">A</div><div><span class="reviewer-name">Aslam Hawawala</span><span class="reviewer-date">April 12, 2026</span><span class="reviewer-product">Modern Attars | Discovery Set</span></div></div>
+            </div>
+            <div class="review-card reveal reveal-delay-2">
+                <div class="review-stars">★★★★★</div>
+                <p class="review-text">Best quality</p>
+                <div class="reviewer"><div class="reviewer-avatar">A</div><div><span class="reviewer-name">Anonymous</span><span class="reviewer-date">April 11, 2026</span><span class="reviewer-product">Sandalwood Attar</span></div></div>
             </div>
         </div>
         <div class="review-form">
@@ -2314,7 +2173,14 @@
         </div>
     </section>
 
-    <!-- BLOG — Raahi style -->
+    <section class="process-section ruh-process" id="process">
+        <div class="process-grid">
+            <div class="process-step reveal reveal-delay-1"><div class="process-num">01</div><h3>GROW</h3><p>Our process begins with fresh flowers, roots, wood etc. grown by Indian herbalists and farmers.</p></div>
+            <div class="process-step reveal reveal-delay-2"><div class="process-num">02</div><h3>HARVEST</h3><p>Once bloomed, the finest selection of flowers are collected and bought to our oil distillery.</p></div>
+            <div class="process-step reveal reveal-delay-3"><div class="process-num">03</div><h3>EXTRACT</h3><p>We slowly extract the flowers for up to a month in copper stills called 'Degs' as it was done centuries ago to make sure that the finest note is produced.</p></div>
+        </div>
+    </section>
+
     <section class="blog-section" id="blog">
         <div class="collection-header reveal">
             <h2>Blog posts</h2>
@@ -2324,21 +2190,21 @@
                 <div class="blog-card-body">
                     <time>October 19, 2023</time>
                     <h3>Ruh Imperium: Guardian of Tradition in the Heart of Kannauj</h3>
-                    <p>True Indian Attars from Kannauj are not merely fragrances; they are stories in a bottle, encapsulating history, tradition, and innovation.</p>
+                    <p>True Indian Attars from Kannauj are not merely fragrances; they are stories in a bottle, encapsulating the history, tradition, and innovation of an entire region. The infusion of absolute oils,...</p>
                 </div>
             </article>
             <article class="blog-card reveal reveal-delay-1">
                 <div class="blog-card-body">
                     <time>May 29, 2023</time>
                     <h3>10 frequently asked questions about Attar</h3>
-                    <p>What is attar? How is attar made? Everything you need to know about pure Indian perfume oils.</p>
+                    <p>What is attar? Attar is a type of natural perfume oil that is derived from botanical sources such as flowers, herbs, and spices. How is attar made? Attar is made by...</p>
                 </div>
             </article>
             <article class="blog-card reveal reveal-delay-2">
                 <div class="blog-card-body">
                     <time>May 3, 2022</time>
                     <h3>What is a Niche perfume?</h3>
-                    <p>Niche perfume made by Kannauj's master perfumer — hand blended with natural ingredients that smell wonderful.</p>
+                    <p>Niche perfume made by Kannauj's master perfumer Hand blended with natural ingredients, these perfumes smell wonderful. Our quality standards are extremely high so you'll never receive a product that irritates...</p>
                 </div>
             </article>
         </div>
@@ -2347,9 +2213,8 @@
     <!-- NEWSLETTER SUBSCRIPTION SETUP -->
     <section class="newsletter">
         <div class="newsletter-inner reveal">
-            <span class="section-label">Join the Family</span>
-            <h2 class="section-title">Stay in the <em>Fragrance</em></h2>
-            <p>Get exclusive offers, new launches, and the art of attar delivered to your inbox.</p>
+            <h2 class="section-title">Subscribe to our emails</h2>
+            <p>Be the first to know about new collections and exclusive offers.</p>
             <div class="nl-form">
                 <input type="email" id="nlEmail" placeholder="Your email address" onkeydown="handleNewsletterKeydown(event)">
                 <button type="button" id="nlSubmitBtn" onclick="subscribe()">Subscribe</button>

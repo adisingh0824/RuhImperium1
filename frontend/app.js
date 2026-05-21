@@ -617,8 +617,9 @@ function starStr(s) {
 }
 
 function productCardTitle(p) {
+    if (p.displayName) return p.displayName;
     const size = p.sizes?.[0] || '';
-    return size ? `${p.name} | ${p.cat} | ${size}` : `${p.name} | ${p.cat}`;
+    return size && size !== 'Standard' ? `${p.name} | ${p.cat} | ${size}` : `${p.name} | ${p.cat}`;
 }
 
 function productCardHTML(p) {
@@ -682,27 +683,13 @@ function renderHomeSections() {
     fill('newArrivalsGrid', catalog.filter(p => p.cat === 'Next Gen Fragrances').slice(0, 4));
     fill('attarsCollectionGrid', catalog.filter(p => p.cat === 'Authentic Indian Attars').slice(0, 4));
     fill('edpCollectionGrid', catalog.filter(p => p.cat === 'Eau De Parfum').slice(0, 4));
-    fill('modernCollectionGrid', catalog.filter(p => p.cat === 'Modern Attars').slice(0, 4));
     fill('wellnessCollectionGrid', catalog.filter(p => p.cat === 'Wellness').slice(0, 4));
-    fill('ruhCollectionGrid', catalog.filter(p => p.cat === 'Ruh / Absolute Oil').slice(0, 4));
-    fill('discoveryCollectionGrid', catalog.filter(p => p.cat === 'Discovery Set').slice(0, 4));
-    const wellness = catalog.filter(p => p.cat === 'Wellness').slice(0, 4);
-    const pooja = catalog
-        .filter(p => p.tags.includes('Festival') || ['Authentic Indian Attars', 'Ruh / Absolute Oil'].includes(p.cat))
-        .slice(0, 4);
-    const gifting = catalog
-        .filter(p => p.tags.includes('Gifting') || p.cat === 'Discovery Set')
-        .slice(0, 4);
-    fill('wellnessGrid', wellness);
-    fill('poojaGrid', pooja);
-    fill('giftingGrid', gifting);
     renderRecommendations();
     renderRecentlyViewed();
     if (window.refreshRuh3D) {
         [
             'bestsellerGrid', 'newArrivalsGrid', 'attarsCollectionGrid', 'edpCollectionGrid',
-            'modernCollectionGrid', 'wellnessCollectionGrid', 'ruhCollectionGrid', 'discoveryCollectionGrid',
-            'wellnessGrid', 'poojaGrid', 'giftingGrid', 'recentlyViewedGrid'
+            'wellnessCollectionGrid', 'recentlyViewedGrid'
         ].forEach(id => {
             const grid = document.getElementById(id);
             if (grid) window.refreshRuh3D(grid);

@@ -1,13 +1,13 @@
-/* Ruh Imperium — Raahi Parfums exact layout (loads after index.html styles) */
+/* Ruh Imperium — luxury store layout (loads after index.html styles) */
 
-body.raahi-store {
+body.ruh-store {
     background: #fff !important;
     color: #1a1a1a;
     font-family: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* Announcement */
-body.raahi-store .announcement {
+body.ruh-store .announcement {
     background: #111 !important;
     color: #f5f5f5 !important;
     font-size: 11px !important;
@@ -18,13 +18,13 @@ body.raahi-store .announcement {
     box-shadow: none !important;
 }
 
-body.raahi-store .announcement span {
+body.ruh-store .announcement span {
     color: #d4af37 !important;
     font-weight: 700;
 }
 
 /* Header */
-body.raahi-store header {
+body.ruh-store header {
     background: #fff !important;
     border-bottom: 1px solid #e8e8e8 !important;
     box-shadow: none !important;
@@ -34,7 +34,7 @@ body.raahi-store header {
     z-index: 1000;
 }
 
-body.raahi-store .header-inner {
+body.ruh-store .header-inner {
     display: grid !important;
     grid-template-columns: 1fr auto 1fr !important;
     align-items: center !important;
@@ -47,24 +47,24 @@ body.raahi-store .header-inner {
     gap: 20px !important;
 }
 
-body.raahi-store .header-left-mobile {
+body.ruh-store .header-left-mobile {
     display: none;
 }
 
-body.raahi-store .nav-desktop-left {
+body.ruh-store .nav-desktop-left {
     display: flex;
     justify-content: flex-start;
     grid-column: 1;
 }
 
-body.raahi-store .nav-desktop-left nav {
+body.ruh-store .nav-desktop-left nav {
     display: flex !important;
     gap: 24px !important;
     align-items: center;
     flex-wrap: wrap;
 }
 
-body.raahi-store .header-icons {
+body.ruh-store .header-icons {
     display: flex !important;
     justify-content: flex-end !important;
     align-items: center !important;
@@ -72,12 +72,12 @@ body.raahi-store .header-icons {
     grid-column: 3;
 }
 
-body.raahi-store .header-icons .nav-desktop-right {
+body.ruh-store .header-icons .nav-desktop-right {
     display: flex !important;
     gap: 24px !important;
 }
 
-body.raahi-store nav a {
+body.ruh-store nav a {
     font-size: 12px !important;
     letter-spacing: 1.5px !important;
     text-transform: uppercase !important;
@@ -86,22 +86,22 @@ body.raahi-store nav a {
     font-family: 'Jost', sans-serif !important;
 }
 
-body.raahi-store nav a:hover {
+body.ruh-store nav a:hover {
     color: #8b6914 !important;
 }
 
-body.raahi-store nav a::after {
+body.ruh-store nav a::after {
     display: none !important;
 }
 
-body.raahi-store .dropdown-menu {
+body.ruh-store .dropdown-menu {
     border-radius: 0 !important;
     border: 1px solid #e8e8e8 !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Logo — image only in black frame (like Raahi) */
-body.raahi-store .logo {
+body.ruh-store .logo {
     grid-column: 2;
     justify-self: center;
     text-align: center;
@@ -111,7 +111,7 @@ body.raahi-store .logo {
     min-width: unset !important;
 }
 
-body.raahi-store .logo-frame {
+body.ruh-store .logo-frame {
     display: inline-block;
     background: #0a0a0a;
     padding: 10px 32px 8px;
@@ -119,8 +119,8 @@ body.raahi-store .logo-frame {
     line-height: 0;
 }
 
-body.raahi-store .logo-frame img,
-body.raahi-store .logo img.brand-logo {
+body.ruh-store .logo-frame img,
+body.ruh-store .logo img.brand-logo {
     height: 48px;
     width: auto;
     max-width: min(220px, 50vw);
@@ -129,14 +129,14 @@ body.raahi-store .logo img.brand-logo {
     filter: none;
 }
 
-body.raahi-store .logo-main,
-body.raahi-store .logo-sub,
-body.raahi-store .logo-marketed {
+body.ruh-store .logo-main,
+body.ruh-store .logo-sub,
+body.ruh-store .logo-marketed {
     display: none !important;
 }
 
 /* Header icons — minimal like Raahi */
-body.raahi-store .icon-btn {
+body.ruh-store .icon-btn {
     font-size: 0;
     color: #1a1a1a;
     padding: 4px;
@@ -145,16 +145,16 @@ body.raahi-store .icon-btn {
     transform: none !important;
 }
 
-body.raahi-store .icon-btn:hover {
+body.ruh-store .icon-btn:hover {
     color: #8b6914;
     transform: none !important;
 }
 
-body.raahi-store .icon-btn svg {
+body.ruh-store .icon-btn svg {
     display: block;
 }
 
-body.raahi-store .account-pill {
+body.ruh-store .account-pill {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -164,16 +164,16 @@ body.raahi-store .account-pill {
     background: none !important;
 }
 
-body.raahi-store .account-pill strong,
-body.raahi-store .account-pill-text {
+body.ruh-store .account-pill strong,
+body.ruh-store .account-pill-text {
     display: none !important;
 }
 
-body.raahi-store .currency-chip-btn {
+body.ruh-store .currency-chip-btn {
     display: none !important;
 }
 
-body.raahi-store .currency-selector {
+body.ruh-store .currency-selector {
     font-size: 11px !important;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -187,11 +187,11 @@ body.raahi-store .currency-selector {
     outline: none;
 }
 
-body.raahi-store .header-cart-btn {
+body.ruh-store .header-cart-btn {
     position: relative;
 }
 
-body.raahi-store .cart-count {
+body.ruh-store .cart-count {
     top: -4px;
     right: -6px;
     background: #1a1a1a !important;
@@ -200,13 +200,13 @@ body.raahi-store .cart-count {
     height: 15px;
 }
 
-body.raahi-store .top-admin-badge {
+body.ruh-store .top-admin-badge {
     font-size: 10px;
 }
 
 /* Hero — centered, plain white, no card */
-body.raahi-store .hero,
-body.raahi-store .hero.raahi-hero {
+body.ruh-store .hero,
+body.ruh-store .hero.ruh-hero {
     min-height: auto !important;
     height: auto !important;
     padding: 48px 24px 36px !important;
@@ -219,15 +219,15 @@ body.raahi-store .hero.raahi-hero {
     text-align: center !important;
 }
 
-body.raahi-store .hero::after,
-body.raahi-store .hero-bg-pattern,
-body.raahi-store .hero-ornament,
-body.raahi-store .float-3d {
+body.ruh-store .hero::after,
+body.ruh-store .hero-bg-pattern,
+body.ruh-store .hero-ornament,
+body.ruh-store .float-3d {
     display: none !important;
 }
 
-body.raahi-store .raahi-hero-title,
-body.raahi-store .hero-title {
+body.ruh-store .ruh-hero-title,
+body.ruh-store .hero-title {
     font-family: 'Playfair Display', Georgia, serif !important;
     font-size: clamp(24px, 3.8vw, 36px) !important;
     font-weight: 400 !important;
@@ -245,26 +245,26 @@ body.raahi-store .hero-title {
     animation: none !important;
 }
 
-body.raahi-store .hero-shop-layout,
-body.raahi-store .hero-brand-row,
-body.raahi-store .hero:not(.raahi-hero) .hero-content {
+body.ruh-store .hero-shop-layout,
+body.ruh-store .hero-brand-row,
+body.ruh-store .hero:not(.ruh-hero) .hero-content {
     display: none !important;
 }
 
-body.raahi-store .hero.raahi-hero .raahi-hero-title {
+body.ruh-store .hero.ruh-hero .ruh-hero-title {
     display: block !important;
 }
 
-body.raahi-store .hero-tagline {
+body.ruh-store .hero-tagline {
     display: none !important;
 }
 
 /* Category grid — Raahi */
-body.raahi-store .collection-section:first-of-type {
+body.ruh-store .collection-section:first-of-type {
     padding-top: 8px !important;
 }
 
-body.raahi-store .cat-grid {
+body.ruh-store .cat-grid {
     grid-template-columns: repeat(6, 1fr) !important;
     gap: 10px !important;
     max-width: 1280px;
@@ -272,22 +272,22 @@ body.raahi-store .cat-grid {
     padding: 0 24px 24px;
 }
 
-body.raahi-store .cat-card {
+body.ruh-store .cat-card {
     border-radius: 4px !important;
     aspect-ratio: 4/5;
     box-shadow: none !important;
     border: none !important;
 }
 
-body.raahi-store .cat-card img {
+body.ruh-store .cat-card img {
     object-fit: cover;
 }
 
-body.raahi-store .cat-card-overlay {
+body.ruh-store .cat-card-overlay {
     background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.55) 100%) !important;
 }
 
-body.raahi-store .cat-card h3 {
+body.ruh-store .cat-card h3 {
     font-size: 12px !important;
     letter-spacing: 0.5px;
     font-weight: 500;
@@ -295,22 +295,22 @@ body.raahi-store .cat-card h3 {
 }
 
 /* Collection sections */
-body.raahi-store .collection-section {
+body.ruh-store .collection-section {
     padding: 44px 24px;
     max-width: 1280px;
     margin: 0 auto;
 }
 
-body.raahi-store .collection-section.alt {
+body.ruh-store .collection-section.alt {
     background: #fafafa;
 }
 
-body.raahi-store .collection-header {
+body.ruh-store .collection-header {
     text-align: center;
     margin-bottom: 28px;
 }
 
-body.raahi-store .collection-header h2 {
+body.ruh-store .collection-header h2 {
     font-family: 'Playfair Display', serif;
     font-size: clamp(20px, 2.8vw, 28px);
     font-weight: 500;
@@ -319,64 +319,64 @@ body.raahi-store .collection-header h2 {
     text-transform: none;
 }
 
-body.raahi-store .collection-header p {
+body.ruh-store .collection-header p {
     margin-top: 8px;
     color: #666;
     font-size: 14px;
 }
 
 /* Product cards */
-body.raahi-store .products-grid,
-body.raahi-store .shop-products-grid {
+body.ruh-store .products-grid,
+body.ruh-store .shop-products-grid {
     grid-template-columns: repeat(4, 1fr) !important;
     gap: 20px !important;
 }
 
-body.raahi-store .product-card {
+body.ruh-store .product-card {
     background: #fff;
     border: none;
     border-radius: 0;
     box-shadow: none;
 }
 
-body.raahi-store .product-card:hover {
+body.ruh-store .product-card:hover {
     transform: none;
     box-shadow: none;
 }
 
-body.raahi-store .product-card .card-3d-inner {
+body.ruh-store .product-card .card-3d-inner {
     transform: none !important;
 }
 
-body.raahi-store .product-img-wrap {
+body.ruh-store .product-img-wrap {
     aspect-ratio: 1;
     background: #f5f5f5;
     border-radius: 0;
 }
 
-body.raahi-store .product-badge {
+body.ruh-store .product-badge {
     background: #1a1a1a;
     border-radius: 0;
     font-size: 10px;
 }
 
-body.raahi-store .product-badge.new {
+body.ruh-store .product-badge.new {
     background: #8b6914;
 }
 
-body.raahi-store .product-info {
+body.ruh-store .product-info {
     padding: 12px 2px 4px;
 }
 
-body.raahi-store .product-info::before {
+body.ruh-store .product-info::before {
     display: none;
 }
 
-body.raahi-store .product-desc {
+body.ruh-store .product-desc {
     display: none;
 }
 
-body.raahi-store .product-name {
+body.ruh-store .product-name {
     font-family: 'Jost', sans-serif;
     font-size: 13px;
     font-weight: 500;
@@ -384,37 +384,37 @@ body.raahi-store .product-name {
     min-height: 38px;
 }
 
-body.raahi-store .product-variant {
+body.ruh-store .product-variant {
     display: none;
 }
 
-body.raahi-store .product-stars {
+body.ruh-store .product-stars {
     font-size: 11px;
     margin-bottom: 8px;
 }
 
-body.raahi-store .product-price-row {
+body.ruh-store .product-price-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
 }
 
-body.raahi-store .product-price {
+body.ruh-store .product-price {
     font-size: 14px;
     font-weight: 600;
 }
 
-body.raahi-store .product-price-row .add-btn {
+body.ruh-store .product-price-row .add-btn {
     display: none;
 }
 
-body.raahi-store .product-actions {
+body.ruh-store .product-actions {
     display: grid;
     grid-template-columns: 1fr;
     margin-top: auto;
 }
 
-body.raahi-store .product-actions .add-btn-main {
+body.ruh-store .product-actions .add-btn-main {
     width: 100%;
     padding: 11px 14px;
     border: 1px solid #1a1a1a;
@@ -428,17 +428,17 @@ body.raahi-store .product-actions .add-btn-main {
     cursor: pointer;
 }
 
-body.raahi-store .product-actions .add-btn-main:hover {
+body.ruh-store .product-actions .add-btn-main:hover {
     background: #1a1a1a;
     color: #fff;
 }
 
-body.raahi-store .product-actions .buy-now-btn,
-body.raahi-store .product-actions .compare-btn {
+body.ruh-store .product-actions .buy-now-btn,
+body.ruh-store .product-actions .compare-btn {
     display: none;
 }
 
-body.raahi-store .view-all-wrap .btn-outline {
+body.ruh-store .view-all-wrap .btn-outline {
     border: 1px solid #1a1a1a;
     border-radius: 0;
     color: #1a1a1a;
@@ -447,48 +447,197 @@ body.raahi-store .view-all-wrap .btn-outline {
     padding: 12px 28px;
 }
 
-body.raahi-store .view-all-wrap .btn-outline:hover {
+body.ruh-store .view-all-wrap .btn-outline:hover {
     background: #1a1a1a;
     color: #fff;
 }
 
-/* Hide extra homepage blocks not on Raahi */
-body.raahi-store .sliding-banner,
-body.raahi-store .scent-finder-band,
-body.raahi-store .recently-viewed-section {
+/* Hide extra homepage blocks */
+body.ruh-store .sliding-banner,
+body.ruh-store .scent-finder-band,
+body.ruh-store .recently-viewed-section,
+body.ruh-store .story-banner,
+body.ruh-store .attar-info-section,
+body.ruh-store .market-section {
     display: none !important;
 }
 
+/* Editorial blocks — story / manufacturing */
+body.ruh-store .editorial-block {
+    padding: 56px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+body.ruh-store .editorial-block.alt {
+    background: #fafafa;
+}
+
+body.ruh-store .editorial-inner h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    text-transform: uppercase;
+}
+
+body.ruh-store .editorial-inner p {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #444;
+}
+
+/* Sandalwood promo */
+body.ruh-store .promo-band {
+    padding: 48px 24px;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+body.ruh-store .promo-band-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+body.ruh-store .promo-band h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(20px, 2.8vw, 28px);
+    margin-bottom: 12px;
+}
+
+body.ruh-store .promo-lead {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+body.ruh-store .promo-band p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/* Shop by use — simple tiles */
+body.ruh-store .use-grid-shop {
+    grid-template-columns: repeat(5, 1fr);
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+}
+
+body.ruh-store .use-grid-shop .use-card {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+body.ruh-store .use-grid-shop .use-card p {
+    display: none;
+}
+
+body.ruh-store .use-grid-shop .use-card h3 {
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Process — GROW HARVEST EXTRACT */
+body.ruh-store .ruh-process {
+    background: #fff !important;
+    padding: 56px 24px !important;
+}
+
+body.ruh-store .ruh-process .process-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+body.ruh-store .ruh-process .process-step {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    text-align: center;
+}
+
+body.ruh-store .ruh-process .process-num,
+body.ruh-store .ruh-process .process-icon {
+    display: none;
+}
+
+body.ruh-store .ruh-process h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+}
+
+body.ruh-store .ruh-process p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #555;
+}
+
+body.ruh-store .reviews-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+@media (max-width: 768px) {
+    body.ruh-store .use-grid-shop {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    body.ruh-store .ruh-process .process-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.ruh-store .reviews-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 /* Notes / Use */
-body.raahi-store #shop-notes .notes-grid {
+body.ruh-store #shop-notes .notes-grid {
     max-width: 1280px;
     margin: 0 auto;
     padding: 0 24px;
 }
 
-body.raahi-store .notes-grid .note-card {
+body.ruh-store .notes-grid .note-card {
     border: 1px solid #eee;
     border-radius: 4px;
     background: #fff;
 }
 
-body.raahi-store .use-section {
+body.ruh-store .use-section {
     background: #fafafa !important;
 }
 
-body.raahi-store .use-card {
+body.ruh-store .use-card {
     border: 1px solid #e8e8e8;
     background: #fff;
     color: #1a1a1a;
     border-radius: 4px;
 }
 
-body.raahi-store .use-card h3 {
+body.ruh-store .use-card h3 {
     color: #1a1a1a;
 }
 
 /* Trust strip — Raahi (before reviews) */
-body.raahi-store .trust-strip {
+body.ruh-store .trust-strip {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
@@ -500,7 +649,7 @@ body.raahi-store .trust-strip {
     background: #fff;
 }
 
-body.raahi-store .trust-strip article {
+body.ruh-store .trust-strip article {
     text-align: center;
     font-size: 11px;
     letter-spacing: 1px;
@@ -513,56 +662,56 @@ body.raahi-store .trust-strip article {
 }
 
 /* Reviews */
-body.raahi-store .reviews-section {
+body.ruh-store .reviews-section {
     background: #fafafa;
 }
 
-body.raahi-store .reviews-header .section-title {
+body.ruh-store .reviews-header .section-title {
     font-size: clamp(22px, 3vw, 30px);
     text-transform: none;
 }
 
-body.raahi-store .rating-count::before {
+body.ruh-store .rating-count::before {
     content: 'from ';
 }
 
 /* Blog */
-body.raahi-store .blog-section {
+body.ruh-store .blog-section {
     padding: 48px 24px;
     max-width: 1280px;
     margin: 0 auto;
 }
 
-body.raahi-store .blog-grid {
+body.ruh-store .blog-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
 }
 
-body.raahi-store .blog-card {
+body.ruh-store .blog-card {
     border: 1px solid #eee;
     border-radius: 4px;
 }
 
 /* Footer */
-body.raahi-store footer {
+body.ruh-store footer {
     background: #111 !important;
     color: #f5f5f5;
 }
 
-body.raahi-store footer a {
+body.ruh-store footer a {
     color: rgba(255, 255, 255, 0.7);
 }
 
-body.raahi-store footer a:hover {
+body.ruh-store footer a:hover {
     color: #d4af37;
 }
 
-body.raahi-store footer .footer-brand p {
+body.ruh-store footer .footer-brand p {
     color: rgba(255, 255, 255, 0.55) !important;
 }
 
 /* Floating AI + WhatsApp */
-body.raahi-store .ai-float {
+body.ruh-store .ai-float {
     background: #1a1a1a !important;
     color: #fff !important;
     font-size: 11px;
@@ -570,159 +719,159 @@ body.raahi-store .ai-float {
 }
 
 /* Shop page */
-body.raahi-store #shop-page {
+body.ruh-store #shop-page {
     max-width: 1280px;
     margin: 0 auto;
     padding: 32px 24px 80px;
 }
 
-body.raahi-store #shop-page h2 {
+body.ruh-store #shop-page h2 {
     font-family: 'Playfair Display', serif;
     font-weight: 500;
 }
 
-body.raahi-store .filter-btn {
+body.ruh-store .filter-btn {
     border-radius: 0;
     border: 1px solid #ddd;
 }
 
-body.raahi-store .filter-btn.active {
+body.ruh-store .filter-btn.active {
     background: #1a1a1a;
     border-color: #1a1a1a;
     color: #fff;
 }
 
 /* Search overlay */
-body.raahi-store .search-overlay {
+body.ruh-store .search-overlay {
     background: rgba(255, 255, 255, 0.98) !important;
 }
 
 @media (max-width: 1100px) {
-    body.raahi-store .products-grid,
-    body.raahi-store .shop-products-grid {
+    body.ruh-store .products-grid,
+    body.ruh-store .shop-products-grid {
         grid-template-columns: repeat(3, 1fr) !important;
     }
 
-    body.raahi-store .cat-grid {
+    body.ruh-store .cat-grid {
         grid-template-columns: repeat(3, 1fr) !important;
     }
 
-    body.raahi-store .trust-strip {
+    body.ruh-store .trust-strip {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    body.raahi-store .header-inner {
+    body.ruh-store .header-inner {
         grid-template-columns: auto 1fr auto !important;
         padding: 10px 14px !important;
         min-height: 64px !important;
     }
 
-    body.raahi-store .header-left-mobile {
+    body.ruh-store .header-left-mobile {
         display: flex !important;
         grid-column: 1;
     }
 
-    body.raahi-store .nav-desktop-left,
-    body.raahi-store .header-icons .nav-desktop-right {
+    body.ruh-store .nav-desktop-left,
+    body.ruh-store .header-icons .nav-desktop-right {
         display: none !important;
     }
 
-    body.raahi-store .logo {
+    body.ruh-store .logo {
         grid-column: 2;
         justify-self: center;
     }
 
-    body.raahi-store .logo-frame {
+    body.ruh-store .logo-frame {
         padding: 8px 18px 6px;
     }
 
-    body.raahi-store .logo-frame img {
+    body.ruh-store .logo-frame img {
         height: 36px;
         max-width: 140px;
     }
 
-    body.raahi-store .header-icons {
+    body.ruh-store .header-icons {
         grid-column: 3;
         gap: 12px !important;
     }
 
-    body.raahi-store .currency-selector {
+    body.ruh-store .currency-selector {
         display: none;
     }
 
-    body.raahi-store .products-grid,
-    body.raahi-store .shop-products-grid {
+    body.ruh-store .products-grid,
+    body.ruh-store .shop-products-grid {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 
-    body.raahi-store .cat-grid {
+    body.ruh-store .cat-grid {
         grid-template-columns: repeat(2, 1fr) !important;
         padding: 0 14px 20px;
     }
 
-    body.raahi-store .raahi-hero-title {
+    body.ruh-store .ruh-hero-title {
         font-size: clamp(20px, 5.5vw, 28px) !important;
         padding: 0 8px !important;
     }
 
-    body.raahi-store .hero.raahi-hero {
+    body.ruh-store .hero.ruh-hero {
         padding: 32px 16px 24px !important;
     }
 
-    body.raahi-store .blog-grid {
+    body.ruh-store .blog-grid {
         grid-template-columns: 1fr;
     }
 
-    body.raahi-store .collection-section {
+    body.ruh-store .collection-section {
         padding: 32px 14px;
     }
 }
 
 @media (max-width: 480px) {
-    body.raahi-store .trust-strip {
+    body.ruh-store .trust-strip {
         grid-template-columns: 1fr;
     }
 }
 
 /* Story / process sections — lighter Raahi tone */
-body.raahi-store .story-banner,
-body.raahi-store .process-section,
-body.raahi-store .attar-info-section,
-body.raahi-store .market-section {
+body.ruh-store .story-banner,
+body.ruh-store .process-section,
+body.ruh-store .attar-info-section,
+body.ruh-store .market-section {
     background: #fff !important;
 }
 
-body.raahi-store .process-section {
+body.ruh-store .process-section {
     background: #fafafa !important;
 }
 
-body.raahi-store .newsletter {
+body.ruh-store .newsletter {
     background: #111 !important;
 }
 
-body.raahi-store .newsletter .section-title {
+body.ruh-store .newsletter .section-title {
     color: #fff !important;
 }
 
 /* Override touch/coarse rules that left-align hero */
 @media (hover: none) and (pointer: coarse) {
-    body.raahi-store .hero,
-    body.raahi-store .hero.raahi-hero {
+    body.ruh-store .hero,
+    body.ruh-store .hero.ruh-hero {
         padding: 28px 14px 20px !important;
         text-align: center !important;
     }
 
-    body.raahi-store .raahi-hero-title {
+    body.ruh-store .ruh-hero-title {
         text-align: center !important;
     }
 
-    body.raahi-store .header-inner {
+    body.ruh-store .header-inner {
         display: grid !important;
     }
 
-    body.raahi-store .logo {
+    body.ruh-store .logo {
         text-align: center !important;
         flex: unset !important;
     }

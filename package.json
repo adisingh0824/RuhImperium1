@@ -10,7 +10,7 @@
     "dev": "cd backend && npm run dev",
     "install": "cd backend && npm install",
     "sync:products": "node scripts/sync-products.js",
-    "import:raahi": "node scripts/import-raahi-catalog.js && npm run sync:products",
+    "import:catalog": "node scripts/import-raahi-catalog.js && node scripts/rebrand-catalog.js && npm run sync:products",
     "predeploy": "npm run sync:products"
   },
   "dependencies": {

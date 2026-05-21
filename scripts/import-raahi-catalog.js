@@ -231,8 +231,9 @@ async function main() {
         return `    { id:${p.id}, name:'${esc(p.name)}', img:'${esc(p.img)}', cat:'${esc(p.cat)}', notes:'${p.notes}', price:${p.price}, oldPrice:${oldPrice}, stars:${p.stars}, reviews:${p.reviews}, badge:${badge}, sizes:[${sizes}], desc:'${esc(p.desc)}', bestseller:${bestseller}, tags:[${tags}] }`;
     });
 
-    const file = `//PRODUCTS DETAIL — Raahi Parfums catalog (${products.length} products)\nconst products = [\n${lines.join(',\n')}\n];\n`;
+    const file = `//PRODUCTS DETAIL — Ruh Imperium catalog (${products.length} products)\nconst products = [\n${lines.join(',\n')}\n];\n`;
     fs.writeFileSync(OUT, file);
+    console.log('Run: node scripts/rebrand-catalog.js && npm run sync:products');
 
     const summary = {};
     products.forEach(p => { summary[p.cat] = (summary[p.cat] || 0) + 1; });

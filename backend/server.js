@@ -731,6 +731,7 @@ function normalizeCatalogProduct(product) {
     return {
         id: product.id,
         name: product.name,
+        displayName: product.displayName || product.name,
         img: product.img,
         cat: product.cat,
         notes: product.notes,
