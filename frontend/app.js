@@ -4,6 +4,8 @@ const USER_STORAGE_KEY = 'ruhImperiumUser';
 const AUTH_TOKEN_KEY = 'ruhImperiumAuthToken';
 const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
 const ADDRESSES_STORAGE_KEY = 'ruhImperiumAddresses';
+const RECENTLY_VIEWED_KEY = 'ruhImperiumRecentlyViewed';
+const COMPARE_STORAGE_KEY = 'ruhImperiumCompare';
 const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
 
 const coupons = {
@@ -41,6 +43,9 @@ let selectedShippingProvider = '';
 let authMode = 'login';
 let authOtpState = null;
 let authRecaptchaWidgetId = null;
+let compareIds = [];
+let lastToastMessage = '';
+let lastToastAt = 0;
 
 function loadStoredState() {
     try {
@@ -50,6 +55,7 @@ function loadStoredState() {
         authToken = localStorage.getItem(AUTH_TOKEN_KEY) || null;
         appliedCoupon = JSON.parse(localStorage.getItem(COUPON_STORAGE_KEY) || 'null');
         orders = JSON.parse(localStorage.getItem(ORDERS_STORAGE_KEY) || '[]');
+        compareIds = JSON.parse(localStorage.getItem(COMPARE_STORAGE_KEY) || '[]');
     } catch (error) {
         cart = [];
         wishlist = [];
@@ -57,7 +63,16 @@ function loadStoredState() {
         authToken = null;
         appliedCoupon = null;
         orders = [];
+        compareIds = [];
     }
+}
+
+function persistCompare() {
+    localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(compareIds.slice(0, 3)));
+}
+
+function escapeAttr(value) {
+    return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
 function persistOrders() {
@@ -183,6 +198,8 @@ function showDetailedError(response, intent) {
 function populateAuthDebug(response, intent) {
     const panel = document.getElementById('authDebug');
     if (!panel) return;
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (!isLocal) return;
     const details = Object.assign({}, response || {});
     if (!details.__tried && details.__failed) details.__tried = [details.__failed];
     const payload = {
@@ -379,8 +396,11 @@ async function sendScentMessage(event) {
         assistantBubble.classList.remove('loading');
         assistantBubble.innerHTML = `<p>${response.reply || 'Here is a hand-picked match for your request.'}</p>`;
         if (Array.isArray(response.suggestions) && response.suggestions.length) {
-            const suggestionsHtml = response.suggestions.map(item => `<button type="button" class="scent-suggestion-card" onclick="handleScentSuggestion('${item.replace(/'/g, "\\'")}')"><strong>${item}</strong><small>Tap to search</small></button>`).join('');
+            const suggestionsHtml = response.suggestions.map(item => `<button type="button" class="scent-suggestion-card" data-suggestion="${escapeAttr(item)}"><strong>${item}</strong><small>Tap to search</small></button>`).join('');
             assistantBubble.innerHTML += `<div class="scent-suggestions">${suggestionsHtml}</div>`;
+            assistantBubble.querySelectorAll('[data-suggestion]').forEach(btn => {
+                btn.addEventListener('click', () => handleScentSuggestion(btn.dataset.suggestion || ''));
+            });
         }
         scrollScentMessages();
     } catch (error) {
@@ -401,9 +421,15 @@ function handleScentSuggestion(suggestion) {
 
 function showToast(msg) {
     const t = document.getElementById('toast');
+    if (!t) return;
+    const now = Date.now();
+    if (msg === lastToastMessage && now - lastToastAt < 2200) return;
+    lastToastMessage = msg;
+    lastToastAt = now;
     t.textContent = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2500);
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
 function showHome() {
@@ -485,12 +511,14 @@ function starStr(s) {
 
 function productCardHTML(p) {
     const inWish = wishlist.includes(p.id);
+    const inCompare = compareIds.includes(p.id);
     return `
-    <div class="product-card" onclick="openProductModal(${p.id})">
+    <div class="product-card card-3d" data-product-id="${p.id}" role="button" tabindex="0">
+      <div class="card-3d-inner">
       ${p.badge ? `<span class="product-badge ${p.badge === 'NEW' ? 'new' : ''}">${p.badge}</span>` : ''}
       <div class="product-img-wrap">
-        <img src="${p.img}" alt="${p.name}" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">
-        <button class="wishlist-btn ${inWish ? 'active' : ''}" onclick="toggleWish(event,${p.id})">♥</button>
+        <img src="${escapeAttr(p.img)}" alt="${escapeAttr(p.name)}" loading="lazy" onerror="this.style.display='none';this.parentElement.style.background='var(--dark-3)'">
+        <button class="wishlist-btn ${inWish ? 'active' : ''}" type="button" data-wish-id="${p.id}" aria-label="Toggle wishlist">♥</button>
       </div>
       <div class="product-info">
         <p class="product-desc">${p.cat}</p>
@@ -501,8 +529,13 @@ function productCardHTML(p) {
             <span class="product-price">₹${p.price.toLocaleString()}</span>
             ${p.oldPrice ? `<span class="product-price-old">₹${p.oldPrice.toLocaleString()}</span>` : ''}
           </div>
-          <button class="add-btn" onclick="quickAdd(event,${p.id})">Add to Cart</button>
+          <button class="add-btn" type="button" data-add-id="${p.id}">Add to Cart</button>
         </div>
+        <div class="product-actions">
+          <button class="buy-now-btn" type="button" data-buy-id="${p.id}">Buy Now</button>
+          <button class="compare-btn ${inCompare ? 'active' : ''}" type="button" data-compare-id="${p.id}">${inCompare ? 'Added' : 'Compare'}</button>
+        </div>
+      </div>
       </div>
     </div>`;
 }
@@ -514,6 +547,7 @@ function renderShopGrid() {
     grid.innerHTML = filtered.length === 0
         ? `<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text-light);font-style:italic;">No products found. Try adjusting filters.</div>`
         : filtered.map(p => productCardHTML(p)).join('');
+    if (window.refreshRuh3D) window.refreshRuh3D(grid);
 }
 
 function renderHomeSections() {
@@ -541,6 +575,38 @@ function renderHomeSections() {
     if (poojaGrid) poojaGrid.innerHTML = pooja.map(p => productCardHTML(p)).join('');
     if (giftingGrid) giftingGrid.innerHTML = gifting.map(p => productCardHTML(p)).join('');
     renderRecommendations();
+    renderRecentlyViewed();
+    if (window.refreshRuh3D) {
+        ['bestsellerGrid', 'newArrivalsGrid', 'wellnessGrid', 'poojaGrid', 'giftingGrid'].forEach(id => {
+            const grid = document.getElementById(id);
+            if (grid) window.refreshRuh3D(grid);
+        });
+    }
+}
+
+function getRecentlyViewedIds() {
+    try {
+        return JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY) || '[]');
+    } catch (error) {
+        return [];
+    }
+}
+
+function rememberRecentlyViewed(id) {
+    const next = [id, ...getRecentlyViewedIds().filter(entry => entry !== id)].slice(0, 6);
+    localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next));
+    renderRecentlyViewed();
+}
+
+function renderRecentlyViewed() {
+    const grid = document.getElementById('recentlyViewedGrid');
+    if (!grid) return;
+    const ids = getRecentlyViewedIds();
+    const items = ids.map(id => products.find(p => p.id === id)).filter(Boolean);
+    grid.innerHTML = items.length
+        ? items.map(p => productCardHTML(p)).join('')
+        : '<div class="recently-viewed-empty">Products you view will appear here for quick access.</div>';
+    if (window.refreshRuh3D) window.refreshRuh3D(grid);
 }
 
 function renderRecommendations() {
@@ -785,6 +851,7 @@ function openProductModal(id) {
     const p = products.find(x => x.id === id);
     if (!p) return;
     currentProduct = p;
+    rememberRecentlyViewed(p.id);
 
     document.getElementById('modalCat').textContent    = p.cat;
     document.getElementById('modalName').textContent   = p.name;
@@ -803,23 +870,37 @@ function openProductModal(id) {
     }
 
     let selectedSize = p.sizes[0];
-    document.getElementById('sizeOpts').innerHTML = p.sizes.map((s, i) =>
-        `<button class="size-opt ${i === 0 ? 'active' : ''}" onclick="selectSize(this,'${s}')">${s}</button>`
+    const sizeOpts = document.getElementById('sizeOpts');
+    sizeOpts.innerHTML = p.sizes.map((s, i) =>
+        `<button class="size-opt ${i === 0 ? 'active' : ''}" type="button" data-size-index="${i}">${s}</button>`
     ).join('');
+    sizeOpts.querySelectorAll('.size-opt').forEach(btn => {
+        btn.addEventListener('click', () => selectSize(btn, p.sizes[Number(btn.dataset.sizeIndex)] || p.sizes[0]));
+    });
 
-    const setAddBtn = (size) => {
+    const setModalActions = (size) => {
+        selectedSize = size;
         document.getElementById('modalAddBtn').onclick = () => {
             addToCart(p, size);
             closeProductModal();
             openCart();
         };
+        document.getElementById('modalBuyNowBtn').onclick = () => {
+            addToCart(p, size);
+            closeProductModal();
+            openCheckout();
+        };
+        document.getElementById('modalCompareBtn').onclick = () => {
+            toggleCompareProduct(p.id);
+        };
+        document.getElementById('modalShareBtn').onclick = () => shareProduct(p, size);
+        document.getElementById('modalWaBtn').onclick = () => {
+            const msg = `Hello! I am interested in *${p.name}* (${size}) at ₹${p.price.toLocaleString()}. Please help me place an order.`;
+            window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
+        };
     };
-    setAddBtn(selectedSize);
-
-    document.getElementById('modalWaBtn').onclick = () => {
-        const msg = `Hello! I am interested in *${p.name}* (${selectedSize}) at ₹${p.price.toLocaleString()}. Please help me place an order.`;
-        window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
-    };
+    setModalActions(selectedSize);
+    document.getElementById('modalCompareBtn').classList.toggle('active', compareIds.includes(p.id));
 
     document.getElementById('productModal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -828,17 +909,85 @@ function openProductModal(id) {
 function selectSize(btn, size) {
     document.querySelectorAll('.size-opt').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    if (currentProduct) {
-        document.getElementById('modalAddBtn').onclick = () => {
-            addToCart(currentProduct, size);
-            closeProductModal();
-            openCart();
-        };
-        document.getElementById('modalWaBtn').onclick = () => {
-            const msg = `Hello! I am interested in *${currentProduct.name}* (${size}) at ₹${currentProduct.price.toLocaleString()}. Please help me place an order.`;
-            window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
-        };
+    if (!currentProduct) return;
+    document.getElementById('modalAddBtn').onclick = () => {
+        addToCart(currentProduct, size);
+        closeProductModal();
+        openCart();
+    };
+    document.getElementById('modalBuyNowBtn').onclick = () => {
+        addToCart(currentProduct, size);
+        closeProductModal();
+        openCheckout();
+    };
+    document.getElementById('modalWaBtn').onclick = () => {
+        const msg = `Hello! I am interested in *${currentProduct.name}* (${size}) at ₹${currentProduct.price.toLocaleString()}. Please help me place an order.`;
+        window.open('https://wa.me/919785854770?text=' + encodeURIComponent(msg), '_blank');
+    };
+}
+
+async function shareProduct(product, size) {
+    const text = `${product.name} (${size}) — ₹${product.price.toLocaleString()} at Ruh Imperium`;
+    const url = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: product.name, text, url });
+            return;
+        } catch (error) {
+            if (error && error.name === 'AbortError') return;
+        }
     }
+    try {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        showToast('Product link copied.');
+    } catch (error) {
+        showToast('Sharing is not supported on this device.');
+    }
+}
+
+function quickBuy(id) {
+    const p = products.find(item => item.id === id);
+    if (!p) return;
+    addToCart(p, p.sizes[0]);
+    openCheckout();
+}
+
+function toggleCompareProduct(id) {
+    if (compareIds.includes(id)) {
+        compareIds = compareIds.filter(entry => entry !== id);
+        showToast('Removed from compare.');
+    } else {
+        if (compareIds.length >= 3) {
+            showToast('You can compare up to 3 products.');
+            return;
+        }
+        compareIds.push(id);
+        showToast('Added to compare.');
+    }
+    persistCompare();
+    updateCompareBar();
+    if (document.getElementById('shop-page').classList.contains('active')) renderShopGrid();
+    else renderHomeSections();
+}
+
+function updateCompareBar() {
+    const bar = document.getElementById('compareBar');
+    const list = document.getElementById('compareItems');
+    if (!bar || !list) return;
+    if (!compareIds.length) {
+        bar.classList.remove('show');
+        list.innerHTML = '';
+        return;
+    }
+    bar.classList.add('show');
+    list.innerHTML = compareIds.map(id => {
+        const p = products.find(item => item.id === id);
+        if (!p) return '';
+        return `<button type="button" class="compare-pill" data-open-id="${p.id}">${p.name}</button>`;
+    }).join('');
+    list.querySelectorAll('[data-open-id]').forEach(btn => {
+        btn.addEventListener('click', () => openProductModal(Number(btn.dataset.openId)));
+    });
 }
 
 function closeProductModal() {
@@ -869,6 +1018,7 @@ async function openCheckout() {
     updateCouponUI();
     updateOrderSummary();
     updateCheckoutPaymentUI();
+    updatePinServiceability();
     document.getElementById('checkoutModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -1585,17 +1735,6 @@ function openAuthModal() {
     renderAuthView();
     document.getElementById('authModal').classList.add('open');
     document.body.style.overflow = 'hidden';
-    try {
-        const panel = document.getElementById('authDebug');
-        if (panel) {
-            if (panel.textContent && panel.textContent.trim()) {
-                panel.style.display = 'block';
-                panel.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                panel.style.display = 'none';
-            }
-        }
-    } catch (e) {}
 }
 
 function closeAuthModal() {
@@ -1889,9 +2028,45 @@ function subscribeStockAlert() {
     showToast('Stock alert saved. We will notify you when the item is back.');
 }
 
-function clearCompare() { showToast('Compare is coming soon. Please use the product cards for quick purchase.'); }
+function clearCompare() {
+    compareIds = [];
+    persistCompare();
+    updateCompareBar();
+    renderHomeSections();
+    if (document.getElementById('shop-page').classList.contains('active')) renderShopGrid();
+    showToast('Compare list cleared.');
+}
 
-function openCompareModal() { showToast('Compare is coming soon in the next release.'); }
+function openCompareModal() {
+    if (!compareIds.length) {
+        showToast('Add up to 3 products to compare first.');
+        return;
+    }
+    const modal = document.getElementById('compareModal');
+    const grid = document.getElementById('compareGrid');
+    if (!modal || !grid) return;
+    const items = compareIds.map(id => products.find(p => p.id === id)).filter(Boolean);
+    grid.innerHTML = items.map(p => `
+        <article class="compare-card card-3d">
+            <img src="${escapeAttr(p.img)}" alt="${escapeAttr(p.name)}">
+            <div class="compare-card-body">
+                <h3>${p.name}</h3>
+                <p>${p.cat}</p>
+                <p><strong>Notes:</strong> ${p.notes}</p>
+                <span class="compare-price">₹${p.price.toLocaleString()}</span>
+                <button type="button" class="btn-primary" data-buy-id="${p.id}">Buy Now</button>
+            </div>
+        </article>`).join('');
+    grid.querySelectorAll('[data-buy-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            closeCompareModal();
+            quickBuy(Number(btn.dataset.buyId));
+        });
+    });
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (window.refreshRuh3D) window.refreshRuh3D(grid);
+}
 
 function closeCompareModal(e) {
     const modal = document.getElementById('compareModal');
@@ -1900,6 +2075,26 @@ function closeCompareModal(e) {
         modal.classList.remove('open');
         document.body.style.overflow = '';
     }
+}
+
+function updatePinServiceability() {
+    const status = document.getElementById('pinServiceabilityStatus');
+    const pinInput = document.getElementById('cPin');
+    if (!status || !pinInput) return;
+    const pin = pinInput.value.trim();
+    const state = document.getElementById('cState')?.value || '';
+    if (!/^\d{6}$/.test(pin)) {
+        status.textContent = 'Enter a valid 6-digit PIN to check delivery.';
+        status.className = 'pin-serviceability';
+        return;
+    }
+    const charge = getEstimatedDeliveryCharge();
+    const remote = ['West Bengal', 'Tamil Nadu', 'Karnataka', 'Maharashtra', 'Other'].includes(state);
+    const pinSurcharge = /^[78]/.test(pin);
+    status.className = 'pin-serviceability ok';
+    status.textContent = remote || pinSurcharge
+        ? `Deliverable to ${pin}. Estimated extra shipping ₹${charge.toLocaleString()}.`
+        : `Deliverable to ${pin}. Standard delivery charges apply.`;
 }
 
 function copyAllSubscriberEmails() { showToast('Subscriber export is disabled in this demo.'); }
@@ -1948,22 +2143,76 @@ async function ensureProductCatalog() {
     }
 }
 
+function initProductGridActions() {
+    document.body.addEventListener('click', event => {
+        const card = event.target.closest('[data-product-id]');
+        if (card && !event.target.closest('button')) {
+            openProductModal(Number(card.dataset.productId));
+            return;
+        }
+        const wishBtn = event.target.closest('[data-wish-id]');
+        if (wishBtn) {
+            event.stopPropagation();
+            toggleWish(event, Number(wishBtn.dataset.wishId));
+            return;
+        }
+        const addBtn = event.target.closest('[data-add-id]');
+        if (addBtn) {
+            event.stopPropagation();
+            quickAdd(event, Number(addBtn.dataset.addId));
+            return;
+        }
+        const buyBtn = event.target.closest('[data-buy-id]');
+        if (buyBtn) {
+            event.stopPropagation();
+            quickBuy(Number(buyBtn.dataset.buyId));
+            return;
+        }
+        const compareBtn = event.target.closest('[data-compare-id]');
+        if (compareBtn) {
+            event.stopPropagation();
+            toggleCompareProduct(Number(compareBtn.dataset.compareId));
+        }
+    });
+}
+
+function initCheckoutBindings() {
+    const pinInput = document.getElementById('cPin');
+    const stateInput = document.getElementById('cState');
+    if (pinInput) {
+        pinInput.addEventListener('input', updatePinServiceability);
+        pinInput.addEventListener('blur', updatePinServiceability);
+    }
+    if (stateInput) stateInput.addEventListener('change', updatePinServiceability);
+}
+
+function applyDeepLinkProduct() {
+    const params = new URLSearchParams(window.location.search);
+    const productId = Number(params.get('product'));
+    if (productId) openProductModal(productId);
+}
+
 async function bootApp() {
     loadStoredState();
     loadLastOrder();
     await ensureProductCatalog();
     await loadServerConfig();
     initPwaInstall();
+    initProductGridActions();
+    initCheckoutBindings();
     renderHomeSections();
     updateWishBadge();
     updateCartBadge();
     updateAccountUI();
     updateCouponUI();
     updateOrderSummary();
+    updateCompareBar();
     prefillCheckout();
     renderCartItems();
     initReveals();
     initAuthBindings();
+    if (window.initRuh3D) window.initRuh3D();
+    applyDeepLinkProduct();
 }
 
 bootApp();
