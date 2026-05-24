@@ -874,11 +874,19 @@ body.ruh-store .process-section {
 }
 
 body.ruh-store .newsletter {
-    background: #111 !important;
+    background: #f7f4ee !important;
 }
 
 body.ruh-store .newsletter .section-title {
-    color: #fff !important;
+    color: #1a1a1a !important;
+}
+
+body.ruh-store .newsletter p {
+    color: #444 !important;
+}
+
+body.ruh-store .newsletter .security-note {
+    color: #888 !important;
 }
 
 /* Override touch/coarse rules that left-align hero */
