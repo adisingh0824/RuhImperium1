@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "HQ_Ry_pX9jNApdi0SwEZT"
+uri = "file://artifacts/ruh-imperium-mobile/assets/images/icon.png"
+type = "image"
+title = "ruh imperium app icon"
