@@ -511,7 +511,7 @@ async function createRazorpayOrder(amount: number, receipt: string, notes: any) 
     headers: { Authorization: `Basic ${Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString("base64")}`, "Content-Type": "application/json" },
     body: JSON.stringify({ amount, currency: "INR", receipt, notes }),
   });
-  const data = await response.json();
+  const dataany = await response.json();
   if (!response.ok) throw new Error(data.error?.description || "Unable to create Razorpay order.");
   return data;
 }
