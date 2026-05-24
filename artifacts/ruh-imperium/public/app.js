@@ -588,10 +588,11 @@ function filterShop(cat) {
     currentFilter = cat;
     document.getElementById('home-page').style.display = 'none';
     document.getElementById('shop-page').classList.add('active');
-    window.scrollTo(0, 0);
     document.getElementById('shopTitle').textContent = cat === 'all' ? 'All Products' : cat;
     updateShopFilterUI(cat);
     renderShopGrid();
+    // Defer scroll until after the mobile-menu slide-out transition (0.28s) finishes
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 320);
 }
 
 function filterByNote(note) {
