@@ -238,7 +238,7 @@ async function fetchJsonWithFallback(path, options = {}) {
                 alts.push(`/api/auth/${last}`);
             }
         } catch (e) {}
-        // ensure unique and keep original order
+        // /ensure unique and keep original order
         return Array.from(new Set(alts));
     };
 
