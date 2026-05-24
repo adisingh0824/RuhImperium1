@@ -2411,6 +2411,7 @@ async function bootApp() {
     initAuthBindings();
     if (window.initRuh3D) window.initRuh3D();
     applyDeepLinkProduct();
+    filterShop('all');
 }
 
 bootApp();
