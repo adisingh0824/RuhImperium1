@@ -459,9 +459,35 @@ function renderScentAssistantReply(assistantBubble, message, response) {
         : getLocalScentMatches(message);
     const reply = response.reply || buildLocalScentReply(message, suggestions);
     assistantBubble.classList.remove('loading');
-    assistantBubble.innerHTML = `<p>${reply}</p>`;
-    if (suggestions.length) {
-        assistantBubble.innerHTML += `<div class="scent-suggestions">${suggestions.map(item => `<button type="button" class="scent-suggestion-card" data-suggestion="${escapeAttr(item)}"><strong>${item}</strong><small>Tap to search</small></button>`).join('')}</div>`;
+
+    const catalog = getCatalog();
+    const matchedProducts = suggestions
+        .map(name => catalog.find(p => p.name === name || p.displayName === name))
+        .filter(Boolean)
+        .slice(0, 4);
+
+    if (matchedProducts.length) {
+        assistantBubble.innerHTML = `<p style="margin-bottom:12px;">${reply}</p>
+            <div class="products-grid" style="grid-template-columns:repeat(2,1fr);gap:12px;max-width:520px;">
+                ${matchedProducts.map(p => productCardHTML(p)).join('')}
+            </div>`;
+        assistantBubble.querySelectorAll('[data-open-id]').forEach(btn => {
+            btn.addEventListener('click', () => openProductModal(Number(btn.dataset.openId)));
+        });
+        assistantBubble.querySelectorAll('[data-add-id]').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.stopPropagation(); quickAdd(e, Number(btn.dataset.addId)); });
+        });
+        assistantBubble.querySelectorAll('[data-buy-id]').forEach(btn => {
+            btn.addEventListener('click', () => quickBuy(Number(btn.dataset.buyId)));
+        });
+        assistantBubble.querySelectorAll('[data-product-id]').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) openProductModal(Number(card.dataset.productId));
+            });
+        });
+    } else {
+        assistantBubble.innerHTML = `<p>${reply}</p>
+            <div class="scent-suggestions">${suggestions.map(item => `<button type="button" class="scent-suggestion-card" data-suggestion="${escapeAttr(item)}"><strong>${item}</strong><small>Tap to search</small></button>`).join('')}</div>`;
         assistantBubble.querySelectorAll('[data-suggestion]').forEach(btn => {
             btn.addEventListener('click', () => handleScentSuggestion(btn.dataset.suggestion || ''));
         });
@@ -2090,22 +2116,30 @@ function toggleScentAssistant() {
     if (panel.classList.contains('open')) closeScentAssistant(); else openScentAssistant();
 }
 
-function askScentAssistantPreset(prompt) {
-    const messages = document.querySelector('.scent-messages');
-    if (!messages) return;
-    const userBubble = document.createElement('div');
-    userBubble.className = 'scent-message user';
-    userBubble.innerHTML = `<p>${prompt}</p>`;
-    messages.appendChild(userBubble);
-    const assistantBubble = document.createElement('div');
-    assistantBubble.className = 'scent-message assistant';
-    assistantBubble.innerHTML = '<p>Finding the perfect attar profile for you...</p>';
-    messages.appendChild(assistantBubble);
-    messages.scrollTop = messages.scrollHeight;
-    setTimeout(() => {
-        assistantBubble.innerHTML = `<p>These attars match your request: <strong>${prompt}</strong>. Try the top picks in the shop, add to cart, and track your order once placed.</p>`;
-        messages.scrollTop = messages.scrollHeight;
-    }, 1200);
+async function askScentAssistantPreset(prompt) {
+    const input = document.getElementById('scentInput');
+    if (input) input.value = prompt;
+    renderScentMessage(prompt, 'user');
+    const assistantBubble = renderScentMessage('Finding the best attar matches for you...', 'assistant', true);
+    try {
+        const response = await fetchJson('/api/ai-scent-chat', {
+            method: 'POST',
+            body: { message: prompt }
+        });
+        if (response.error) {
+            renderScentAssistantReply(assistantBubble, prompt, {
+                reply: buildLocalScentReply(prompt, getLocalScentMatches(prompt)),
+                suggestions: getLocalScentMatches(prompt)
+            });
+            return;
+        }
+        renderScentAssistantReply(assistantBubble, prompt, response);
+    } catch (error) {
+        renderScentAssistantReply(assistantBubble, prompt, {
+            reply: buildLocalScentReply(prompt, getLocalScentMatches(prompt)),
+            suggestions: getLocalScentMatches(prompt)
+        });
+    }
 }
 
 async function openOrdersModal() {
