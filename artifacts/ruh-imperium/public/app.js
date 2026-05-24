@@ -634,7 +634,7 @@ function productCardHTML(p) {
       <div class="card-3d-inner">
       ${p.badge ? `<span class="product-badge ${p.badge === 'NEW' ? 'new' : ''}">${p.badge}</span>` : ''}
       <div class="product-img-wrap">
-        <img src="${assetUrl(p.img)}" alt="${escapeAttr(p.name)}" loading="lazy" draggable="false" onerror="this.onerror=null;this.src='/ruh-imperium-logo.png';this.style.objectFit='contain';this.style.padding='18px';this.parentElement.style.background='#efefef'">
+        <img src="${assetUrl(p.img)}" alt="${escapeAttr(p.name)}" loading="lazy" draggable="false" onerror="this.onerror=null;this.src='/ruh-imperium-logo.jpg';this.style.objectFit='contain';this.style.padding='18px';this.parentElement.style.background='#efefef'">
         <button class="wishlist-btn ${inWish ? 'active' : ''}" type="button" data-wish-id="${p.id}" aria-label="Toggle wishlist">♥</button>
       </div>
       <div class="product-info">

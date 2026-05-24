@@ -9,7 +9,7 @@ const APP_SHELL = [
     '/products.js',
     '/effects-3d.js',
     '/ruh-store-theme.css',
-    '/ruh-imperium-logo.png',
+    '/ruh-imperium-logo.jpg',
     '/sw.js',
     '/manifest.webmanifest',
     '/offline.html',
