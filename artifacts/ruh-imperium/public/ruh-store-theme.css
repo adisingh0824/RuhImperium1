@@ -700,20 +700,40 @@ body.ruh-store .blog-card {
 
 /* Footer */
 body.ruh-store footer {
-    background: #111 !important;
-    color: #f5f5f5;
+    background: #ffffff !important;
+    color: #1f2a38;
 }
 
 body.ruh-store footer a {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(31, 42, 56, 0.65);
 }
 
 body.ruh-store footer a:hover {
-    color: #d4af37;
+    color: #b9904b;
 }
 
 body.ruh-store footer .footer-brand p {
-    color: rgba(255, 255, 255, 0.55) !important;
+    color: rgba(31, 42, 56, 0.55) !important;
+}
+
+body.ruh-store footer .footer-col h4 {
+    color: #b9904b !important;
+}
+
+body.ruh-store footer .footer-col ul li a {
+    color: rgba(31, 42, 56, 0.6) !important;
+}
+
+body.ruh-store footer .footer-col ul li a:hover {
+    color: #b9904b !important;
+}
+
+body.ruh-store footer .footer-bottom p {
+    color: rgba(31, 42, 56, 0.4) !important;
+}
+
+body.ruh-store footer .footer-bottom {
+    border-top-color: rgba(185, 144, 75, 0.2) !important;
 }
 
 /* Floating AI + WhatsApp */
