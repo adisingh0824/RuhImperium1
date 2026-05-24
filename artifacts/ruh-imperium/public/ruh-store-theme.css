@@ -1,0 +1,1170 @@
+/* Ruh Imperium — luxury store layout (loads after index.html styles) */
+
+body.ruh-store {
+    background: #fff !important;
+    color: #1a1a1a;
+    font-family: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Announcement /*/
+body.ruh-store .announcement {
+    background: #111 !important;
+    color: #f5f5f5 !important;
+    font-size: 11px !important;
+    letter-spacing: 2px !important;
+    padding: 10px 16px !important;
+    text-transform: uppercase;
+    border-bottom: none !important;
+    box-shadow: none !important;
+}
+
+body.ruh-store .announcement span {
+    color: #d4af37 !important;
+    font-weight: 700;
+}
+
+/* Header */
+body.ruh-store header {
+    background: #fff !important;
+    border-bottom: 1px solid #e8e8e8 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+body.ruh-store .header-inner {
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
+    align-items: center !important;
+    justify-content: unset !important;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    height: auto !important;
+    min-height: 82px !important;
+    padding: 12px 32px !important;
+    gap: 20px !important;
+}
+
+body.ruh-store .header-left-mobile {
+    display: none;
+}
+
+body.ruh-store .nav-desktop-left {
+    display: flex;
+    justify-content: flex-start;
+    grid-column: 1;
+}
+
+body.ruh-store .nav-desktop-left nav {
+    display: flex !important;
+    gap: 24px !important;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+body.ruh-store .header-icons {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 18px !important;
+    grid-column: 3;
+}
+
+body.ruh-store .header-icons .nav-desktop-right {
+    display: flex !important;
+    gap: 24px !important;
+}
+
+body.ruh-store nav a {
+    font-size: 12px !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
+    font-family: 'Jost', sans-serif !important;
+}
+
+body.ruh-store nav a:hover {
+    color: #8b6914 !important;
+}
+
+body.ruh-store nav a::after {
+    display: none !important;
+}
+
+body.ruh-store .dropdown-menu {
+    border-radius: 0 !important;
+    border: 1px solid #e8e8e8 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Logo — image only in black frame (like Raahi) */
+body.ruh-store .logo {
+    grid-column: 2;
+    justify-self: center;
+    text-align: center;
+    cursor: pointer;
+    line-height: 0 !important;
+    flex: unset !important;
+    min-width: unset !important;
+}
+
+body.ruh-store .logo-frame {
+    display: inline-block;
+    background: #0a0a0a;
+    padding: 10px 32px 8px;
+    border-radius: 0;
+    line-height: 0;
+}
+
+body.ruh-store .logo-frame img,
+body.ruh-store .logo img.brand-logo {
+    height: 48px;
+    width: auto;
+    max-width: min(220px, 50vw);
+    object-fit: contain;
+    display: block;
+    filter: none;
+}
+
+body.ruh-store .logo-main,
+body.ruh-store .logo-sub,
+body.ruh-store .logo-marketed {
+    display: none !important;
+}
+
+/* Header icons — minimal like Raahi */
+body.ruh-store .icon-btn {
+    font-size: 0;
+    color: #1a1a1a;
+    padding: 4px;
+    background: none !important;
+    border: none !important;
+    transform: none !important;
+}
+
+body.ruh-store .icon-btn:hover {
+    color: #8b6914;
+    transform: none !important;
+}
+
+body.ruh-store .icon-btn svg {
+    display: block;
+}
+
+body.ruh-store .account-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: auto;
+    padding: 4px !important;
+    border: none !important;
+    background: none !important;
+}
+
+body.ruh-store .account-pill strong,
+body.ruh-store .account-pill-text {
+    display: none !important;
+}
+
+body.ruh-store .currency-chip-btn {
+    display: none !important;
+}
+
+body.ruh-store .currency-selector {
+    font-size: 11px !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid #ddd !important;
+    border-radius: 0 !important;
+    padding: 6px 8px !important;
+    background: #fff !important;
+    color: #1a1a1a !important;
+    font-family: 'Jost', sans-serif;
+    cursor: pointer;
+    outline: none;
+}
+
+body.ruh-store .header-cart-btn {
+    position: relative;
+}
+
+body.ruh-store .cart-count {
+    top: -4px;
+    right: -6px;
+    background: #1a1a1a !important;
+    font-size: 9px;
+    width: 15px;
+    height: 15px;
+}
+
+body.ruh-store .top-admin-badge {
+    font-size: 10px;
+}
+
+/* Hero — centered, plain white, no card */
+body.ruh-store .hero,
+body.ruh-store .hero.ruh-hero {
+    min-height: auto !important;
+    height: auto !important;
+    padding: 48px 24px 36px !important;
+    margin: 0 !important;
+    background: #fff !important;
+    display: block !important;
+    align-items: unset !important;
+    justify-content: unset !important;
+    overflow: visible !important;
+    text-align: center !important;
+}
+
+body.ruh-store .hero::after,
+body.ruh-store .hero-bg-pattern,
+body.ruh-store .hero-ornament,
+body.ruh-store .float-3d {
+    display: none !important;
+}
+
+body.ruh-store .ruh-hero-title,
+body.ruh-store .hero-title {
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-size: clamp(24px, 3.8vw, 36px) !important;
+    font-weight: 400 !important;
+    line-height: 1.35 !important;
+    color: #1a1a1a !important;
+    text-align: center !important;
+    max-width: 820px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    border-radius: 0 !important;
+    animation: none !important;
+}
+
+body.ruh-store .hero-shop-layout,
+body.ruh-store .hero-brand-row,
+body.ruh-store .hero:not(.ruh-hero) .hero-content {
+    display: none !important;
+}
+
+body.ruh-store .hero.ruh-hero .ruh-hero-title {
+    display: block !important;
+}
+
+body.ruh-store .hero-tagline {
+    display: none !important;
+}
+
+/* Category grid — Raahi */
+body.ruh-store .collection-section:first-of-type {
+    padding-top: 8px !important;
+}
+
+body.ruh-store .cat-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 10px !important;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 24px;
+}
+
+body.ruh-store .cat-card {
+    border-radius: 4px !important;
+    aspect-ratio: 4/5;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+body.ruh-store .cat-card img {
+    object-fit: cover;
+}
+
+body.ruh-store .cat-card-overlay {
+    background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.55) 100%) !important;
+}
+
+body.ruh-store .cat-card h3 {
+    font-size: 12px !important;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    text-transform: none;
+}
+
+/* Collection sections */
+body.ruh-store .collection-section {
+    padding: 44px 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+body.ruh-store .collection-section.alt {
+    background: #fafafa;
+}
+
+body.ruh-store .collection-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+body.ruh-store .collection-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(20px, 2.8vw, 28px);
+    font-weight: 500;
+    color: #1a1a1a;
+    letter-spacing: 0.5px;
+    text-transform: none;
+}
+
+body.ruh-store .collection-header p {
+    margin-top: 8px;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Product cards */
+body.ruh-store .products-grid,
+body.ruh-store .shop-products-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 20px !important;
+}
+
+body.ruh-store .product-card {
+    background: #fff;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+body.ruh-store .product-card:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+body.ruh-store .product-card .card-3d-inner {
+    transform: none !important;
+}
+
+body.ruh-store .product-img-wrap {
+    aspect-ratio: 1;
+    background: #f5f5f5;
+    border-radius: 0;
+}
+
+body.ruh-store .product-badge {
+    background: #1a1a1a;
+    border-radius: 0;
+    font-size: 10px;
+}
+
+body.ruh-store .product-badge.new {
+    background: #8b6914;
+}
+
+body.ruh-store .product-info {
+    padding: 12px 2px 4px;
+}
+
+body.ruh-store .product-info::before {
+    display: none;
+}
+
+body.ruh-store .product-desc {
+    display: none;
+}
+
+body.ruh-store .product-name {
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
+    min-height: 38px;
+}
+
+body.ruh-store .product-variant {
+    display: none;
+}
+
+body.ruh-store .product-stars {
+    font-size: 11px;
+    margin-bottom: 8px;
+}
+
+body.ruh-store .product-price-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+body.ruh-store .product-price {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+body.ruh-store .product-price-row .add-btn {
+    display: none;
+}
+
+body.ruh-store .product-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin-top: auto;
+}
+
+body.ruh-store .product-actions .add-btn-main {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #1a1a1a;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+body.ruh-store .product-actions .add-btn-main:hover {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+body.ruh-store .product-actions .buy-now-btn,
+body.ruh-store .product-actions .compare-btn {
+    display: none;
+}
+
+body.ruh-store .view-all-wrap .btn-outline {
+    border: 1px solid #1a1a1a;
+    border-radius: 0;
+    color: #1a1a1a;
+    background: transparent;
+    letter-spacing: 2px;
+    padding: 12px 28px;
+}
+
+body.ruh-store .view-all-wrap .btn-outline:hover {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+/* Never hide homepage content behind scroll animations */
+body.ruh-store .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* Hide extra homepage blocks */
+body.ruh-store .sliding-banner,
+body.ruh-store .scent-finder-band,
+body.ruh-store .recently-viewed-section,
+body.ruh-store .story-banner,
+body.ruh-store .attar-info-section,
+body.ruh-store .market-section {
+    display: none !important;
+}
+
+/* Editorial blocks — story / manufacturing */
+body.ruh-store .editorial-block {
+    padding: 56px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+body.ruh-store .editorial-block.alt {
+    background: #fafafa;
+}
+
+body.ruh-store .editorial-inner h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    text-transform: uppercase;
+}
+
+body.ruh-store .editorial-inner p {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #444;
+}
+
+/* Sandalwood promo */
+body.ruh-store .promo-band {
+    padding: 48px 24px;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+body.ruh-store .promo-band-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+body.ruh-store .promo-band h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(20px, 2.8vw, 28px);
+    margin-bottom: 12px;
+}
+
+body.ruh-store .promo-lead {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+body.ruh-store .promo-band p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/* Shop by use — simple tiles */
+body.ruh-store .use-grid-shop {
+    grid-template-columns: repeat(5, 1fr);
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+}
+
+body.ruh-store .use-grid-shop .use-card {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+body.ruh-store .use-grid-shop .use-card p {
+    display: none;
+}
+
+body.ruh-store .use-grid-shop .use-card h3 {
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Process — GROW HARVEST EXTRACT */
+body.ruh-store .ruh-process {
+    background: #fff !important;
+    padding: 56px 24px !important;
+}
+
+body.ruh-store .ruh-process .process-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+body.ruh-store .ruh-process .process-step {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    text-align: center;
+}
+
+body.ruh-store .ruh-process .process-num,
+body.ruh-store .ruh-process .process-icon {
+    display: none;
+}
+
+body.ruh-store .ruh-process h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+}
+
+body.ruh-store .ruh-process p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #555;
+}
+
+body.ruh-store .reviews-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+@media (max-width: 768px) {
+    body.ruh-store .use-grid-shop {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    body.ruh-store .ruh-process .process-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.ruh-store .reviews-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Notes / Use */
+body.ruh-store #shop-notes .notes-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+body.ruh-store .notes-grid .note-card {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background: #fff;
+}
+
+body.ruh-store .use-section {
+    background: #fafafa !important;
+}
+
+body.ruh-store .use-card {
+    border: 1px solid #e8e8e8;
+    background: #fff;
+    color: #1a1a1a;
+    border-radius: 4px;
+}
+
+body.ruh-store .use-card h3 {
+    color: #1a1a1a;
+}
+
+/* Trust strip — Raahi (before reviews) */
+body.ruh-store .trust-strip {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+}
+
+body.ruh-store .trust-strip article {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    font-weight: 500;
+    padding: 8px;
+    border: none;
+    background: transparent;
+}
+
+/* Reviews */
+body.ruh-store .reviews-section {
+    background: #fafafa;
+}
+
+body.ruh-store .reviews-header .section-title {
+    font-size: clamp(22px, 3vw, 30px);
+    text-transform: none;
+}
+
+body.ruh-store .rating-count::before {
+    content: 'from ';
+}
+
+/* Blog */
+body.ruh-store .blog-section {
+    padding: 48px 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+body.ruh-store .blog-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+body.ruh-store .blog-card {
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+/* Footer */
+body.ruh-store footer {
+    background: #111 !important;
+    color: #f5f5f5;
+}
+
+body.ruh-store footer a {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+body.ruh-store footer a:hover {
+    color: #d4af37;
+}
+
+body.ruh-store footer .footer-brand p {
+    color: rgba(255, 255, 255, 0.55) !important;
+}
+
+/* Floating AI + WhatsApp */
+body.ruh-store .ai-float {
+    background: #1a1a1a !important;
+    color: #fff !important;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+/* Shop page */
+body.ruh-store #shop-page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+}
+
+body.ruh-store #shop-page h2 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+}
+
+body.ruh-store .filter-btn {
+    border-radius: 0;
+    border: 1px solid #ddd;
+}
+
+body.ruh-store .filter-btn.active {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+}
+
+/* Search overlay */
+body.ruh-store .search-overlay {
+    background: rgba(255, 255, 255, 0.98) !important;
+}
+
+@media (max-width: 1100px) {
+    body.ruh-store .products-grid,
+    body.ruh-store .shop-products-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    body.ruh-store .cat-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    body.ruh-store .trust-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    body.ruh-store .header-inner {
+        grid-template-columns: auto 1fr auto !important;
+        padding: 10px 14px !important;
+        min-height: 64px !important;
+    }
+
+    body.ruh-store .header-left-mobile {
+        display: flex !important;
+        grid-column: 1;
+    }
+
+    body.ruh-store .nav-desktop-left,
+    body.ruh-store .header-icons .nav-desktop-right {
+        display: none !important;
+    }
+
+    body.ruh-store .logo {
+        grid-column: 2;
+        justify-self: center;
+    }
+
+    body.ruh-store .logo-frame {
+        padding: 8px 18px 6px;
+    }
+
+    body.ruh-store .logo-frame img {
+        height: 36px;
+        max-width: 140px;
+    }
+
+    body.ruh-store .header-icons {
+        grid-column: 3;
+        gap: 12px !important;
+    }
+
+    body.ruh-store .currency-selector {
+        display: none;
+    }
+
+    body.ruh-store .products-grid,
+    body.ruh-store .shop-products-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    body.ruh-store .cat-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        padding: 0 14px 20px;
+    }
+
+    body.ruh-store .ruh-hero-title {
+        font-size: clamp(20px, 5.5vw, 28px) !important;
+        padding: 0 8px !important;
+    }
+
+    body.ruh-store .hero.ruh-hero {
+        padding: 32px 16px 24px !important;
+    }
+
+    body.ruh-store .blog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.ruh-store .collection-section {
+        padding: 32px 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    body.ruh-store .trust-strip {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Story / process sections — lighter Raahi tone */
+body.ruh-store .story-banner,
+body.ruh-store .process-section,
+body.ruh-store .attar-info-section,
+body.ruh-store .market-section {
+    background: #fff !important;
+}
+
+body.ruh-store .process-section {
+    background: #fafafa !important;
+}
+
+body.ruh-store .newsletter {
+    background: #111 !important;
+}
+
+body.ruh-store .newsletter .section-title {
+    color: #fff !important;
+}
+
+/* Override touch/coarse rules that left-align hero */
+@media (hover: none) and (pointer: coarse) {
+    body.ruh-store .hero,
+    body.ruh-store .hero.ruh-hero {
+        padding: 28px 14px 20px !important;
+        text-align: center !important;
+    }
+
+    body.ruh-store .ruh-hero-title {
+        text-align: center !important;
+    }
+
+    body.ruh-store .header-inner {
+        display: grid !important;
+    }
+
+    body.ruh-store .logo {
+        text-align: center !important;
+        flex: unset !important;
+    }
+}
+
+/* Luxury Light-Theme Overlays & Product Detail Box overrides to match raahiparfums.com perfectly */
+body.ruh-store .modal-overlay, 
+body.ruh-store .checkout-modal, 
+body.ruh-store .track-modal, 
+body.ruh-store .auth-modal, 
+body.ruh-store .orders-modal, 
+body.ruh-store .compare-modal {
+    background: rgba(255, 255, 255, 0.72) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    z-index: 11000 !important;
+}
+
+body.ruh-store .modal-box {
+    background: #ffffff !important;
+    border: 1px solid #e8e8e8 !important;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+}
+
+body.ruh-store .modal-close {
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid #e8e8e8 !important;
+    cursor: pointer !important;
+    z-index: 100 !important;
+}
+
+body.ruh-store .modal-close:hover {
+    background: #f5f5f5 !important;
+    color: #000000 !important;
+}
+
+body.ruh-store .modal-name {
+    color: #1a1a1a !important;
+    font-family: 'Playfair Display', serif !important;
+    font-size: 28px !important;
+    font-weight: 600 !important;
+}
+
+body.ruh-store .modal-cat {
+    color: #8b6914 !important;
+    font-size: 11px !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+}
+
+body.ruh-store .modal-stars {
+    color: #8b6914 !important;
+}
+
+body.ruh-store .modal-stars span {
+    color: #666666 !important;
+}
+
+body.ruh-store .modal-price {
+    color: #1a1a1a !important;
+    font-family: 'Playfair Display', serif !important;
+    font-size: 32px !important;
+}
+
+body.ruh-store .modal-price-old {
+    color: #999999 !important;
+    font-size: 16px !important;
+    text-decoration: line-through !important;
+}
+
+body.ruh-store .modal-desc {
+    color: #333333 !important;
+    font-family: 'Jost', sans-serif !important;
+    font-size: 15px !important;
+    line-height: 1.6 !important;
+}
+
+body.ruh-store .size-label {
+    color: #1a1a1a !important;
+    font-weight: 600 !important;
+}
+
+body.ruh-store .size-opt {
+    border: 1px solid #dcdcdc !important;
+    color: #1a1a1a !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+}
+
+body.ruh-store .size-opt.active, 
+body.ruh-store .size-opt:hover {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #1a1a1a !important;
+}
+
+body.ruh-store .customization-box {
+    background: #fbfbf9 !important;
+    border: 1px solid #e8e8e8 !important;
+    color: #1a1a1a !important;
+    border-radius: 12px !important;
+}
+
+body.ruh-store .customization-box input {
+    background: #ffffff !important;
+    border: 1px solid #dcdcdc !important;
+    color: #1a1a1a !important;
+    border-radius: 0 !important;
+}
+
+body.ruh-store .customization-box input::placeholder {
+    color: #999999 !important;
+}
+
+body.ruh-store .modal-add-btn {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+    border-radius: 0 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    letter-spacing: 2px !important;
+}
+
+body.ruh-store .modal-add-btn:hover {
+    background: #333333 !important;
+}
+
+body.ruh-store .buy-now-btn {
+    background: #8b6914 !important;
+    color: #ffffff !important;
+    border-radius: 0 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    letter-spacing: 2px !important;
+}
+
+body.ruh-store .buy-now-btn:hover {
+    background: #73560f !important;
+}
+
+body.ruh-store .compare-btn {
+    background: #ffffff !important;
+    border: 1px solid #1a1a1a !important;
+    color: #1a1a1a !important;
+    border-radius: 0 !important;
+}
+
+body.ruh-store .compare-btn:hover {
+    background: #f9f9f9 !important;
+}
+
+body.ruh-store .modal-wa-btn {
+    background: #25d366 !important;
+    color: #ffffff !important;
+    border-radius: 50% !important;
+}
+
+body.ruh-store .modal-share-btn {
+    background: #f5f5f5 !important;
+    color: #1a1a1a !important;
+    border: 1px solid #e8e8e8 !important;
+}
+
+body.ruh-store .modal-feature {
+    color: #4a4a4a !important;
+    border-top-color: #e8e8e8 !important;
+}
+
+body.ruh-store .recommendation-pill {
+    border: 1px solid #e8e8e8 !important;
+    background: #fdfcf9 !important;
+    color: #1a1a1a !important;
+}
+
+/* Checkout Box Light overrides */
+body.ruh-store .checkout-box {
+    background: #ffffff !important;
+    border: 1px solid #e8e8e8 !important;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.06) !important;
+    border-radius: 20px !important;
+    color: #1a1a1a !important;
+}
+
+body.ruh-store .checkout-box h2 {
+    color: #1a1a1a !important;
+    font-family: 'Playfair Display', serif !important;
+}
+
+body.ruh-store .checkout-box label {
+    color: #8b6914 !important;
+    font-weight: 600 !important;
+}
+
+body.ruh-store .checkout-box input, 
+body.ruh-store .checkout-box select, 
+body.ruh-store .checkout-box textarea {
+    background: #ffffff !important;
+    border: 1px solid #dcdcdc !important;
+    color: #1a1a1a !important;
+    border-radius: 0 !important;
+}
+
+body.ruh-store .checkout-box input:focus, 
+body.ruh-store .checkout-box select:focus {
+    border-color: #1a1a1a !important;
+    background: #fdfdfd !important;
+}
+
+body.ruh-store .order-summary {
+    background: #fbfbf9 !important;
+    border: 1px solid #e8e8e8 !important;
+    border-radius: 12px !important;
+}
+
+body.ruh-store .order-summary h3 {
+    color: #1a1a1a !important;
+    font-family: 'Playfair Display', serif !important;
+}
+
+body.ruh-store .order-line {
+    color: #333333 !important;
+    border-bottom: 1px solid #e8e8e8 !important;
+}
+
+body.ruh-store .order-line:last-child {
+    color: #8b6914 !important;
+}
+
+body.ruh-store .pay-opt {
+    border: 1px solid #dcdcdc !important;
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    border-radius: 0 !important;
+}
+
+body.ruh-store .pay-opt.active {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #1a1a1a !important;
+}
+
+body.ruh-store .payment-status-note {
+    background: #fbfbf9 !important;
+    border: 1px solid #e8e8e8 !important;
+    color: #4a4a4a !important;
+    border-radius: 12px !important;
+}
+
+body.ruh-store .place-order-btn {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+    border-radius: 0 !important;
+}
+
+/* Mobile adjustments for product modal */
+@media (max-width: 768px) {
+    body.ruh-store .modal-box {
+        grid-template-columns: 1fr !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 92vh !important;
+    }
+    body.ruh-store .modal-img {
+        max-height: 38vh !important;
+        background: #faf9f6 !important;
+    }
+    body.ruh-store .modal-img img {
+        object-fit: contain !important;
+        height: 100% !important;
+        width: 100% !important;
+    }
+    body.ruh-store .modal-close {
+        top: 12px !important;
+        right: 12px !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16) !important;
+    }
+}
