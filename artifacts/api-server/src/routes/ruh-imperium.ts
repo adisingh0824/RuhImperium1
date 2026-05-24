@@ -16,7 +16,10 @@ const ARTIFACT_ROOT = path.resolve(process.cwd());
 const router = Router();
 
 // ── Config ──────────────────────────────────────────────────────────────────
-const TOKEN_SECRET = process.env.AUTH_SECRET || "change-this-auth-secret";
+const TOKEN_SECRET = process.env.AUTH_SECRET || "";
+if (!TOKEN_SECRET) {
+  console.warn("[ruh-imperium] AUTH_SECRET is not set — user login/token features are disabled. Set AUTH_SECRET in Replit Secrets to enable authentication.");
+}
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || "";
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "";
 const RECAPTCHA_SITE_KEY = String(process.env.RECAPTCHA_SITE_KEY || "").trim();
