@@ -620,8 +620,7 @@ function csvEscape(value) {
 }
 
 function getOtpDeliveryMode() {
-    const isPlaceholder = (val) => !val || String(val).toLowerCase().includes('your_') || String(val).toLowerCase().includes('placeholder');
-    if (OTP_PROVIDER === 'msg91' && !isPlaceholder(MSG91_AUTH_KEY) && !isPlaceholder(MSG91_TEMPLATE_ID)) {
+    if (OTP_PROVIDER === 'msg91' && MSG91_AUTH_KEY && MSG91_TEMPLATE_ID) {
         return 'sms';
     }
     return 'preview';
@@ -634,48 +633,42 @@ async function sendOtpMessage({ phone, otp }) {
         return { mode: 'preview', previewOtp: otp };
     }
 
+    const payload = {
+        template_id: MSG91_TEMPLATE_ID,
+        short_url: '0',
+        recipients: [
+            {
+                mobiles: mobile,
+                otp
+            }
+        ]
+    };
+
+    if (MSG91_SENDER_ID) payload.sender = MSG91_SENDER_ID;
+    if (MSG91_ROUTE) payload.route = MSG91_ROUTE;
+
+    const response = await fetch('https://control.msg91.com/api/v5/flow/', {
+        method: 'POST',
+        headers: {
+            authkey: MSG91_AUTH_KEY,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const responseText = await response.text();
+    let data = {};
     try {
-        const payload = {
-            template_id: MSG91_TEMPLATE_ID,
-            short_url: '0',
-            recipients: [
-                {
-                    mobiles: mobile,
-                    otp
-                }
-            ]
-        };
-
-        if (MSG91_SENDER_ID) payload.sender = MSG91_SENDER_ID;
-        if (MSG91_ROUTE) payload.route = MSG91_ROUTE;
-
-        const response = await fetch('https://control.msg91.com/api/v5/flow/', {
-            method: 'POST',
-            headers: {
-                authkey: MSG91_AUTH_KEY,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const responseText = await response.text();
-        let data = {};
-        try {
-            data = responseText ? JSON.parse(responseText) : {};
-        } catch (error) {
-            data = {};
-        }
-
-        if (!response.ok) {
-            console.warn('MSG91 SMS sending failed:', data.message || data.error);
-            return { mode: 'preview', previewOtp: otp, fallbackReason: 'sms-provider-error' };
-        }
-
-        return { mode: 'sms' };
-    } catch (err) {
-        console.warn('MSG91 SMS network error, falling back to preview:', err.message || err);
-        return { mode: 'preview', previewOtp: otp, fallbackReason: 'sms-network-error' };
+        data = responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+        data = {};
     }
+
+    if (!response.ok) {
+        throw new Error(data.message || data.error || 'Unable to send OTP SMS right now.');
+    }
+
+    return { mode: 'sms' };
 }
 
 function buildAdminStats(orders) {
@@ -1290,50 +1283,12 @@ async function handleApi(req, res, pathname, url) {
         });
         await writeOtps(otps);
         const delivery = await sendOtpMessage({ phone: targetUser.phone || phone, otp: code });
-        
-        let emailSent = false;
-        const targetEmail = targetUser.email || email;
-        if (isValidEmail(targetEmail)) {
-            try {
-                const transporter = await getTransporter();
-                if (transporter) {
-                    await transporter.sendMail({
-                        from: SMTP_FROM || SMTP_USER,
-                        to: targetEmail,
-                        subject: `Your Ruh Imperium Verification Code: ${code}`,
-                        html: `
-                            <div style="font-family:Arial,sans-serif;background:#eef3f9;padding:24px;color:#162742">
-                                <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #d6e1ee;padding:28px">
-                                    <h1 style="margin:0 0 10px;font-size:24px;color:#162742">Ruh Imperium</h1>
-                                    <p style="margin:0 0 18px;color:#53657e">Your account verification code is below. Please enter this code to sign in or verify your account.</p>
-                                    <div style="padding:16px;background:#f8fbff;border:1px solid #dde6f0;margin-bottom:20px;text-align:center;font-size:28px;font-weight:bold;letter-spacing:4px;color:#162742">
-                                        ${code}
-                                    </div>
-                                    <p style="margin:0;font-size:12px;color:#888;">This code is valid for 5 minutes. If you did not request this code, please ignore this email.</p>
-                                </div>
-                            </div>
-                        `
-                    });
-                    emailSent = true;
-                }
-            } catch (err) {
-                console.error('Failed to send OTP email:', err.message);
-            }
-        }
-
-        let responseMessage = '';
-        if (delivery.mode === 'sms') {
-            responseMessage = `OTP sent to ${targetUser.phone || phone}.`;
-        } else if (emailSent) {
-            responseMessage = `OTP sent to your email (${targetEmail}).`;
-        } else {
-            responseMessage = `OTP generated for ${email || phone}. SMS is not configured yet.`;
-        }
-
         sendJson(res, 200, {
-            message: responseMessage,
+            message: delivery.mode === 'sms'
+                ? `OTP sent to ${targetUser.phone || phone}.`
+                : `OTP generated for ${email || phone}. SMS is not configured yet.`,
             identifier: email || phone,
-            delivery: delivery.mode === 'sms' ? 'sms' : (emailSent ? 'email' : 'preview'),
+            delivery: delivery.mode,
             previewOtp: delivery.previewOtp || ''
         });
         return;
@@ -1425,49 +1380,12 @@ async function handleApi(req, res, pathname, url) {
         });
         await writeOtps(otps);
         const delivery = await sendOtpMessage({ phone, otp: code });
-        
-        let emailSent = false;
-        if (isValidEmail(email)) {
-            try {
-                const transporter = await getTransporter();
-                if (transporter) {
-                    await transporter.sendMail({
-                        from: SMTP_FROM || SMTP_USER,
-                        to: email,
-                        subject: `Confirm your Ruh Imperium Order - Verification Code: ${code}`,
-                        html: `
-                            <div style="font-family:Arial,sans-serif;background:#eef3f9;padding:24px;color:#162742">
-                                <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #d6e1ee;padding:28px">
-                                    <h1 style="margin:0 0 10px;font-size:24px;color:#162742">Ruh Imperium</h1>
-                                    <p style="margin:0 0 18px;color:#53657e">Please verify your email to complete your order. Use the following code at checkout:</p>
-                                    <div style="padding:16px;background:#f8fbff;border:1px solid #dde6f0;margin-bottom:20px;text-align:center;font-size:28px;font-weight:bold;letter-spacing:4px;color:#162742">
-                                        ${code}
-                                    </div>
-                                    <p style="margin:0;font-size:12px;color:#888;">This code is valid for 5 minutes. If you did not request this, please contact support.</p>
-                                </div>
-                            </div>
-                        `
-                    });
-                    emailSent = true;
-                }
-            } catch (err) {
-                console.error('Failed to send order OTP email:', err.message);
-            }
-        }
-
-        let responseMessage = '';
-        if (delivery.mode === 'sms') {
-            responseMessage = `Order OTP sent to ${phone || email}.`;
-        } else if (emailSent) {
-            responseMessage = `Order OTP sent to your email (${email}).`;
-        } else {
-            responseMessage = `Order OTP generated for ${phone || email}. SMS is not configured yet.`;
-        }
-
         sendJson(res, 200, {
-            message: responseMessage,
+            message: delivery.mode === 'sms'
+                ? `Order OTP sent to ${phone || email}.`
+                : `Order OTP generated for ${phone || email}. SMS is not configured yet.`,
             identifier: phone || email,
-            delivery: delivery.mode === 'sms' ? 'sms' : (emailSent ? 'email' : 'preview'),
+            delivery: delivery.mode,
             previewOtp: delivery.previewOtp || ''
         });
         return;
