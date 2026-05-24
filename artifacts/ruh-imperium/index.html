@@ -2362,14 +2362,14 @@
     </div>
     <div class="shop-controls">
         <div class="filter-bar">
-            <button class="filter-btn active" onclick="shopFilter('all',this)">All</button>
-            <button class="filter-btn" onclick="shopFilter('Authentic Indian Attars',this)">Authentic Attars</button>
-            <button class="filter-btn" onclick="shopFilter('Modern Attars',this)">Modern Attars</button>
-            <button class="filter-btn" onclick="shopFilter('Next Gen Fragrances',this)">Next Gen</button>
-            <button class="filter-btn" onclick="shopFilter('Discovery Set',this)">Discovery Sets</button>
-            <button class="filter-btn" onclick="shopFilter('Ruh / Absolute Oil',this)">Ruh / Oil</button>
-            <button class="filter-btn" onclick="shopFilter('Eau De Parfum',this)">Eau De Parfum</button>
-            <button class="filter-btn" onclick="shopFilter('Wellness',this)">Wellness</button>
+            <button class="filter-btn active" data-filter="all" onclick="shopFilter('all',this)">All</button>
+            <button class="filter-btn" data-filter="Authentic Indian Attars" onclick="shopFilter('Authentic Indian Attars',this)">Authentic Attars</button>
+            <button class="filter-btn" data-filter="Modern Attars" onclick="shopFilter('Modern Attars',this)">Modern Attars</button>
+            <button class="filter-btn" data-filter="Next Gen Fragrances" onclick="shopFilter('Next Gen Fragrances',this)">Next Gen</button>
+            <button class="filter-btn" data-filter="Discovery Set" onclick="shopFilter('Discovery Set',this)">Discovery Sets</button>
+            <button class="filter-btn" data-filter="Ruh / Absolute Oil" onclick="shopFilter('Ruh / Absolute Oil',this)">Ruh / Oil</button>
+            <button class="filter-btn" data-filter="Eau De Parfum" onclick="shopFilter('Eau De Parfum',this)">Eau De Parfum</button>
+            <button class="filter-btn" data-filter="Wellness" onclick="shopFilter('Wellness',this)">Wellness</button>
         </div>
         <select class="sort-select" onchange="sortProducts(this.value)">
             <option value="default">Sort: Featured</option>

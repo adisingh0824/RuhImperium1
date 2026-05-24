@@ -606,6 +606,7 @@ function filterByNote(note) {
 
 function shopFilter(cat, btn) {
     currentFilter = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     document.getElementById('shopTitle').textContent = cat === 'all' ? 'All Products' : cat;
     updateShopFilterUI(cat);
