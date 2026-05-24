@@ -6,7 +6,7 @@ const COUPON_STORAGE_KEY = 'ruhImperiumCoupon';
 const ADDRESSES_STORAGE_KEY = 'ruhImperiumAddresses';
 const RECENTLY_VIEWED_KEY = 'ruhImperiumRecentlyViewed';
 const COMPARE_STORAGE_KEY = 'ruhImperiumCompare';
-const RAZORPAY_KEY_ID = 'rzp_test_replace_with_your_key';
+const RAZORPAY_KEY_ID = 'rzp_test_SaIRJSykISjwjQ';
 
 const coupons = {
     BUY2: { type: 'percent', value: 20, label: 'Buy 2 Offer' },
