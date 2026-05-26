@@ -594,7 +594,7 @@ function updateShopFilterUI(cat) {
     const summary = document.getElementById('shopFilterSummary');
     if (!summary) return;
     summary.textContent = cat === 'all'
-        ? 'Browse every attar, fragrance, and gifting set in the Raahi Parfums collection.'
+        ? 'Browse every attar, fragrance, and gifting set in the Ruh Imperium collection.'
         : `Showing curated ${cat} selections for your next scent discovery.`;
 }
 
@@ -1000,7 +1000,7 @@ function removeCoupon() {
 function whatsappOrder() {
     if (cart.length === 0) { showToast('Cart is empty!'); return; }
     const pricing = getOrderPricing();
-    let msg = '🌹 *Raahi Parfums Order* 🌹\n\nI would like to order:\n\n';
+    let msg = '🌹 *Ruh Imperium Order* 🌹\n\nI would like to order:\n\n';
     cart.forEach(item => { msg += `• ${item.name} (${item.size}) × ${item.qty} = ₹${(item.price * item.qty).toLocaleString()}\n`; });
     if (appliedCoupon) msg += `\nCoupon: ${appliedCoupon.code} (-₹${pricing.discount.toLocaleString()})\n`;
     msg += `\n*Total: ₹${pricing.total.toLocaleString()}*\n\nPlease confirm my order. Thank you!`;
@@ -1090,7 +1090,7 @@ function selectSize(btn, size) {
 }
 
 async function shareProduct(product, size) {
-    const text = `${product.name} (${size}) — ₹${product.price.toLocaleString()} at Raahi Parfums`;
+    const text = `${product.name} (${size}) — ₹${product.price.toLocaleString()} at Ruh Imperium`;
     const url = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
     if (navigator.share) {
         try {
@@ -1267,7 +1267,7 @@ function createOrder(details, paymentLabel, paymentId = '') {
 
 function buildOrderMessage(details, paymentLabel, paymentId = '', orderId = '') {
     const pricing = getOrderPricing();
-    let msg = `🌹 *New Order - Raahi Parfums* 🌹\n\n`;
+    let msg = `🌹 *New Order - Ruh Imperium* 🌹\n\n`;
     if (orderId) msg += `*Order ID:* ${orderId}\n`;
     msg += `*Customer:* ${details.name}\n*Phone:* ${details.phone}\n`;
     if (details.email) msg += `*Email:* ${details.email}\n`;
@@ -1345,7 +1345,7 @@ async function processBackendRazorpayOrder(details) {
         key: response.keyId,
         amount: response.amount,
         currency: response.currency || 'INR',
-        name: 'Raahi Parfums',
+        name: 'Ruh Imperium',
         description: `Order for ${details.name}`,
         order_id: response.orderId,
         image: 'gulabattar.png',
@@ -1424,7 +1424,7 @@ function processRazorpayOrder(details) {
         key: clientKey,
         amount: pricing.total * 100,
         currency: 'INR',
-        name: 'Raahi Parfums',
+        name: 'Ruh Imperium',
         description: `Order for ${details.name}`,
         image: 'gulabattar.png',
         handler(response) {
@@ -1549,7 +1549,7 @@ async function subscribe() {
         if (emailInput) emailInput.value = '';
         const message = response.alreadySubscribed
             ? 'You are already subscribed. Thank you for staying with us!'
-            : '🌸 Subscribed! Welcome to the Raahi Parfums family.';
+            : '🌸 Subscribed! Welcome to the Ruh Imperium family.';
         showToast(message);
         if (statusEl) {
             statusEl.textContent = message;
@@ -1610,7 +1610,7 @@ function initPwaInstall() {
     });
 
     window.addEventListener('appinstalled', () => {
-        showToast('Raahi Parfums is installed. Enjoy quick access!');
+        showToast('Ruh Imperium is installed. Enjoy quick access!');
         if (installBtn) installBtn.style.display = 'none';
         deferredInstallPrompt = null;
     });
@@ -1922,7 +1922,7 @@ function renderAuthView() {
     if (currentUser) {
         guestView.style.display = 'none';
         userView.style.display = 'block';
-        document.getElementById('accountName').textContent = currentUser.name || 'Raahi Parfums Customer';
+        document.getElementById('accountName').textContent = currentUser.name || 'Ruh Imperium Customer';
         document.getElementById('accountEmail').textContent = currentUser.email || 'No email saved';
         document.getElementById('accountPhone').textContent = currentUser.phone || 'No phone saved';
     } else {

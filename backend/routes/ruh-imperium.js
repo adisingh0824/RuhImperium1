@@ -269,7 +269,7 @@ function buildLocalScentReply(message, suggestions) {
   if (!suggestions.length) return "I could not find a perfect match yet. Try fresh, floral, woody, sweet, office, party, gifting, summer, or winter.";
   const tone = String(message || "").trim() || "your scent tone";
   const lines = suggestions.slice(0, 3).map((p) => `${p.name}: ${p.notes} profile, ${p.cat}, ₹${p.price}.`);
-  return `For ${tone}, I would start with these Raahi Parfums picks:\n${lines.join("\n")}\nOpen any recommendation to compare notes, size, and price.`;
+  return `For ${tone}, I would start with these Ruh Imperium picks:\n${lines.join("\n")}\nOpen any recommendation to compare notes, size, and price.`;
 }
 
 // ── Auth helpers ─────────────────────────────────────────────────────────────
@@ -446,9 +446,9 @@ async function sendOrderNotification(order, eventType, req) {
   const trackingUrl = buildOrderTrackingUrl(order);
   const invoiceUrl = `${getBaseUrl(req)}/api/orders/${order.id}/document?type=invoice`;
   const titleMap = {
-    placed: "Your Raahi Parfums order is confirmed", paid: "Payment received for your Raahi Parfums order",
-    shipped: "Your Raahi Parfums order has been shipped", delivered: "Your Raahi Parfums order has been delivered",
-    updated: "Your Raahi Parfums order has been updated",
+    placed: "Your Ruh Imperium order is confirmed", paid: "Payment received for your Ruh Imperium order",
+    shipped: "Your Ruh Imperium order has been shipped", delivered: "Your Ruh Imperium order has been delivered",
+    updated: "Your Ruh Imperium order has been updated",
   };
   const headlineMap = {
     placed: "Thank you for placing your order.", paid: "We have received your payment successfully.",
@@ -458,7 +458,7 @@ async function sendOrderNotification(order, eventType, req) {
   const itemsHtml = (order.items || []).map((item) => `<li>${escapeHtml(item.name)} (${escapeHtml(item.size)}) × ${escapeHtml(item.qty)}</li>`).join("");
   const html = `<div style="font-family:Arial,sans-serif;background:#eef3f9;padding:24px;color:#162742">
     <div style="max-width:720px;margin:0 auto;background:#ffffff;border:1px solid #d6e1ee;padding:28px">
-      <h1 style="margin:0 0 10px;font-size:28px">Raahi Parfums</h1>
+      <h1 style="margin:0 0 10px;font-size:28px">Ruh Imperium</h1>
       <p style="margin:0 0 18px;color:#53657e">${headlineMap[eventType] || headlineMap.updated}</p>
       <div style="padding:16px;background:#f8fbff;border:1px solid #dde6f0;margin-bottom:20px">
         <p style="margin:0 0 8px"><strong>Order ID:</strong> ${escapeHtml(order.id)}</p>
@@ -529,7 +529,7 @@ function buildOrderDocumentHtml(order, type) {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${escapeHtml(documentTitle)} ${escapeHtml(order.id)}</title>
 <style>body{font-family:Arial,sans-serif;color:#162742;margin:0;background:#eef3f9}.sheet{max-width:900px;margin:24px auto;background:#fff;border:1px solid #d6e1ee;padding:32px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #dde6f0;padding:10px;font-size:14px}th{background:#edf4fb}.summary-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e0e8f1}.summary-line.total{font-size:18px;font-weight:700;border-bottom:none}</style>
 </head><body><div class="sheet">
-<h1 style="margin:0 0 10px">Raahi Parfums</h1>
+<h1 style="margin:0 0 10px">Ruh Imperium</h1>
 <p><strong>${escapeHtml(documentTitle)}</strong> · ${escapeHtml(order.id)}</p>
 <p>Customer: ${escapeHtml(order.customerName)} · ${escapeHtml(order.customerEmail)}</p>
 <p>Address: ${escapeHtml(address.address)}, ${escapeHtml(address.city)}, ${escapeHtml(address.state)} - ${escapeHtml(address.pin)}</p>
@@ -602,7 +602,7 @@ router.post("/ai-scent-chat", async (req, res) => {
       const aiRes = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
         headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: OPENAI_MODEL, instructions: "You are Raahi Parfums Scent Assistant. Recommend products from the catalog matching the customer's tone, mood, season, occasion, budget, and note family. Be concise and warm.", input: `Customer: ${promptText}\n\nCatalog:\n${catalogLines}`, max_output_tokens: 420 }),
+        body: JSON.stringify({ model: OPENAI_MODEL, instructions: "You are Ruh Imperium Scent Assistant. Recommend products from the catalog matching the customer's tone, mood, season, occasion, budget, and note family. Be concise and warm.", input: `Customer: ${promptText}\n\nCatalog:\n${catalogLines}`, max_output_tokens: 420 }),
       });
       const data = await aiRes.json().catch(() => ({}));
       if (!aiRes.ok) { res.json({ reply: buildLocalScentReply(promptText, suggestions), suggestions, source: "local" }); return; }

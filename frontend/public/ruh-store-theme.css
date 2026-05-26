@@ -116,18 +116,17 @@ body.ruh-store .logo-frame {
     background: #ffffff;
     padding: 10px 32px 8px;
     border-radius: 0;
+    line-height: 0;
 }
 
-body.ruh-store .logo-frame .brand-logo-text {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-weight: 700;
-    font-size: 22px;
-    letter-spacing: 3px;
-    color: #162742;
-    text-transform: uppercase;
-    display: inline-block;
-    line-height: 1.2;
-    vertical-align: middle;
+body.ruh-store .logo-frame img,
+body.ruh-store .logo img.brand-logo {
+    height: 48px;
+    width: auto;
+    max-width: min(220px, 50vw);
+    object-fit: contain;
+    display: block;
+    filter: none;
 }
 
 body.ruh-store .logo-main,
