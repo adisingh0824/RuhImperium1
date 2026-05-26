@@ -11,7 +11,7 @@
     "install": "cd backend && npm install",
     "build": "npm --prefix frontend run build",
     "postinstall": "npm --prefix frontend install",
-    "sync:products": "node scripts/sync-products.js",
+    "sync:products": "echo skip-sync",
     "import:catalog": "node scripts/import-raahi-catalog.js && node scripts/rebrand-catalog.js && npm run sync:products",
     "predeploy": "npm run sync:products"
   },
