@@ -1,19 +1,22 @@
 {
-  "name": "ruh-imperium-root",
+  "name": "ruh-imperium-vercel",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "packageManager": "pnpm@11.3.0",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
-    "build": "pnpm --prefix frontend install && pnpm --prefix frontend build"
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install": "cd backend && npm install",
+    "build": "npm --prefix frontend run build",
+    "postinstall": "npm --prefix frontend install",
+    "sync:products": "node scripts/sync-products.js",
+    "import:catalog": "node scripts/import-raahi-catalog.js && node scripts/rebrand-catalog.js && npm run sync:products",
+    "predeploy": "npm run sync:products"
   },
   "dependencies": {
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "mongodb": "^7.2.0",
-    "nodemailer": "^8.0.7",
-    "pino": "^9.14.0",
-    "pino-http": "^10.5.0"
+    "mongodb": "^7.1.1",
+    "nodemailer": "^8.0.5"
   }
 }

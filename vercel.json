@@ -1,11 +1,16 @@
 {
   "version": 2,
-  "cleanUrls": true,
-  "outputDirectory": "frontend/dist",
+  "installCommand": "npm install && npm run sync:products",
+  "cleanUrls": false,
+  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "source": "/",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/frontend/$1"
     }
   ]
 }
