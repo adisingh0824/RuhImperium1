@@ -1,20 +1,17 @@
 {
-  "name": "ruh-imperium-vercel",
-  "version": "1.0.0",
-  "private": true,
-  "engines": {
-    "node": "22.x"
-  },
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
   "scripts": {
-    "start": "cd backend && npm start",
-    "dev": "cd backend && npm run dev",
-    "install": "cd backend && npm install",
-    "sync:products": "node scripts/sync-products.js",
-    "import:catalog": "node scripts/import-raahi-catalog.js && node scripts/rebrand-catalog.js && npm run sync:products",
-    "predeploy": "npm run sync:products"
+    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
-  "dependencies": {
-    "mongodb": "^7.1.1",
-    "nodemailer": "^8.0.5"
+  "private": true,
+  "devDependencies": {
+    "@types/nodemailer": "^8.0.0",
+    "prettier": "^3.8.3",
+    "typescript": "~5.9.3"
   }
 }
