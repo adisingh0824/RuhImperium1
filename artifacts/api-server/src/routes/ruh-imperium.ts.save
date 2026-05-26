@@ -6,7 +6,7 @@ import vm from "node:vm";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { logger } from "../lib/logger";
-
+const data = await response.json();
 const _require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -511,7 +511,7 @@ async function createRazorpayOrder(amount: number, receipt: string, notes: any) 
     headers: { Authorization: `Basic ${Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString("base64")}`, "Content-Type": "application/json" },
     body: JSON.stringify({ amount, currency: "INR", receipt, notes }),
   });
-  const data: any = await response.json();
+  const data = await response.json();
 if (!response.ok) throw new Error(data?.error?.description || "Unable to create Razorpay order.");
 return data;
 }
@@ -605,7 +605,7 @@ router.post("/ai-scent-chat", async (req, res) => {
         headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ model: OPENAI_MODEL, instructions: "You are Ruh Imperium Scent Assistant. Recommend products from the catalog matching the customer's tone, mood, season, occasion, budget, and note family. Be concise and warm.", input: `Customer: ${promptText}\n\nCatalog:\n${catalogLines}`, max_output_tokens: 420 }),
       });
-      const data: any = await aiRes.json().catch(() => ({}));
+      const data = await aiRes.json().catch(() => ({}));
       if (!aiRes.ok) { res.json({ reply: buildLocalScentReply(promptText, suggestions), suggestions, source: "local" }); return; }
       const parts: string[] = [];
       (data?.output || []).forEach((item: any) => (item.content || []).forEach((c: any) => { if (typeof c.text === "string") parts.push(c.text); }));
@@ -662,7 +662,7 @@ router.post("/auth/request-otp", async (req, res) => {
     if (RECAPTCHA_SITE_KEY && RECAPTCHA_SECRET_KEY) {
       const token = String(req.body.recaptcha || "").trim();
       if (!token) { res.status(400).json({ error: "Please complete the captcha challenge." }); return; }
-      const verification: any = await verifyRecaptchaToken(token, req.ip || "")
+      const verification = await verifyRecaptchaToken(token, req.ip || "");
       if (!verification?.success) { res.status(400).json({ error: "Captcha verification failed." }); return; }
     }
     const users = await readUsers();
