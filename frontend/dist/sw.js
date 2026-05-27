@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'ruh-imperium-static-v9';
-const RUNTIME_CACHE = 'ruh-imperium-runtime-v4';
+const STATIC_CACHE = 'ruh-imperium-static-v11';
+const RUNTIME_CACHE = 'ruh-imperium-runtime-v6';
 const OFFLINE_URL = '/offline.html';
 
 const APP_SHELL = [
@@ -9,11 +9,12 @@ const APP_SHELL = [
     '/products.js',
     '/effects-3d.js',
     '/ruh-store-theme.css',
-    '/ruh-imperium-logo.jpg',
+    '/ruh-imperium-logo-old-2026.png',
+    '/ruh-imperium-logo-old-2026.jpg',
     '/sw.js',
     '/manifest.webmanifest',
     '/offline.html',
-    '/pwa-icons/ruh-logo-192.png'
+    '/pwa-icons/ruh-logo-192-2026.png'
 ];
 
 async function cacheShell(cache) {
@@ -99,7 +100,7 @@ self.addEventListener('fetch', event => {
                 })
                 .catch(() => {
                     if (request.destination === 'image') {
-                        return caches.match('/pwa-icons/ruh-logo-192.png');
+                        return caches.match('/pwa-icons/ruh-logo-192-2026.png');
                     }
                     return caches.match(OFFLINE_URL);
                 });

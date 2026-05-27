@@ -14,19 +14,19 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/pwa-icons/ruh-logo-192.png",
+      "src": "/pwa-icons/ruh-logo-192-2026.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icons/ruh-logo-512.png",
+      "src": "/pwa-icons/ruh-logo-512-2026.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/pwa-icons/apple-touch-icon.png",
+      "src": "/pwa-icons/apple-touch-icon-2026.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
