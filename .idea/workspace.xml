@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="81ed504b-75cd-4939-90b4-12639638482f" name="Changes" comment="Commit" />
+    <list default="true" id="81ed504b-75cd-4939-90b4-12639638482f" name="Changes" comment="Commit">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -108,7 +111,7 @@
       <workItem from="1779608609776" duration="5581000" />
       <workItem from="1779643181355" duration="10259000" />
       <workItem from="1779775332657" duration="8667000" />
-      <workItem from="1779815818301" duration="1707000" />
+      <workItem from="1779815818301" duration="3563000" />
     </task>
     <task id="LOCAL-00101" summary="commit">
       <option name="closed" value="true" />
