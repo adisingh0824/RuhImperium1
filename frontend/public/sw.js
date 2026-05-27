@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'ruh-imperium-static-v9';
-const RUNTIME_CACHE = 'ruh-imperium-runtime-v4';
+const STATIC_CACHE = 'ruh-imperium-static-v10';
+const RUNTIME_CACHE = 'ruh-imperium-runtime-v5';
 const OFFLINE_URL = '/offline.html';
 
 const APP_SHELL = [
@@ -9,6 +9,7 @@ const APP_SHELL = [
     '/products.js',
     '/effects-3d.js',
     '/ruh-store-theme.css',
+    '/ruh-imperium-logo.png',
     '/ruh-imperium-logo.jpg',
     '/sw.js',
     '/manifest.webmanifest',
