@@ -5,8 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="81ed504b-75cd-4939-90b4-12639638482f" name="Changes" comment="Commit">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/dist/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/dist/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/dist/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/dist/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/dist/pwa-icons/apple-touch-icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/dist/pwa-icons/apple-touch-icon.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/dist/pwa-icons/ruh-logo-512.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/dist/pwa-icons/ruh-logo-512.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/dist/ruh-imperium-logo.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/dist/ruh-imperium-logo.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/dist/ruh-store-theme.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/dist/ruh-store-theme.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/pwa-icons/apple-touch-icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/pwa-icons/apple-touch-icon.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/pwa-icons/ruh-logo-512.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/pwa-icons/ruh-logo-512.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/ruh-imperium-logo.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/ruh-imperium-logo.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/ruh-store-theme.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/ruh-store-theme.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,15 +121,7 @@
       <workItem from="1779608609776" duration="5581000" />
       <workItem from="1779643181355" duration="10259000" />
       <workItem from="1779775332657" duration="8667000" />
-      <workItem from="1779815818301" duration="3563000" />
-    </task>
-    <task id="LOCAL-00101" summary="commit">
-      <option name="closed" value="true" />
-      <created>1776607826873</created>
-      <option name="number" value="00101" />
-      <option name="presentableId" value="LOCAL-00101" />
-      <option name="project" value="LOCAL" />
-      <updated>1776607826873</updated>
+      <workItem from="1779815818301" duration="4238000" />
     </task>
     <task id="LOCAL-00102" summary="commit">
       <option name="closed" value="true" />
@@ -505,7 +507,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779817648028</updated>
     </task>
-    <option name="localTasksCounter" value="150" />
+    <task id="LOCAL-00150" summary="Commit">
+      <option name="closed" value="true" />
+      <created>1779882082100</created>
+      <option name="number" value="00150" />
+      <option name="presentableId" value="LOCAL-00150" />
+      <option name="project" value="LOCAL" />
+      <updated>1779882082100</updated>
+    </task>
+    <option name="localTasksCounter" value="151" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

@@ -312,12 +312,12 @@
         .cart-item-info { flex:1; }
         .cart-item-name { font-family:'Playfair Display',serif; color:var(--text); font-size:15px; font-weight:600; }
         .cart-item-price { color:var(--gold-light); font-size:14px; margin-top:4px; }
-        .cart-item-note { color:rgba(253,246,232,0.52); font-size:11px; margin-top:4px; }
+        .cart-item-note { color:rgba(31,42,56,0.58); font-size:11px; margin-top:4px; }
         .cart-qty-row { display:flex; align-items:center; gap:10px; margin-top:8px; }
         .qty-btn { background:var(--dark-3); border:1px solid rgba(201,168,76,0.3); color:var(--gold-light); width:28px; height:28px; cursor:pointer; font-size:16px; transition:background 0.2s; }
         .qty-btn:hover { background:var(--gold); color:var(--dark); }
         .qty-num { color:var(--text); font-size:14px; min-width:24px; text-align:center; }
-        .cart-item-del { background:none; border:none; color:rgba(253,246,232,0.3); cursor:pointer; font-size:18px; transition:color 0.2s; }
+        .cart-item-del { background:#fff4f6; border:1px solid rgba(241,94,122,0.22); color:var(--red-accent); cursor:pointer; font-size:16px; transition:color 0.2s, background 0.2s; border-radius:999px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .cart-item-del:hover { color:var(--red-accent); }
         .cart-empty { text-align:center; padding:60px 20px; }
         .cart-empty span { font-size:60px; display:block; margin-bottom:16px; }
@@ -521,6 +521,7 @@
         }
         .hero-product-caption {
             position:absolute; left:22px; right:22px; bottom:22px; z-index:2; color:#fff;
+            overflow-wrap:anywhere;
         }
         .hero-product-caption span { display:block; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold-light); margin-bottom:6px; }
         .hero-product-caption strong { display:block; font-family:'Playfair Display',serif; font-size:28px; line-height:1.1; }
@@ -532,6 +533,7 @@
         .hero-mini-card span {
             position:absolute; left:16px; bottom:16px; right:16px; color:#fff; font-family:'Playfair Display',serif;
             font-size:20px; z-index:2; text-shadow:0 2px 10px rgba(7,17,31,0.4);
+            overflow-wrap:anywhere;
         }
         .hero-mini-card::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg,transparent 42%,rgba(7,17,31,0.68)); }
         .sliding-banner {
@@ -606,6 +608,7 @@
         .products-section .section-label { color:var(--gold); }
         .products-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; max-width:1400px; margin:0 auto; }
         .product-card { background:rgba(255,255,255,0.92); border:1px solid rgba(31,42,56,0.08); overflow:visible; transition:border-color 0.3s,transform 0.3s, box-shadow 0.3s; cursor:pointer; position:relative; border-radius:24px; box-shadow:var(--shadow-card); }
+        .product-card .card-3d-inner { position:relative; z-index:1; }
         .product-card .product-img-wrap { overflow:hidden; border-radius:24px 24px 0 0; }
         .product-card::before {
             content:''; position:absolute; inset:0; pointer-events:none;
@@ -642,6 +645,13 @@
         .add-btn:hover { background:var(--gold); color:var(--dark); border-color:var(--gold); }
         .product-actions { display:flex; gap:8px; margin-top:14px; }
         .product-actions button { flex:1; }
+        .add-btn-main {
+            border:none; background:linear-gradient(135deg,var(--gold),var(--gold-light)); color:var(--dark);
+            padding:10px 12px; font-size:11px; letter-spacing:1.2px; text-transform:uppercase;
+            cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; border-radius:999px;
+            font-family:'Jost',sans-serif; font-weight:700; box-shadow:0 10px 24px rgba(211,176,102,0.22);
+        }
+        .add-btn-main:hover { transform:translateY(-1px); box-shadow:0 14px 30px rgba(211,176,102,0.32); }
         .buy-now-btn, .compare-btn {
             border:1px solid rgba(31,42,56,0.12); background:#fff; color:var(--text);
             padding:10px 12px; font-size:11px; letter-spacing:1.2px; text-transform:uppercase;
@@ -679,6 +689,16 @@
         .story-text { background:linear-gradient(180deg, rgba(246,244,239,0.94), rgba(231,236,244,0.94)); padding:80px 60px; display:flex; flex-direction:column; justify-content:center; }
         .story-text p { font-family:'Cormorant Garamond',serif; font-size:18px; color:var(--text-light); line-height:1.9; margin-bottom:20px; }
         .story-text strong { color:var(--dark); font-weight:600; }
+        .founder-section { padding:80px 40px; background:linear-gradient(180deg,#ffffff 0%,#f0f4f8 100%); }
+        .founder-inner { max-width:1120px; margin:0 auto; display:grid; grid-template-columns:0.82fr 1.18fr; gap:34px; align-items:center; }
+        .founder-copy h2 { font-family:'Playfair Display',serif; font-size:clamp(30px,4vw,46px); color:var(--dark); line-height:1.15; margin-bottom:16px; }
+        .founder-copy p { font-family:'Cormorant Garamond',serif; font-size:19px; line-height:1.85; color:var(--text-light); }
+        .founder-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+        .founder-card { background:#fff; border:1px solid rgba(31,42,56,0.08); border-radius:24px; overflow:hidden; box-shadow:var(--shadow-card); }
+        .founder-card img { width:100%; aspect-ratio:4/4.5; object-fit:cover; display:block; background:#eef1f5; }
+        .founder-card-body { padding:18px; }
+        .founder-card span { display:block; color:var(--gold); font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:700; margin-bottom:6px; }
+        .founder-card h3 { font-family:'Playfair Display',serif; color:var(--text); font-size:24px; line-height:1.2; }
 
         .process-section { padding:80px 40px; background:linear-gradient(180deg,#101e30 0%,#15253d 100%); text-align:center; }
         .process-section .section-title { color:var(--cream); }
@@ -1047,8 +1067,9 @@
         .admin-login-link:hover { background:rgba(244,234,216,0.56); border-color:rgba(185,144,75,0.22); }
         .account-pill {
             min-width:112px; padding:10px 14px; border:1px solid rgba(201,168,76,0.28);
-            background:rgba(253,246,232,0.04); color:var(--gold-light); font-size:12px; letter-spacing:1.5px;
+            background:#fff; color:var(--text); font-size:12px; letter-spacing:1.5px;
             text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:8px; border-radius:999px;
+            box-shadow:var(--shadow-card);
         }
         .account-pill-text { display:flex; align-items:center; gap:8px; }
         .account-pill strong {
@@ -1524,6 +1545,14 @@
             .hero-wide-photo{min-height:240px; border-radius:22px;}
             .hero-product-card{min-height:340px; border-radius:22px;}
             .hero-mini-card{min-height:170px;}
+            .hero-product-card img,.hero-mini-card img{height:100%; min-height:0;}
+            .hero-product-caption{left:16px; right:16px; bottom:16px;}
+            .hero-product-caption strong{font-size:24px; line-height:1.15;}
+            .founder-section{padding:56px 14px;}
+            .founder-inner{grid-template-columns:1fr; gap:24px;}
+            .founder-grid{grid-template-columns:1fr 1fr; gap:14px;}
+            .founder-card{border-radius:18px;}
+            .founder-card h3{font-size:20px;}
             .attar-info-section,.market-section{padding-left:14px; padding-right:14px;}
             .attar-info-media{grid-template-columns:1fr 1fr;}
             .market-grid{grid-template-columns:1fr 1fr;}
@@ -1561,11 +1590,16 @@
             .hero-content.shop-hero-copy{padding:0; margin-top:0;}
             .hero-kicker{font-size:10px; letter-spacing:1.4px;}
             .hero-wide-photo{min-height:210px;}
-            .hero-product-card{min-height:300px;}
-            .hero-mini-card{min-height:190px;}
+            .hero-product-card{min-height:auto; aspect-ratio:4/5;}
+            .hero-mini-card{min-height:auto; aspect-ratio:4/5;}
+            .hero-product-card::after,.hero-mini-card::after{background:linear-gradient(180deg,rgba(7,17,31,0.08) 0%,rgba(7,17,31,0.74) 100%);}
+            .hero-product-caption strong{font-size:21px;}
+            .founder-grid{grid-template-columns:1fr;}
+            .founder-card img{aspect-ratio:4/3; object-fit:contain; padding:18px;}
             .attar-info-media{grid-template-columns:1fr;}
             .attar-info-media img:first-child{margin-top:0;}
             .market-grid{grid-template-columns:1fr;}
+        }
     </style>
     <style>
         /* Premium Splash Screen style */
@@ -2190,6 +2224,32 @@
         <div class="editorial-inner reveal">
             <h2>THE ART OF PERFUME MAKING</h2>
             <p>A legacy of over 200 years in the Indian perfume industry and a eureka moment is what led to the creation of Ruh Imperium. Technology was put to good use, and a new era of intense perfumery began, courtesy of a homegrown brand with a world bound take. No unnecessary middlemen. Straight from India's perfume capital 'Kannauj' to your skin.</p>
+        </div>
+    </section>
+
+    <section class="founder-section" id="founder">
+        <div class="founder-inner reveal">
+            <div class="founder-copy">
+                <span class="section-label">About The Founder</span>
+                <h2>The people shaping Ruh Imperium</h2>
+                <p>Ruh Imperium carries forward the Kannauj perfume legacy with a modern, direct-to-customer approach. The brand is guided by founder Vimal Singh and co-founder Aditya Singh, bringing traditional attar craft into a cleaner, easier shopping experience.</p>
+            </div>
+            <div class="founder-grid">
+                <article class="founder-card">
+                    <img src="/ruh-imperium-logo.jpg" alt="Founder Vimal Singh" onerror="this.onerror=null;this.src='/ruh-imperium-logo.png';this.style.objectFit='contain';this.style.padding='18px'">
+                    <div class="founder-card-body">
+                        <span>Founder</span>
+                        <h3>Vimal Singh</h3>
+                    </div>
+                </article>
+                <article class="founder-card">
+                    <img src="/ruh-imperium-logo.jpg" alt="Co-Founder Aditya Singh" onerror="this.onerror=null;this.src='/ruh-imperium-logo.png';this.style.objectFit='contain';this.style.padding='18px'">
+                    <div class="founder-card-body">
+                        <span>Co-Founder</span>
+                        <h3>Aditya Singh</h3>
+                    </div>
+                </article>
+            </div>
         </div>
     </section>
 

@@ -434,11 +434,11 @@ function updateAccountUI() {
         const displayName = currentUser.name || '';
         const nameParts = displayName.trim().split(/\s+/);
         const firstName = nameParts[0] || 'User';
-        label.textContent = firstName;
-        initial.textContent = (displayName ? displayName.charAt(0) : 'U').toUpperCase();
+        if (label) label.textContent = firstName;
+        if (initial) initial.textContent = (displayName ? displayName.charAt(0) : 'U').toUpperCase();
     } else {
-        label.textContent = 'Account';
-        initial.textContent = 'A';
+        if (label) label.textContent = 'Account';
+        if (initial) initial.textContent = 'A';
     }
     if (ordersBtn) ordersBtn.style.display = showOrders ? 'inline-flex' : 'none';
     if (adminBadge) adminBadge.style.display = currentUser?.isAdmin ? 'inline-block' : 'none';
@@ -800,6 +800,7 @@ function toggleWish(e, id) {
 
 function updateWishBadge() {
     const badge = document.getElementById('wishCount');
+    if (!badge) return;
     if (wishlist.length > 0) { badge.textContent = wishlist.length; badge.style.display = 'flex'; }
     else badge.style.display = 'none';
 }
@@ -1640,6 +1641,13 @@ function setAuthMode(mode) {
         : 'New here? <a class="auth-link" onclick="setAuthMode(\'signup\')">Create an account</a>';
 }
 
+function finishAuthSuccess(message) {
+    authOtpState = null;
+    closeAuthModal();
+    setTimeout(closeAuthModal, 50);
+    if (message) showToast(message);
+}
+
 async function verifyAuthOtp() {
     const otpCode = (document.getElementById('authOtpCode').value || '').trim();
     if (!otpCode || otpCode.length !== 6 || !/^\d+$/.test(otpCode)) {
@@ -1669,8 +1677,7 @@ async function verifyAuthOtp() {
             document.getElementById('authSetPassword').focus();
             return;
         }
-        closeAuthModal();
-        showToast('Verified successfully!');
+        finishAuthSuccess('Verified successfully!');
         // clear UI
         document.getElementById('authOtpSection').style.display = 'none';
         document.getElementById('authVerifyOtpBtn').style.display = 'none';
@@ -1688,9 +1695,7 @@ async function verifyAuthOtp() {
     persistAuthToken();
     updateAccountUI();
     prefillCheckout();
-    closeAuthModal();
-    showToast('Verified successfully!');
-    authOtpState = null;
+    finishAuthSuccess('Verified successfully!');
 }
 
 async function handleAuth() {
@@ -1719,8 +1724,7 @@ async function handleAuth() {
                     persistAuthToken();
                     updateAccountUI();
                     prefillCheckout();
-                    closeAuthModal();
-                    showToast('Account created locally on this device (backend unavailable).');
+                    finishAuthSuccess('Account created locally on this device (backend unavailable).');
                     return;
                 }
                 showDetailedError(response, '/api/auth/signup');
@@ -1732,8 +1736,7 @@ async function handleAuth() {
             persistAuthToken();
             updateAccountUI();
             prefillCheckout();
-            closeAuthModal();
-            showToast('Account created successfully.');
+            finishAuthSuccess('Account created successfully.');
             return;
         }
         // Local signup fallback
@@ -1743,8 +1746,7 @@ async function handleAuth() {
         persistAuthToken();
         updateAccountUI();
         prefillCheckout();
-        closeAuthModal();
-        showToast('Account created locally on this device.');
+        finishAuthSuccess('Account created locally on this device.');
         return;
     }
     // Login flow (password)
@@ -1763,8 +1765,7 @@ async function handleAuth() {
                 persistAuthToken();
                 updateAccountUI();
                 prefillCheckout();
-                closeAuthModal();
-                showToast('Signed in locally (backend unavailable).');
+                finishAuthSuccess('Signed in locally (backend unavailable).');
                 return;
             }
             showDetailedError(response, '/api/auth/login');
@@ -1776,8 +1777,7 @@ async function handleAuth() {
         persistAuthToken();
         updateAccountUI();
         prefillCheckout();
-        closeAuthModal();
-        showToast('Signed in successfully.');
+        finishAuthSuccess('Signed in successfully.');
         return;
     }
     // Local login fallback
@@ -1791,8 +1791,7 @@ async function handleAuth() {
     persistAuthToken();
     updateAccountUI();
     prefillCheckout();
-    closeAuthModal();
-    showToast('Signed in successfully.');
+    finishAuthSuccess('Signed in successfully.');
 }
 
 // Send/request OTP for login; uses backend when available, else generates local OTP for testing
