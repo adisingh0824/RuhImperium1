@@ -4,17 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="81ed504b-75cd-4939-90b4-12639638482f" name="Changes" comment="Merge remote-tracking branch 'origin/main'&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;frontend/dist/sw.js&#10;#&#9;frontend/public/sw.js">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
-    </list>
+    <list default="true" id="81ed504b-75cd-4939-90b4-12639638482f" name="Changes" comment="Merge remote-tracking branch 'origin/main'" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
+    <option name="PUSH_AUTO_UPDATE" value="true" />
+    <option name="PUSH_TAGS">
+      <GitPushTagMode>
+        <option name="argument" value="--tags" />
+        <option name="title" value="All" />
+      </GitPushTagMode>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -113,62 +116,6 @@
       <workItem from="1779643181355" duration="10259000" />
       <workItem from="1779775332657" duration="8667000" />
       <workItem from="1779815818301" duration="4699000" />
-    </task>
-    <task id="LOCAL-00105" summary="commit">
-      <option name="closed" value="true" />
-      <created>1776626733381</created>
-      <option name="number" value="00105" />
-      <option name="presentableId" value="LOCAL-00105" />
-      <option name="project" value="LOCAL" />
-      <updated>1776626733381</updated>
-    </task>
-    <task id="LOCAL-00106" summary="Commit">
-      <option name="closed" value="true" />
-      <created>1776627318016</created>
-      <option name="number" value="00106" />
-      <option name="presentableId" value="LOCAL-00106" />
-      <option name="project" value="LOCAL" />
-      <updated>1776627318016</updated>
-    </task>
-    <task id="LOCAL-00107" summary="Commit">
-      <option name="closed" value="true" />
-      <created>1776662457391</created>
-      <option name="number" value="00107" />
-      <option name="presentableId" value="LOCAL-00107" />
-      <option name="project" value="LOCAL" />
-      <updated>1776662457391</updated>
-    </task>
-    <task id="LOCAL-00108" summary="Commit">
-      <option name="closed" value="true" />
-      <created>1776679271833</created>
-      <option name="number" value="00108" />
-      <option name="presentableId" value="LOCAL-00108" />
-      <option name="project" value="LOCAL" />
-      <updated>1776679271833</updated>
-    </task>
-    <task id="LOCAL-00109" summary="Commit">
-      <option name="closed" value="true" />
-      <created>1776679357786</created>
-      <option name="number" value="00109" />
-      <option name="presentableId" value="LOCAL-00109" />
-      <option name="project" value="LOCAL" />
-      <updated>1776679357786</updated>
-    </task>
-    <task id="LOCAL-00110" summary="Commit">
-      <option name="closed" value="true" />
-      <created>1776681747781</created>
-      <option name="number" value="00110" />
-      <option name="presentableId" value="LOCAL-00110" />
-      <option name="project" value="LOCAL" />
-      <updated>1776681747781</updated>
-    </task>
-    <task id="LOCAL-00111" summary="Commit">
-      <option name="closed" value="true" />
-      <created>1776682022990</created>
-      <option name="number" value="00111" />
-      <option name="presentableId" value="LOCAL-00111" />
-      <option name="project" value="LOCAL" />
-      <updated>1776682022990</updated>
     </task>
     <task id="LOCAL-00112" summary="Commit">
       <option name="closed" value="true" />
@@ -506,7 +453,63 @@
       <option name="project" value="LOCAL" />
       <updated>1779902306919</updated>
     </task>
-    <option name="localTasksCounter" value="154" />
+    <task id="LOCAL-00154" summary="Merge remote-tracking branch 'origin/main'&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;frontend/dist/sw.js&#10;#&#9;frontend/public/sw.js">
+      <option name="closed" value="true" />
+      <created>1779988115834</created>
+      <option name="number" value="00154" />
+      <option name="presentableId" value="LOCAL-00154" />
+      <option name="project" value="LOCAL" />
+      <updated>1779988115834</updated>
+    </task>
+    <task id="LOCAL-00155" summary="Merge remote-tracking branch 'origin/main'&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;frontend/dist/sw.js&#10;#&#9;frontend/public/sw.js">
+      <option name="closed" value="true" />
+      <created>1779989065384</created>
+      <option name="number" value="00155" />
+      <option name="presentableId" value="LOCAL-00155" />
+      <option name="project" value="LOCAL" />
+      <updated>1779989065384</updated>
+    </task>
+    <task id="LOCAL-00156" summary="Merge remote-tracking branch 'origin/main'">
+      <option name="closed" value="true" />
+      <created>1779989108535</created>
+      <option name="number" value="00156" />
+      <option name="presentableId" value="LOCAL-00156" />
+      <option name="project" value="LOCAL" />
+      <updated>1779989108535</updated>
+    </task>
+    <task id="LOCAL-00157" summary="Merge remote-tracking branch 'origin/main'">
+      <option name="closed" value="true" />
+      <created>1779989151467</created>
+      <option name="number" value="00157" />
+      <option name="presentableId" value="LOCAL-00157" />
+      <option name="project" value="LOCAL" />
+      <updated>1779989151467</updated>
+    </task>
+    <task id="LOCAL-00158" summary="Merge remote-tracking branch 'origin/main'">
+      <option name="closed" value="true" />
+      <created>1779989179653</created>
+      <option name="number" value="00158" />
+      <option name="presentableId" value="LOCAL-00158" />
+      <option name="project" value="LOCAL" />
+      <updated>1779989179653</updated>
+    </task>
+    <task id="LOCAL-00159" summary="Merge remote-tracking branch 'origin/main'">
+      <option name="closed" value="true" />
+      <created>1779989206233</created>
+      <option name="number" value="00159" />
+      <option name="presentableId" value="LOCAL-00159" />
+      <option name="project" value="LOCAL" />
+      <updated>1779989206233</updated>
+    </task>
+    <task id="LOCAL-00160" summary="Merge remote-tracking branch 'origin/main'">
+      <option name="closed" value="true" />
+      <created>1779989246568</created>
+      <option name="number" value="00160" />
+      <option name="presentableId" value="LOCAL-00160" />
+      <option name="project" value="LOCAL" />
+      <updated>1779989246568</updated>
+    </task>
+    <option name="localTasksCounter" value="161" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -534,6 +537,7 @@
     <MESSAGE value="Commit" />
     <MESSAGE value="Merge branch 'perfume-website-clone' into main&#10;&#10;# Conflicts:&#10;#&#9;pnpm-lock.yaml&#10;#&#9;pnpm-workspace.yaml" />
     <MESSAGE value="Merge remote-tracking branch 'origin/main'&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;frontend/dist/sw.js&#10;#&#9;frontend/public/sw.js" />
-    <option name="LAST_COMMIT_MESSAGE" value="Merge remote-tracking branch 'origin/main'&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;frontend/dist/sw.js&#10;#&#9;frontend/public/sw.js" />
+    <MESSAGE value="Merge remote-tracking branch 'origin/main'" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merge remote-tracking branch 'origin/main'" />
   </component>
 </project>
