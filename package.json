@@ -2,15 +2,13 @@
   "name": "ruh-imperium-vercel",
   "version": "1.0.0",
   "private": true,
-  "engines": {
-    "node": "22.x"
-  },
+
   "scripts": {
     "start": "cd backend && npm start",
     "dev": "cd backend && npm run dev",
     "install": "cd backend && npm install",
     "build": "npm --prefix frontend run build",
-    "postinstall": "npm --prefix frontend install",
+    "postinstall": "pnpm --filter frontend install",
     "sync:products": "echo skip-sync",
     "import:catalog": "node scripts/import-raahi-catalog.js && node scripts/rebrand-catalog.js && npm run sync:products",
     "predeploy": "npm run sync:products"
